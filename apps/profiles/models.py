@@ -15,7 +15,6 @@ class User(BaseProfile):
     last_name = models.CharField(max_length=255)
 
 
-class Organiser(CustomUser):
+class Organizer(CustomUser):
     title = models.CharField(max_length=255)
     back_img = models.ImageField()
-    # events
