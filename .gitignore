@@ -5,7 +5,7 @@
 __pycache__
 db.sqlite3
 media
-
+.DS_Store
 # Backup files #
 *.bak
 
@@ -23,6 +23,7 @@ media
 
 # Generated files
 .idea/**/contentModel.xml
+
 
 # Sensitive or high-churn files
 .idea/**/dataSources/
