@@ -10,22 +10,36 @@ class Category(models.Model):
         return f"{self.name}"
 
 
-class EventDay(models.Model):
+class EventDate(models.Model):
     start_date = models.DateTimeField()
     end_date = models.DateTimeField()
 
+    def __str__(self):
+        return f"{self.start_date}, {self.end_date}"
 
-class Event(models.Model):
+
+class EventWeek(models.Model):
+    week = models.CharField(max_length=150, choices=None)
+
+    def __str__(self):
+        return f"{self.week}"
+
+
+class BaseEvent(models.Model):
     title = models.CharField(max_length=150)
     description = models.TextField()
     banner = models.ImageField(upload_to='media/', null=True, blank=True)
     language = models.CharField(max_length=100)
     price = models.DecimalField(max_digits=5, decimal_places=2)
-    # guest = models.ManyToManyField(User, on_delete=models.CASCADE)
     category = models.ManyToManyField(Category)
-    event_dates = models.ManyToManyField(EventDay)
-    # address
 
     def __str__(self):
-        return f'{self.title} '
+        return f'{self.title}'
 
+
+class TemporaryEvent(BaseEvent):
+    dates = models.ManyToManyField(EventDate)
+
+
+class PermanentEvent(BaseEvent):
+    weeks = models.ManyToManyField(EventWeek)
