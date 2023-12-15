@@ -8,6 +8,6 @@ class ProfileViewSet(RetrieveAPIView):
     serializer_class = ProfileSerializer
 
     def retrieve(self, request, *args, **kwargs):
-        instance = get_object_or_404(User, pk=request.user.pk)
-        serializer = self.get_serializer(instance)
+        user = User.objects.get(id=self.request.user.id)
+        serializer = self.get_serializer(user)
         return Response(serializer.data)
