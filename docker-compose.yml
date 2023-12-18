@@ -1,0 +1,50 @@
+version: '3'
+
+services:
+  api:
+    build: .
+    command: >
+      sh -c "gunicorn config.wsgi:application --bind 0.0.0.0:8000"
+    ports:
+      - '8000:8000'
+    restart: always
+    depends_on:
+      - postgres
+      - migration
+    volumes:
+      - .:/app
+      - static_volume:/usr/src/app/static
+  postgres:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_DB: eventic_db
+      POSTGRES_USER: silver
+      POSTGRES_PASSWORD: 1
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+  migration:
+    build: .
+    command: sh -c "python manage.py makemigrations && python manage.py migrate"
+    depends_on:
+      - postgres
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - '8888:8080'
+
+  nginx:
+    image: nginx:latest
+    container_name: docker_nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+      - static_volume:/usr/src/app/static
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:
+  static_volume:
