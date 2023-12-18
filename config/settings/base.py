@@ -30,7 +30,7 @@ if DEBUG == True:
 else:
     from .production import *
 
-ALLOWED_HOSTS = ['0.0.0.0', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['0.0.0.0', 'localhost', '127.0.0.1', '34.83.117.144']
 
 # Application definition
 
