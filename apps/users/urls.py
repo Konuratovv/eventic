@@ -8,5 +8,5 @@ urlpatterns = [
     path('refresh/', TokenRefreshView.as_view()),
     path('verify-email/', VerifyAPIView.as_view()),
     path('send-code/', SendCodeAPIView.as_view()),
-    path('verify', TokenVerifyView.as_view())
+    path('verify/', TokenVerifyView.as_view())
 ]
