@@ -43,3 +43,7 @@ class CodeSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = ['code']
+
+
+class SendCodeSerializer(serializers.Serializer):
+    pass

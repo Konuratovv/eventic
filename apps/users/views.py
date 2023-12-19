@@ -1,11 +1,10 @@
 from rest_framework.generics import CreateAPIView, UpdateAPIView
 from apps.profiles.models import User
 from apps.users.models import CustomUser
-from apps.users.serializer import RegisterSerializer, CodeSerializer
+from apps.users.serializer import RegisterSerializer, CodeSerializer, SendCodeSerializer
 from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.response import Response
-from rest_framework import status
 from apps.users.utils import send_verification_mail
 
 
@@ -14,14 +13,18 @@ class RegisterAPIView(CreateAPIView):
     serializer_class = RegisterSerializer
     permission_classes = [AllowAny]
 
-    def post(self, request, *args, **kwargs):
-        response = super().post(request, *args, **kwargs)
-        if response.status_code == status.HTTP_201_CREATED:
-            email = response.data.get('email')
+
+class SendCodeAPIView(UpdateAPIView):
+    serializer_class = SendCodeSerializer
+
+    def get_object(self):
+        user = CustomUser.objects.get(id=self.request.user.id)
+        return user
+
+    def patch(self, request, *args, **kwargs):
+            email = self.get_object().email
             send_verification_mail(email)
             return Response({'message': 'Verify code have sent successfully'})
-        else:
-            return Response('Error')
 
 
 class LoginViewSet(TokenObtainPairView):
