@@ -1,6 +1,5 @@
 from django.db import models
 
-from django.contrib.auth.models import User
 
 
 class Category(models.Model):
@@ -24,6 +23,7 @@ class Event(models.Model):
     # guest = models.ManyToManyField(User, on_delete=models.CASCADE)
     category = models.ManyToManyField(Category)
     event_dates = models.ManyToManyField(EventDay)
+    # organiser = models.ForeignKey('apps.profiles.Organiser',on_delete=models.CASCADE)
     # address
 
     def __str__(self):
