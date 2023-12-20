@@ -7,4 +7,10 @@ from apps.profiles.models import User, Organizer
 
 admin.site.unregister(Group)
 admin.site.register(User)
-admin.site.register(Organizer)
+
+
+class OrganizerAdmin(admin.ModelAdmin):
+    exclude = ['code', 'groups', 'is_verified', 'is_superuser']
+
+
+admin.site.register(Organizer, OrganizerAdmin)

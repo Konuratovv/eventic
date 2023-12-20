@@ -14,20 +14,27 @@ services:
     volumes:
       - .:/app
       - static_volume:/usr/src/app/static
+
   postgres:
     image: postgres
     restart: always
+    ports:
+      - "5432:5432"
     environment:
       POSTGRES_DB: eventic_db
       POSTGRES_USER: silver
       POSTGRES_PASSWORD: 1
     volumes:
       - postgres_data:/var/lib/postgresql/data/
+
   migration:
     build: .
     command: sh -c "python manage.py makemigrations && python manage.py migrate"
+    volumes:
+      - .:/usr/src/app
     depends_on:
       - postgres
+
   adminer:
     image: adminer
     restart: always

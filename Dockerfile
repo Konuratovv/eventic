@@ -8,6 +8,4 @@ COPY requirements.txt ./
 
 COPY . .
 
-RUN pip install --no-cache-dir -r requirements.txt
-
-RUN ./manage.py collectstatic
+RUN pip install --no-cache-dir -r requirements.txt && python manage.py collectstatic
