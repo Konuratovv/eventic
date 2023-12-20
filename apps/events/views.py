@@ -9,6 +9,7 @@ import django_filters
 
 class EventRetrieveAPIView(generics.RetrieveAPIView):
     serializer_class = EventSerializer
+    queryset = Event.objects.all()
 
     def get(self, request, pk):
         event = Event.objects.get(id=pk)

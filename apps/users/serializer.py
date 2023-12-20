@@ -3,7 +3,8 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from apps.profiles.models import User
 from django.contrib.auth.password_validation import validate_password
-from django.contrib.auth.hashers import make_password
+
+from apps.users.models import CustomUser
 
 
 class RegisterSerializer(ModelSerializer):
@@ -36,3 +37,13 @@ class RegisterSerializer(ModelSerializer):
         validated_data.pop('confirm_password', None)
         user = User.objects.create_user(**validated_data)
         return user
+
+
+class CodeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ['code']
+
+
+class SendCodeSerializer(serializers.Serializer):
+    pass
