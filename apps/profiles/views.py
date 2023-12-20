@@ -1,5 +1,5 @@
 from rest_framework import status
-from rest_framework.generics import RetrieveAPIView, get_object_or_404, ListCreateAPIView
+from rest_framework.generics import RetrieveAPIView, get_object_or_404, ListCreateAPIView, ListAPIView
 from apps.profiles.models import User, Organizer
 from apps.profiles.serializer import ProfileSerializer, OrganizerSerializer, FollowSerializer
 from rest_framework.response import Response
@@ -31,3 +31,7 @@ class FollowAPIView(ListCreateAPIView):
             serializer.save()
             return Response({'message': 'Followed'})
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class FollowersSPIView(ListAPIView):
+    serializer_class = ProfileSerializer

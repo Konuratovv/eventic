@@ -1,3 +1,4 @@
+from rest_framework import status
 from rest_framework.generics import CreateAPIView, UpdateAPIView
 from apps.profiles.models import User
 from apps.users.models import CustomUser
@@ -13,6 +14,17 @@ class RegisterAPIView(CreateAPIView):
     serializer_class = RegisterSerializer
     permission_classes = [AllowAny]
 
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        data = {"Status": "Success"}
+        return Response(data, status=status.HTTP_201_CREATED)
+
+
+class LoginViewSet(TokenObtainPairView):
+    permission_classes = [AllowAny]
+
 
 class SendCodeAPIView(UpdateAPIView):
     serializer_class = SendCodeSerializer
@@ -22,13 +34,9 @@ class SendCodeAPIView(UpdateAPIView):
         return user
 
     def patch(self, request, *args, **kwargs):
-            email = self.get_object().email
-            send_verification_mail(email)
-            return Response({'message': 'Verify code have sent successfully'})
-
-
-class LoginViewSet(TokenObtainPairView):
-    permission_classes = [AllowAny]
+        email = self.get_object().email
+        send_verification_mail(email)
+        return Response({'message': 'Verify code have sent successfully'})
 
 
 class VerifyAPIView(UpdateAPIView):

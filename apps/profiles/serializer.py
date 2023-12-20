@@ -20,3 +20,4 @@ class FollowSerializer(ModelSerializer):
     class Meta:
         model = Follow
         fields = '__all__'
+
