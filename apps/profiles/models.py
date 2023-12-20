@@ -9,7 +9,8 @@ class BaseProfile(CustomUser):
 
 
 class User(BaseProfile):
-    favourites = models.ManyToManyField(Event)
+    favourites = models.ManyToManyField('events.Event')
+    organizer = models.ManyToManyField('profiles.Organiser')
     description = models.TextField()
     first_name = models.CharField(max_length=155)
     last_name = models.CharField(max_length=255)
@@ -18,6 +19,7 @@ class User(BaseProfile):
 class Organizer(CustomUser):
     title = models.CharField(max_length=255)
     back_img = models.ImageField()
+    # events
 
 
 class Follow(models.Model):
