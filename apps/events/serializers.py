@@ -1,11 +1,17 @@
 from rest_framework import serializers
 
-from .models import Category, EventDate, BaseEvent, EventWeek
+from .models import Category, EventDate, BaseEvent, EventWeek, Interests
 
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
+        fields = "__all__"
+
+
+class InterestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Interests
         fields = "__all__"
 
 
@@ -23,6 +29,7 @@ class EventWeekSerializer(serializers.ModelSerializer):
 
 class EventSerializer(serializers.ModelSerializer):
     category = CategorySerializer(many=True)
+    interests = InterestSerializer(many=True)
     event_dates = EventDateSerializer(many=True, source='temporaryevent.dates')
     event_weeks = EventWeekSerializer(many=True, source='permanentevent.weeks')
 
@@ -38,4 +45,6 @@ class EventSerializer(serializers.ModelSerializer):
             'event_dates',
             'event_weeks',
             'category',
+            'interests',
         )
+

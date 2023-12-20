@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Category, TemporaryEvent, PermanentEvent, EventWeek, EventDate
+from .models import Category, TemporaryEvent, PermanentEvent, EventWeek, EventDate, Interests
 
 
 @admin.register(TemporaryEvent)
@@ -40,5 +40,19 @@ class CategoryAdmin(admin.ModelAdmin):
     ]
 
 
-admin.site.register(EventWeek)
-admin.site.register(EventDate)
+@admin.register(Interests)
+class InterestsAdmin(admin.ModelAdmin):
+    list_display = [
+        "id",
+        "name",
+    ]
+
+
+@admin.register(EventWeek)
+class EventWeekAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(EventDate)
+class EventWeekAdmin(admin.ModelAdmin):
+    pass

@@ -10,6 +10,13 @@ class Category(models.Model):
         return f"{self.name}"
 
 
+class Interests(models.Model):
+    name = models.CharField(max_length=155)
+
+    def __str__(self):
+        return f"{self.name}"
+
+
 class EventDate(models.Model):
     start_date = models.DateTimeField()
     end_date = models.DateTimeField()
@@ -32,6 +39,7 @@ class BaseEvent(models.Model):
     language = models.CharField(max_length=100)
     price = models.DecimalField(max_digits=5, decimal_places=2)
     category = models.ManyToManyField(Category)
+    interests = models.ManyToManyField(Interests)
 
     def __str__(self):
         return f'{self.title}'
