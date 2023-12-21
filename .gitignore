@@ -5,7 +5,7 @@
 __pycache__
 db.sqlite3
 media
-
+.DS_Store
 # Backup files #
 *.bak
 
@@ -23,6 +23,7 @@ media
 
 # Generated files
 .idea/**/contentModel.xml
+
 
 # Sensitive or high-churn files
 .idea/**/dataSources/
@@ -99,13 +100,13 @@ celerybeat-schedule.*
 *.sage.py
 
 # Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
+#.env
+#.venv
+#env/
+#venv/
+#ENV/
+#env.bak/
+#venv.bak/
 
 # mkdocs documentation
 /site

@@ -14,6 +14,7 @@ from .serializers import EventSerializer
 class EventRetrieveAPIView(generics.RetrieveAPIView):
     """ Вывод Eventa по id """
     serializer_class = EventSerializer
+    queryset = Event.objects.all()
 
     def get(self, request, pk):
         event = BaseEvent.objects.get(id=pk)
