@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'apps.users',
     'apps.events',
 
+
     # my_libraries
     'rest_framework',
     "corsheaders",

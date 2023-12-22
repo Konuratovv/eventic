@@ -1,28 +1,23 @@
 from django.db import models
 
-from django.contrib.auth.models import User
+# from django.contrib.auth.models import User
 
 
 class Category(models.Model):
-    name = models.CharField(max_length=155)
+    name = models.CharField(max_length=150)
+
+    # class Meta:
+    #     pass
 
     def __str__(self):
         return f"{self.name}"
 
 
 class Interests(models.Model):
-    name = models.CharField(max_length=155)
+    name = models.CharField(max_length=150)
 
     def __str__(self):
         return f"{self.name}"
-
-
-class EventDate(models.Model):
-    start_date = models.DateTimeField()
-    end_date = models.DateTimeField()
-
-    def __str__(self):
-        return f"{self.start_date}, {self.end_date}"
 
 
 class EventWeek(models.Model):
@@ -37,13 +32,21 @@ class BaseEvent(models.Model):
     description = models.TextField()
     banner = models.ImageField(upload_to='media/', null=True, blank=True)
     language = models.CharField(max_length=100)
-    price = models.DecimalField(max_digits=5, decimal_places=2)
+    price = models.DecimalField(max_digits=7, decimal_places=2)
     # guest = models.ManyToManyField(User, on_delete=models.CASCADE)
     category = models.ManyToManyField(Category)
     interests = models.ManyToManyField(Interests)
 
     def __str__(self):
         return f'{self.title}'
+
+
+class EventDate(models.Model):
+    start_date = models.DateTimeField()
+    end_date = models.DateTimeField()
+
+    def __str__(self):
+        return f"{self.start_date}, {self.end_date}"
 
 
 class TemporaryEvent(BaseEvent):
