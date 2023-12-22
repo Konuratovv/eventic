@@ -42,6 +42,9 @@ class BaseEvent(models.Model):
     category = models.ManyToManyField(Category)
     interests = models.ManyToManyField(Interests)
 
+    objects = models.Manager()
+
+
     def __str__(self):
         return f'{self.title}'
 
