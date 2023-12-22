@@ -19,7 +19,7 @@ class RegisterAPIView(CreateAPIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         data = {"Status": "Success"}
-        return Response(data, status=status.HTTP_201_CREATED)
+        return Response(data, status=status.HTTP_200_OK)
 
 
 class LoginViewSet(TokenObtainPairView):

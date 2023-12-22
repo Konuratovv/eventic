@@ -1,7 +1,9 @@
-from apps.profiles.models import Organizer, Follow
+from apps.events.models import Event
+from apps.profiles.models import Organizer, FollowOrganizer
 
 from apps.profiles.models import User
 from rest_framework.serializers import ModelSerializer
+from rest_framework import serializers
 
 
 class ProfileSerializer(ModelSerializer):
@@ -16,8 +18,14 @@ class OrganizerSerializer(ModelSerializer):
         exclude = ['code']
 
 
-class FollowSerializer(ModelSerializer):
+class FollowOrganizerSerializer(ModelSerializer):
     class Meta:
-        model = Follow
-        fields = '__all__'
+        model = FollowOrganizer
+        fields = ['following']
 
+
+class FollowEventSerializer(ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ['events']

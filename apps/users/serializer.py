@@ -3,6 +3,8 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from apps.profiles.models import User
 from django.contrib.auth.password_validation import validate_password
+from rest_framework.exceptions import AuthenticationFailed
+from django.core.exceptions import ValidationError
 
 from apps.users.models import CustomUser
 
@@ -24,13 +26,15 @@ class RegisterSerializer(ModelSerializer):
 
     def validate_password(self, value):
         request = self.context.get('request')
-        validate_password(value, request.user)
-        print(value)
+        try:
+            validate_password(value, request.user)
+        except ValidationError as e:
+            raise AuthenticationFailed(detail=e, code='invalid_password')
         return value
 
     def validate(self, data):
         if data.get('password') != data.get('confirm_password'):
-            raise serializers.ValidationError('Password did not match')
+            raise AuthenticationFailed('Password did not match')
         return data
 
     def create(self, validated_data):

@@ -24,6 +24,9 @@ class Event(models.Model):
     category = models.ManyToManyField(Category)
     event_dates = models.ManyToManyField(EventDay)
 
+    objects = models.Manager()
+
+
     def __str__(self):
         return f'{self.title} '
 
