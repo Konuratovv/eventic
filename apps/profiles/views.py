@@ -13,6 +13,7 @@ from django.core.exceptions import ObjectDoesNotExist
 
 class ProfileViewSet(RetrieveAPIView):
     serializer_class = ProfileSerializer
+    permission_classes = [IsAuthenticated]
 
     def retrieve(self, request, *args, **kwargs):
         user = User.objects.get(id=self.request.user.id)

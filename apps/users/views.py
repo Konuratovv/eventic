@@ -3,7 +3,7 @@ from rest_framework.generics import CreateAPIView, UpdateAPIView
 from apps.profiles.models import User
 from apps.users.models import CustomUser
 from apps.users.serializer import RegisterSerializer, CodeSerializer, SendCodeSerializer
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.response import Response
 from apps.users.utils import send_verification_mail
@@ -28,6 +28,7 @@ class LoginViewSet(TokenObtainPairView):
 
 class SendCodeAPIView(UpdateAPIView):
     serializer_class = SendCodeSerializer
+    permission_classes = [IsAuthenticated]
 
     def get_object(self):
         user = CustomUser.objects.get(id=self.request.user.id)
@@ -41,6 +42,7 @@ class SendCodeAPIView(UpdateAPIView):
 
 class VerifyAPIView(UpdateAPIView):
     serializer_class = CodeSerializer
+    permission_classes = [IsAuthenticated]
 
     def get_object(self):
         user = CustomUser.objects.get(id=self.request.user.id)
