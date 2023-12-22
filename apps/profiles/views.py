@@ -153,7 +153,6 @@ class UnFollowEventAPIView(DestroyAPIView):
 
 class SendResetAPiView(UpdateAPIView):
     serializer_class = SendResetCodeSerializer
-    permission_classes = [IsAuthenticated]
 
     def get_object(self):
         user = CustomUser.objects.get(email=self.request.data.get('email'))
