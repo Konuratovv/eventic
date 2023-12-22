@@ -9,7 +9,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_superuser = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)
-    code = models.CharField(max_length=9, blank=True)
+    code = models.CharField(max_length=9, blank=True, null=True)
 
     objects = CustomUserManager()
 

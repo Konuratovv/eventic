@@ -16,7 +16,7 @@ class User(BaseProfile):
     events = models.ManyToManyField(Event, related_name='users')
 
 
-class Organizer(CustomUser):
+class Organizer(BaseProfile):
     title = models.CharField(max_length=255)
     back_img = models.ImageField()
 

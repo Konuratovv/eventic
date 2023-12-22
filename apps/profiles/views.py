@@ -1,14 +1,22 @@
+from django.contrib.auth.hashers import make_password
 from rest_framework import status
-from rest_framework.generics import RetrieveAPIView, UpdateAPIView, ListAPIView, CreateAPIView, DestroyAPIView
+from rest_framework.generics import RetrieveAPIView, ListAPIView, CreateAPIView, DestroyAPIView, UpdateAPIView
 
 from apps.events.models import Event
 from apps.events.serializers import EventSerializer
 from apps.profiles.models import User, Organizer, FollowOrganizer
 from apps.profiles.serializer import ProfileSerializer, OrganizerSerializer, FollowOrganizerSerializer, \
-    FollowEventSerializer
+    FollowEventSerializer, ChangePasswordSerializer
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.core.exceptions import ObjectDoesNotExist
+from django.utils.crypto import constant_time_compare
+
+from apps.users.serializer import CodeSerializer
+from apps.users.utils import send_verification_mail
+
+from apps.users.models import CustomUser
+from apps.profiles.serializer import SendResetCodeSerializer
 
 
 class ProfileViewSet(RetrieveAPIView):
@@ -35,7 +43,7 @@ class FollowOrganizerAPIView(CreateAPIView):
 
         if serializer.is_valid():
             try:
-                existing_follow = FollowOrganizer.objects.get(follower=user, following=organizer)
+                FollowOrganizer.objects.get(follower=user, following=organizer)
                 return Response({'error': 'Already following this organizer'}, status=status.HTTP_400_BAD_REQUEST)
             except ObjectDoesNotExist:
                 follow = FollowOrganizer.objects.create(follower=user, following=organizer)
@@ -141,3 +149,71 @@ class UnFollowEventAPIView(DestroyAPIView):
             except ObjectDoesNotExist:
                 return Response({'status': 'Not following this event'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'status': 'event is not found'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class SendResetAPiView(UpdateAPIView):
+    serializer_class = SendResetCodeSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        user = CustomUser.objects.get(email=self.request.data.get('email'))
+        return user
+
+    def patch(self, request, *args, **kwargs):
+        email = self.get_object().email
+        send_verification_mail(email)
+        return Response({'message': 'Reset code have sent successfully'})
+
+
+class CheckResetCodeAPIView(UpdateAPIView):
+    serializer_class = CodeSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        user = User.objects.get(id=self.request.user.id)
+        return user
+
+    def patch(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            user = self.get_object()
+            code = self.request.data.get('code')
+            if user.code == code:
+                user.code = None
+                user.save()
+                return Response({'status': 'success'}, status=status.HTTP_200_OK)
+            else:
+                return Response({'status': 'invalid code'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'error': 'invalid serializer'})
+
+
+class ChangePasswordAPIVIew(UpdateAPIView):
+    serializer_class = ChangePasswordSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        user = User.objects.get(id=self.request.user.id)
+        return user
+
+    def patch(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=self.request.data)
+        if serializer.is_valid():
+            new_password = self.request.data.get('new_password')
+            confirming_new_password = self.request.data.get('confirming_new_password')
+            if constant_time_compare(new_password, confirming_new_password):
+                user = self.get_object()
+                user.password = make_password(confirming_new_password)
+                user.save()
+                return Response({'status': 'password changed successfully'}, status=status.HTTP_200_OK)
+            else:
+                return Response({'status': 'password is not match'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors)
+
+
+
+
+
+
+
+
+
