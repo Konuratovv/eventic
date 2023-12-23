@@ -30,7 +30,8 @@ if DEBUG:
 else:
     from .production import *
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
+
 
 
 # Application definition
