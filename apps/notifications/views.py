@@ -1,12 +1,9 @@
-from django.shortcuts import render
-
 from rest_framework.generics import RetrieveAPIView
-
 
 from .models import Notification
 
 
-class Notifications(RetrieveAPIView) :
+class Notifications(RetrieveAPIView):
     queryset = Notification.objects.all()
 
     def get_object(self):
