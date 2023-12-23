@@ -2,7 +2,7 @@ from django.contrib.auth.hashers import make_password
 from rest_framework import status
 from rest_framework.generics import RetrieveAPIView, ListAPIView, CreateAPIView, DestroyAPIView, UpdateAPIView
 
-from apps.events.models import Event
+from apps.events.models import BaseEvent
 from apps.events.serializers import EventSerializer
 from apps.profiles.models import User, Organizer, FollowOrganizer
 from apps.profiles.serializer import ProfileSerializer, OrganizerSerializer, FollowOrganizerSerializer, \
@@ -93,7 +93,7 @@ class FollowersOrganizerAPIView(ListAPIView):
 
 
 class FollowersEventAPIView(ListAPIView):
-    queryset = Event.objects.all()
+    queryset = BaseEvent.objects.all()
     serializer_class = EventSerializer
     permission_classes = [AllowAny]
 
@@ -123,7 +123,7 @@ class FollowEventAPIView(CreateAPIView):
         event_id = self.request.data.get('events')
         if serializer.is_valid():
             user = self.get_object()
-            event = Event.objects.get(id=event_id)
+            event = BaseEvent.objects.get(id=event_id)
             if user.events.get(id=event.id):
                 return Response({'status': 'Already following this event'}, status=status.HTTP_400_BAD_REQUEST)
             user.events.add(event)
@@ -141,7 +141,7 @@ class UnFollowEventAPIView(DestroyAPIView):
         user = User.objects.get(id=self.request.user.id)
         event_id = self.request.data.get('events')
         if serializer.is_valid():
-            event = Event.objects.get(id=event_id)
+            event = BaseEvent.objects.get(id=event_id)
             try:
                 user.events.get(id=event.id)
                 user.events.remove(event)
