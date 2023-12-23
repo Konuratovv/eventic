@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django.contrib.auth.hashers import make_password
 from rest_framework import status
 from rest_framework.generics import RetrieveAPIView, ListAPIView, CreateAPIView, DestroyAPIView, UpdateAPIView
@@ -11,6 +13,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.crypto import constant_time_compare
+from rest_framework_simplejwt.tokens import AccessToken
 
 from apps.users.serializer import CodeSerializer
 from apps.users.utils import send_verification_mail
@@ -174,30 +177,31 @@ class SendResetAPiView(UpdateAPIView):
         return user
 
     def patch(self, request, *args, **kwargs):
-        email = self.get_object().email
+        try:
+            email = self.get_object().email
+        except ObjectDoesNotExist:
+            return Response({'status': 'Invalid email'})
         send_verification_mail(email)
         return Response({'message': 'Reset code have sent successfully'})
 
 
 class CheckResetCodeAPIView(UpdateAPIView):
     serializer_class = CodeSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_object(self):
-        user = User.objects.get(id=self.request.user.id)
-        return user
 
     def patch(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
-            user = self.get_object()
             code = self.request.data.get('code')
-            if user.code == code:
+            try:
+                user = CustomUser.objects.get(code=code)
                 user.code = None
                 user.save()
-                return Response({'status': 'success'}, status=status.HTTP_200_OK)
+            except ObjectDoesNotExist:
+                return Response({'status': 'Invalid code'})
             else:
-                return Response({'status': 'invalid code'}, status=status.HTTP_400_BAD_REQUEST)
+                access_token = AccessToken.for_user(user)
+                access_token.set_exp(lifetime=timedelta(minutes=15))
+                return Response({'status': 'success', 'access_token': str(access_token)}, status=status.HTTP_200_OK)
         return Response({'error': 'invalid serializer'})
 
 
