@@ -1,5 +1,6 @@
 from django.db import models
 from apps.users.models import CustomUser
+from apps.events.models import BaseEvent
 
 
 class BaseProfile(CustomUser):
@@ -13,13 +14,12 @@ class User(BaseProfile):
     description = models.TextField()
     first_name = models.CharField(max_length=155)
     last_name = models.CharField(max_length=255)
-    events = models.ManyToManyField(Event, related_name='users')
+    events = models.ManyToManyField(BaseEvent, related_name='users')
 
 
 class Organizer(BaseProfile):
     title = models.CharField(max_length=255)
     back_img = models.ImageField()
-    # events
 
 
 class FollowOrganizer(models.Model):
