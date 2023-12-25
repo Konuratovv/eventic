@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import Notifications
+from .views import *
 
 # urlpatterns = [
 #     path("unread/", UnreadNotifications.as_view()),
@@ -9,5 +9,6 @@ from .views import Notifications
 
 urlpatterns = [
     path('noti/<int:pk>/', Notifications.as_view(),),
+    # path('sent',SendNotToUserApiView.as_view()),
 
 ]
