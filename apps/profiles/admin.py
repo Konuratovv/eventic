@@ -9,6 +9,7 @@ admin.site.unregister(Group)
 
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
+    exclude = ['code', 'groups', 'is_verified', 'is_superuser', 'password']
     list_display = [
         "id",
         'first_name',

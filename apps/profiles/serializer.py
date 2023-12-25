@@ -25,12 +25,6 @@ class FollowOrganizerSerializer(ModelSerializer):
         fields = ['following']
 
 
-class SubscribersUserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = FollowOrganizer
-        fields = '__all__'
-
-
 class FollowEventSerializer(ModelSerializer):
     class Meta:
         model = User

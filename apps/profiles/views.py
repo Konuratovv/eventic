@@ -8,7 +8,7 @@ from apps.events.models import BaseEvent
 from apps.events.serializers import EventSerializer
 from apps.profiles.models import User, Organizer, FollowOrganizer
 from apps.profiles.serializer import ProfileSerializer, OrganizerSerializer, FollowOrganizerSerializer, \
-    FollowEventSerializer, ChangePasswordSerializer, SubscribersUserSerializer
+    FollowEventSerializer, ChangePasswordSerializer
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.core.exceptions import ObjectDoesNotExist
