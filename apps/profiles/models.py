@@ -2,7 +2,6 @@ from django.db import models
 
 from apps.events.models import BaseEvent
 from apps.users.models import CustomUser
-from apps.events.models import BaseEvent
 
 
 class BaseProfile(CustomUser):

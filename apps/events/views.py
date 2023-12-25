@@ -35,6 +35,3 @@ class FreeEventListAPIView(generics.ListAPIView):
     serializer_class = EventSerializer
     queryset = BaseEvent.objects.filter(price=0.0)
 
-# class PopularEventListAPIView(generics.ListAPIView):
-#     serializer_class = EventSerializer
-#     queryset = Event.objects.all().order_by()
