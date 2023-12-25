@@ -2,7 +2,7 @@ from django.urls import path
 
 from apps.profiles.views import ProfileViewSet, FollowOrganizerAPIView, FollowersOrganizerAPIView, FollowEventAPIView, \
     FollowersEventAPIView, UnFollowOrganizerAPIView, UnFollowEventAPIView, SendResetAPiView, CheckResetCodeAPIView, \
-    ChangePasswordAPIVIew
+    ChangePasswordAPIVIew, SubscribersUserAPIView
 from apps.users.views import SendCodeAPIView, VerifyAPIView
 
 urlpatterns = [
@@ -10,7 +10,8 @@ urlpatterns = [
     path('follow/organizer/', FollowOrganizerAPIView.as_view()),
     path('unfollow/organizer/', UnFollowOrganizerAPIView.as_view()),
     path('followers/organizer/', FollowersOrganizerAPIView.as_view()),
-    path('send_code/', SendCodeAPIView.as_view()),
+    path('subscribers/user/', SubscribersUserAPIView.as_view()),
+    path('send_verify_code/', SendCodeAPIView.as_view()),
     path('verify/email/', VerifyAPIView.as_view()),
     path('follow/event/', FollowEventAPIView.as_view()),
     path('followers/event/', FollowersEventAPIView.as_view()),
