@@ -23,7 +23,7 @@ class UserAdmin(admin.ModelAdmin):
 
 @admin.register(Organizer)
 class OrganizerAdmin(admin.ModelAdmin):
-    exclude = ['code', 'groups', 'is_verified', 'is_superuser']
+    exclude = ['code',  'is_verified']
     list_display = [
         "id",
         'title',
