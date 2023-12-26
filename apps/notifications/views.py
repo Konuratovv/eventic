@@ -1,12 +1,13 @@
 from django.db.models import Q
+from django.shortcuts import render, get_object_or_404
 
-from rest_framework.generics import RetrieveAPIView
+from rest_framework.generics import RetrieveAPIView, CreateAPIView,ListAPIView
 
 from .models import Notification
 from .serializers import NotificationSerializer
 
 
-class Notifications(RetrieveAPIView):
+class Notifications(RetrieveAPIView) :
     queryset = Notification.objects.all()
     serializer_class = NotificationSerializer
 
