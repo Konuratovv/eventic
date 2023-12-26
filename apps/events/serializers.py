@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Category, EventDate, BaseEvent, EventWeek, Interests, EventFavorite
+from .models import Category, EventDate, BaseEvent, EventWeek, Interests
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -48,7 +48,3 @@ class EventSerializer(serializers.ModelSerializer):
             'interests',
         )
 
-class EventFavoriteSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = EventFavorite
-        fields = ('id', 'event')

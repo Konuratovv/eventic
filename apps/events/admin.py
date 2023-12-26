@@ -1,6 +1,5 @@
 from django.contrib import admin
-from .models import Category, TemporaryEvent, PermanentEvent, EventWeek, EventDate, Interests, EventFavorite
-
+from .models import Category, TemporaryEvent, PermanentEvent, EventWeek, EventDate, Interests
 
 @admin.register(TemporaryEvent)
 class TemporaryEventAdmin(admin.ModelAdmin):
@@ -57,7 +56,3 @@ class EventWeekAdmin(admin.ModelAdmin):
 class EventWeekAdmin(admin.ModelAdmin):
     pass
 
-
-@admin.register(EventFavorite)
-class EventFavoriteAdmin(admin.ModelAdmin):
-    list_display = ('user', 'event')

@@ -1,10 +1,10 @@
 from django.db import models
-from apps.notification.constance import CATEGORY_CHOICES
+from apps.invitations.constance import CATEGORY_CHOICES
 # from apps.notification.constants import *
 # from apps..constants import DESTINATION_CHOICES
 
 
-class Notification(models.Model):
+class Invitation(models.Model):
     name = models.CharField(max_length=255)
     category = models.CharField(choices=CATEGORY_CHOICES ,max_length=255, verbose_name = "Категория мероприятия")
     start_date = models.DateField("Дата начала")

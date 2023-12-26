@@ -9,8 +9,8 @@ from rest_framework.response import Response
 
 from django.db.models import Q, Prefetch
 
-from .models import BaseEvent, TemporaryEvent, PermanentEvent, EventFavorite
-from .serializers import EventSerializer, EventFavoriteSerializer
+from .models import BaseEvent, TemporaryEvent, PermanentEvent
+from .serializers import EventSerializer
 
 
 class EventRetrieveAPIView(generics.RetrieveAPIView):
@@ -20,7 +20,7 @@ class EventRetrieveAPIView(generics.RetrieveAPIView):
     def get(self, request, pk):
         event = BaseEvent.objects.get(id=pk)
         serializer = EventSerializer(event)
-        return Response(serializer.data)
+        return Response(serializer.data)    
 
 
 class EventListAPIView(generics.ListAPIView):
@@ -77,14 +77,3 @@ class InterestsFilterEventAPIView(generics.ListAPIView):
         return BaseEvent.objects.filter(combined_q_objects)
 
 
-class EventFavoriteAPIView(GenericViewSet,
-                          mixins.CreateModelMixin,
-                          mixins.DestroyModelMixin,
-                          mixins.UpdateModelMixin,
-                          ):
-    queryset = EventFavorite.objects.all()
-    serializer_class = EventFavoriteSerializer
-
-
-    def perform_create(self, serializer):
-        return serializer.save(user=self.request.user)
