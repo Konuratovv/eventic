@@ -4,16 +4,17 @@ from django.contrib.auth.hashers import make_password
 from rest_framework import status
 from rest_framework.generics import RetrieveAPIView, ListAPIView, CreateAPIView, DestroyAPIView, UpdateAPIView
 
-from apps.events.models import BaseEvent
+from apps.events.models import BaseEvent, TemporaryEvent, PermanentEvent
 from apps.events.serializers import EventSerializer
 from apps.profiles.models import User, Organizer, FollowOrganizer
 from apps.profiles.serializer import ProfileSerializer, OrganizerSerializer, FollowOrganizerSerializer, \
-    FollowEventSerializer, ChangePasswordSerializer
+    FollowEventSerializer, ChangePasswordSerializer, PermanentEventSerializer, TemporaryEventSerializer
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.crypto import constant_time_compare
 from rest_framework_simplejwt.tokens import AccessToken
+from operator import itemgetter
 
 from apps.users.serializer import CodeSerializer
 from apps.users.utils import send_verification_mail
@@ -46,8 +47,10 @@ class FollowOrganizerAPIView(CreateAPIView):
 
         if serializer.is_valid():
             try:
-                FollowOrganizer.objects.get(follower=user, following=organizer)
-                return Response({'error': 'Already following this organizer'}, status=status.HTTP_400_BAD_REQUEST)
+                follow = FollowOrganizer.objects.get(follower=user, following=organizer, is_followed=False)
+                follow.is_followed = True
+                follow.save()
+                return Response({'message': 'followed', 'status': f'{follow.is_followed}'}, status=status.HTTP_200_OK)
             except ObjectDoesNotExist:
                 follow = FollowOrganizer.objects.create(follower=user, following=organizer)
                 follow.is_followed = True
@@ -56,11 +59,11 @@ class FollowOrganizerAPIView(CreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class UnFollowOrganizerAPIView(DestroyAPIView):
+class UnFollowOrganizerAPIView(UpdateAPIView):
     serializer_class = FollowOrganizerSerializer
     permission_classes = [IsAuthenticated]
 
-    def delete(self, request, *args, **kwargs):
+    def patch(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         user = User.objects.get(id=self.request.user.id)
 
@@ -71,7 +74,7 @@ class UnFollowOrganizerAPIView(DestroyAPIView):
 
         if serializer.is_valid():
             try:
-                existing_follow = FollowOrganizer.objects.get(follower=user, following=organizer)
+                existing_follow = FollowOrganizer.objects.get(follower=user, following=organizer, is_followed=True)
             except ObjectDoesNotExist:
                 return Response({'status': "follow is not exist"})
             existing_follow.is_followed = False
@@ -80,13 +83,17 @@ class UnFollowOrganizerAPIView(DestroyAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class FollowersOrganizerAPIView(ListAPIView):
+class OrganizerListAPIView(ListAPIView):
     serializer_class = OrganizerSerializer
-    queryset = Organizer.objects.all()
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        organizers = self.get_queryset()
+        user = User.objects.get(id=self.request.user.id)
+        user_organizers = FollowOrganizer.objects.filter(follower=user, is_followed=True).values_list('following',
+                                                                                                      flat=True)
+        organizers = Organizer.objects.exclude(id__in=user_organizers)
+        print(organizers)
+
         data = []
         for organizer in organizers:
             followers = organizer.followers.count()
@@ -110,21 +117,29 @@ class SubscribersUserAPIView(ListAPIView):
         return Response(serializer.data)
 
 
-class FollowersEventAPIView(ListAPIView):
-    queryset = BaseEvent.objects.all()
-    serializer_class = EventSerializer
+class EventListAPIView(ListAPIView):
     permission_classes = [AllowAny]
 
     def get(self, request, *args, **kwargs):
-        events = self.get_queryset()
-        data = []
-        for event in events:
-            followers = event.users.count()
-            serializer = self.get_serializer(event)
-            data.append({'event_data': serializer.data, 'followers_count': followers})
+        data = {}
+        for event in BaseEvent.objects.all():
+            serializer_data = EventSerializer(event).data
+            serializer_data['followers'] = event.users.count()
+            data.setdefault('events', []).append(serializer_data)
+        for perEvent in PermanentEvent.objects.all():
+            serializer_data = PermanentEventSerializer(perEvent).data
+            serializer_data['followers'] = perEvent.users.count()
+            data.setdefault('perEvents', []).append(serializer_data)
+        for temEvent in TemporaryEvent.objects.all():
+            serializer_data = TemporaryEventSerializer(temEvent).data
+            serializer_data['followers'] = temEvent.users.count()
+            data.setdefault('temEvents', []).append(serializer_data)
 
-        sorted_data = sorted(data, key=lambda x: x['followers_count'], reverse=True)
-
+        sorted_data = {
+            'events': sorted(data['events'], key=itemgetter('followers'), reverse=True),
+            'perEvents': sorted(data['perEvents'], key=itemgetter('followers'), reverse=True),
+            'temEvents': sorted(data['temEvents'], key=itemgetter('followers'), reverse=True),
+        }
         return Response(sorted_data)
 
 
@@ -132,21 +147,17 @@ class FollowEventAPIView(CreateAPIView):
     serializer_class = FollowEventSerializer
     permission_classes = [IsAuthenticated]
 
-    def get_object(self):
-        user = User.objects.get(id=self.request.user.id)
-        return user
-
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         event_id = self.request.data.get('events')
         if serializer.is_valid():
-            user = self.get_object()
+            user = User.objects.get(id=self.request.user.id)
             event = BaseEvent.objects.get(id=event_id)
-            if user.events.get(id=event.id):
-                return Response({'status': 'Already following this event'}, status=status.HTTP_400_BAD_REQUEST)
-            user.events.add(event)
-            user.save()
-            return Response({'status': 'Followed to Event'}, status=status.HTTP_200_OK)
+            if not user.events.filter(id=event.id).exists():
+                user.events.add(event)
+                user.save()
+                return Response({'message': 'Followed to Event', 'is_followed': True}, status=status.HTTP_200_OK)
+            return Response({'status': 'Already following this event'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'status': 'Event not found'}, status=status.HTTP_404_NOT_FOUND)
 
 
@@ -163,7 +174,7 @@ class UnFollowEventAPIView(DestroyAPIView):
             try:
                 user.events.get(id=event.id)
                 user.events.remove(event)
-                return Response({'status': 'Unfollowed from Event'}, status=status.HTTP_200_OK)
+                return Response({'message': 'Unfollowed from Event', 'is_followed': False}, status=status.HTTP_200_OK)
             except ObjectDoesNotExist:
                 return Response({'status': 'Not following this event'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'status': 'event is not found'}, status=status.HTTP_400_BAD_REQUEST)

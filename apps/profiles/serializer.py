@@ -1,3 +1,5 @@
+from apps.events.models import BaseEvent, PermanentEvent, TemporaryEvent
+from apps.events.serializers import EventWeekSerializer, EventDateSerializer
 from apps.profiles.models import Organizer, FollowOrganizer
 
 from apps.profiles.models import User
@@ -43,3 +45,26 @@ class ChangePasswordSerializer(serializers.Serializer):
 
     class Meta:
         fields = ['new_password', 'confirming_new_password']
+
+
+class BaseEventSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = BaseEvent
+        fields = '__all__'
+
+
+class PermanentEventSerializer(serializers.ModelSerializer):
+    weeks = EventWeekSerializer(many=True)
+
+    class Meta:
+        model = PermanentEvent
+        fields = '__all__'
+
+
+class TemporaryEventSerializer(serializers.ModelSerializer):
+    dates = EventDateSerializer(many=True)
+
+    class Meta:
+        model = TemporaryEvent
+        fields = '__all__'
