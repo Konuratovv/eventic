@@ -12,7 +12,6 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 import os
 from datetime import timedelta
 from pathlib import Path
-from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -30,7 +29,7 @@ if DEBUG:
 else:
     from .production import *
 
-ALLOWED_HOSTS = ['0.0.0.0', 'localhost', '127.0.0.1', '34.83.117.144']
+ALLOWED_HOSTS = []
 
 # Application definition
 
@@ -47,14 +46,11 @@ INSTALLED_APPS = [
     'apps.profiles',
     'apps.users',
     'apps.events',
-    'apps.locations',
-    'apps.notifications',
 
     # my_libraries
     'rest_framework',
     "corsheaders",
     'rest_framework_simplejwt',
-    'drf_spectacular',
     'django_filters',
     'drf_multiple_model',
 ]
@@ -156,12 +152,8 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
-}
 
-EMAIL_BACKEND = config('EMAIL_BACKEND')
-EMAIL_HOST = config('EMAIL_HOST')
-EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
-EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
-EMAIL_HOST_USER = config('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend'
+    ],
+}
