@@ -1,5 +1,6 @@
 from django.db import models
 
+from apps.events.models import BaseEvent
 from apps.users.models import CustomUser
 
 
@@ -10,7 +11,6 @@ class BaseProfile(CustomUser):
 
 class User(BaseProfile):
     favourites = models.ManyToManyField('events.BaseEvent')
-    # organizer = models.ManyToManyField('profiles.Organizer')
     description = models.TextField(blank=True)
     first_name = models.CharField(max_length=155)
     last_name = models.CharField(max_length=255)
