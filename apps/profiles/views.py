@@ -135,12 +135,15 @@ class EventListAPIView(ListAPIView):
             serializer_data['followers'] = temEvent.users.count()
             data.setdefault('temEvents', []).append(serializer_data)
 
-        sorted_data = {
-            'events': sorted(data['events'], key=itemgetter('followers'), reverse=True),
-            'perEvents': sorted(data['perEvents'], key=itemgetter('followers'), reverse=True),
-            'temEvents': sorted(data['temEvents'], key=itemgetter('followers'), reverse=True),
-        }
-        return Response(sorted_data)
+        keys_to_check = ['events', 'perEvents', 'temEvents']
+        if all(key in data for key in keys_to_check):
+            sorted_data = {
+                'events': sorted(data.get('events'), key=itemgetter('followers'), reverse=True),
+                'perEvents': sorted(data.get('perEvents'), key=itemgetter('followers'), reverse=True),
+                'temEvents': sorted(data.get('temEvents'), key=itemgetter('followers'), reverse=True),
+            }
+            return Response(sorted_data)
+        return Response({'error': 'One or more event types event do not exist'})
 
 
 class FollowEventAPIView(CreateAPIView):
