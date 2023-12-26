@@ -1,5 +1,7 @@
+from django.db.models import Q
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.shortcuts import get_object_or_404
 
 from apps.events.models import BaseEvent
 from .models import  Notification
@@ -10,7 +12,6 @@ def send_post_created_notification(sender, instance, created, **kwargs):
 
         Notification.objects.create(
             event=instance
-
-
-
         )
+
+

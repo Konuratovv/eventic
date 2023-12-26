@@ -41,7 +41,7 @@ class BaseEvent(models.Model):
     # guest = models.ManyToManyField(User, on_delete=models.CASCADE)
     category = models.ManyToManyField(Category)
     interests = models.ManyToManyField(Interests)
-
+    organizer = models.ForeignKey('profiles.Organizer',on_delete=models.CASCADE,null=True, blank=True)
     objects = models.Manager()
 
 
