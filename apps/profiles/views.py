@@ -134,13 +134,25 @@ class EventListAPIView(ListAPIView):
             serializer_data = TemporaryEventSerializer(temEvent).data
             serializer_data['followers'] = temEvent.users.count()
             data.setdefault('temEvents', []).append(serializer_data)
+        for freeEvent in BaseEvent.objects.all():
+            if freeEvent.price == 0:
+                serializer_data = EventSerializer(freeEvent).data
+                serializer_data['followers'] = freeEvent.users.count()
+                data.setdefault('freeEvents', []).append(serializer_data)
+        for paidEvent in BaseEvent.objects.all():
+            if paidEvent.price > 0:
+                serializer_data = EventSerializer(paidEvent).data
+                serializer_data['followers'] = paidEvent.users.count()
+                data.setdefault('paidEvents', []).append(serializer_data)
 
-        keys_to_check = ['events', 'perEvents', 'temEvents']
+        keys_to_check = ['events', 'perEvents', 'temEvents', 'freeEvents', 'paidEvents']
         if all(key in data for key in keys_to_check):
             sorted_data = {
                 'events': sorted(data.get('events'), key=itemgetter('followers'), reverse=True),
                 'perEvents': sorted(data.get('perEvents'), key=itemgetter('followers'), reverse=True),
                 'temEvents': sorted(data.get('temEvents'), key=itemgetter('followers'), reverse=True),
+                'freeEvents': sorted(data.get('freeEvents'), key=itemgetter('followers'), reverse=True),
+                'paidEvents': sorted(data.get('paidEvents'), key=itemgetter('followers'), reverse=True),
             }
             return Response(sorted_data)
         return Response({'error': 'One or more event types event do not exist'})
