@@ -113,9 +113,10 @@ class DetailOrganizer(RetrieveAPIView):
     serializer_class = OrganizerSerializer
     queryset = Organizer.objects.all()
 
-    def get_object(self):
-        pass
-
+    def get(self, request, *args, **kwargs):
+        organizer = self.get_object()
+        serializer = self.get_serializer(organizer)
+        return Response(serializer.data)
 
 
 class SubscribersUserAPIView(ListAPIView):
@@ -185,7 +186,7 @@ class EventListAPIView(ListAPIView):
             {'type': 'paidEvents', 'events': sorted(data['paidEvents'], key=itemgetter('followers'), reverse=True)}
         ]
 
-        return Response(sorted_data)
+        return Response(sorted_data, status=status.HTTP_200_OK)
 
 
 class FollowEventAPIView(CreateAPIView):
@@ -236,9 +237,9 @@ class SendResetAPiView(UpdateAPIView):
         try:
             email = self.get_object().email
         except ObjectDoesNotExist:
-            return Response({'status': 'Invalid email'})
+            return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
         send_verification_mail(email)
-        return Response({'status': 'success'})
+        return Response({'status': 'success'}, status=status.HTTP_200_OK)
 
 
 class CheckResetCodeAPIView(UpdateAPIView):
@@ -280,7 +281,7 @@ class ChangePasswordAPIVIew(UpdateAPIView):
                 user.save()
                 return Response({'status': 'success'}, status=status.HTTP_200_OK)
             else:
-                return Response({'status': 'password is not match'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors)
 
 
@@ -300,22 +301,24 @@ class LastViewedEvents(ListCreateAPIView):
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=self.request.data)
-        if serializer.is_valid():
-            user = User.objects.get(id=self.request.user.id)
-            event = BaseEvent.objects.get(id=self.request.data.get('event'))
-            viewed_event = ViewedEvent.objects.filter(user=user, event=event)
-            if not viewed_event:
-                viewed_event = ViewedEvent.objects.create(user=user, event=event)
-                viewed_event.save()
-                user.last_viewed_events.add(viewed_event)
-                user.save()
-                return Response({'status': 'success'})
-            else:
-                # viewed_event.delete()
-                viewed_event = viewed_event[0]
-                viewed_event.timestamp = timezone.now()
-                viewed_event.save()
-                user.last_viewed_events.add(viewed_event)
-                user.save()
-                return Response({'status': 'success'})
-        return Response({'status': 'event is not found'})
+        try:
+            if serializer.is_valid():
+                user = User.objects.get(id=self.request.user.id)
+                event = BaseEvent.objects.get(id=self.request.data.get('event'))
+                viewed_event = ViewedEvent.objects.filter(user=user, event=event)
+                if not viewed_event:
+                    viewed_event = ViewedEvent.objects.create(user=user, event=event)
+                    viewed_event.save()
+                    user.last_viewed_events.add(viewed_event)
+                    user.save()
+                    return Response({'status': 'success'}, status=status.HTTP_200_OK)
+                else:
+                    viewed_event = viewed_event[0]
+                    viewed_event.timestamp = timezone.now()
+                    viewed_event.save()
+                    user.last_viewed_events.add(viewed_event)
+                    user.save()
+                    return Response({'status': 'success'}, status=status.HTTP_200_OK)
+            return Response({'status': 'event is not found'}, status=status.HTTP_400_BAD_REQUEST)
+        except ObjectDoesNotExist:
+            return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
