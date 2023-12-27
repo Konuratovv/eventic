@@ -7,7 +7,7 @@ from apps.users.models import CustomUser
 
 
 class BaseProfile(CustomUser):
-    city = models.CharField(max_length=150)
+    city = models.ForeignKey(City, on_delete=models.SET_NULL, **nb)
     profile_picture = models.ImageField()
 
 
@@ -18,14 +18,11 @@ class User(BaseProfile):
     last_name = models.CharField(max_length=255)
     events = models.ManyToManyField(BaseEvent, related_name='users')
     last_viewed_events = models.ManyToManyField('profiles.ViewedEvent', related_name='users')
-    city = models.ForeignKey(City, on_delete=models.SET_NULL, **nb)
-
 
 
 class Organizer(BaseProfile):
     title = models.CharField(max_length=255)
     back_img = models.ImageField()
-
 
 
 class FollowOrganizer(models.Model):
