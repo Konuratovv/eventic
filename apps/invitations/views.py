@@ -1,6 +1,6 @@
 from rest_framework.response import Response
-from apps.invitations.models import Invitation
-from apps.invitations.serializers import InviSerializer
+from apps.invitations import Invitation
+from apps.invitations import InviSerializer
 from rest_framework import mixins   
 from rest_framework.viewsets import GenericViewSet
 

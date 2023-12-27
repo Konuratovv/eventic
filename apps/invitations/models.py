@@ -1,5 +1,5 @@
 from django.db import models
-from apps.invitations.constance import CATEGORY_CHOICES
+from apps.invitations import CATEGORY_CHOICES
 # from apps.notification.constants import *
 # from apps..constants import DESTINATION_CHOICES
 
