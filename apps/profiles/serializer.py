@@ -21,6 +21,12 @@ class OrganizerSerializer(ModelSerializer):
         exclude = ['code']
 
 
+class DetailOrganizer(ModelSerializer):
+    class Meta:
+        model = Organizer
+
+
+
 class FollowOrganizerSerializer(ModelSerializer):
     class Meta:
         model = FollowOrganizer

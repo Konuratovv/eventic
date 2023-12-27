@@ -111,6 +111,10 @@ class OrganizerListAPIView(ListAPIView):
 
 class DetailOrganizer(RetrieveAPIView):
     serializer_class = OrganizerSerializer
+    queryset = Organizer.objects.all()
+
+    def get_object(self):
+        pass
 
 
 
