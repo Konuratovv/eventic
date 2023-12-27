@@ -109,6 +109,11 @@ class OrganizerListAPIView(ListAPIView):
         return Response(sorted_data)
 
 
+class DetailOrganizer(RetrieveAPIView):
+    serializer_class = OrganizerSerializer
+
+
+
 class SubscribersUserAPIView(ListAPIView):
     serializer_class = OrganizerSerializer
     queryset = FollowOrganizer.objects.all()
