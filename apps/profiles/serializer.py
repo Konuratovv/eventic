@@ -1,6 +1,6 @@
 from apps.events.models import BaseEvent, PermanentEvent, TemporaryEvent
 from apps.events.serializers import EventWeekSerializer, EventDateSerializer
-from apps.profiles.models import Organizer, FollowOrganizer
+from apps.profiles.models import Organizer, FollowOrganizer, ViewedEvent
 
 from apps.profiles.models import User
 from rest_framework.serializers import ModelSerializer
@@ -48,7 +48,6 @@ class ChangePasswordSerializer(serializers.Serializer):
 
 
 class BaseEventSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = BaseEvent
         fields = '__all__'
@@ -68,3 +67,17 @@ class TemporaryEventSerializer(serializers.ModelSerializer):
     class Meta:
         model = TemporaryEvent
         fields = '__all__'
+
+
+class LastViewedEventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ViewedEvent
+        fields = ['event']
+
+
+class LastViewedEventReadSerializer(serializers.ModelSerializer):
+    event = BaseEventSerializer(read_only=True)
+
+    class Meta:
+        model = ViewedEvent
+        fields = ['event']
