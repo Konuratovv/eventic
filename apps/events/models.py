@@ -25,14 +25,6 @@ class Interests(models.Model):
         return f"{self.name}"
 
 
-class EventDate(models.Model):
-    start_date = models.DateTimeField()
-    end_date = models.DateTimeField()
-
-    def __str__(self):
-        return f"{self.start_date}, {self.end_date}"
-
-
 class EventWeek(models.Model):
     week = models.CharField(max_length=150, verbose_name="Недели")
     slug = models.SlugField(max_length=80)
