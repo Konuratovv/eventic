@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from apps.invitations.models import Invitation
+from apps.invitations import Invitation
 
 class InviSerializer(serializers.ModelSerializer):
     class Meta:

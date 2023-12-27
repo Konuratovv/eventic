@@ -30,6 +30,6 @@ urlpatterns = [
     path('schema/', SpectacularAPIView.as_view(), name='schema'),
     path('', include('apps.notifications.urls')),
     path('', include('apps.invitations.urls')),
-    path('',include('apps.favourite.urls'))
+    path('', include('apps.favourite.urls'))
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
