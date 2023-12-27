@@ -11,7 +11,6 @@ from .models import Category, TemporaryEvent, PermanentEvent, EventWeek, EventDa
 #         "price"
 #     ]
 
-
 @admin.register(TemporaryEvent)
 class TemporaryEventAdmin(admin.ModelAdmin):
     list_display = [
@@ -105,3 +104,4 @@ class EventWeekAdmin(admin.ModelAdmin):
 @admin.register(EventDate)
 class EventDateAdmin(admin.ModelAdmin):
     pass
+

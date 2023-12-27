@@ -1,14 +1,17 @@
 from datetime import timedelta
+from django.utils import timezone
 
 from django.contrib.auth.hashers import make_password
 from rest_framework import status
-from rest_framework.generics import RetrieveAPIView, ListAPIView, CreateAPIView, DestroyAPIView, UpdateAPIView
+from rest_framework.generics import RetrieveAPIView, ListAPIView, CreateAPIView, DestroyAPIView, UpdateAPIView, \
+    ListCreateAPIView
 
 from apps.events.models import BaseEvent, TemporaryEvent, PermanentEvent
 from apps.events.serializers import EventSerializer
-from apps.profiles.models import User, Organizer, FollowOrganizer
+from apps.profiles.models import User, Organizer, FollowOrganizer, ViewedEvent
 from apps.profiles.serializer import ProfileSerializer, OrganizerSerializer, FollowOrganizerSerializer, \
-    FollowEventSerializer, ChangePasswordSerializer, PermanentEventSerializer, TemporaryEventSerializer
+    FollowEventSerializer, ChangePasswordSerializer, PermanentEventSerializer, TemporaryEventSerializer, \
+    LastViewedEventSerializer, LastViewedEventReadSerializer
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.core.exceptions import ObjectDoesNotExist
@@ -88,11 +91,13 @@ class OrganizerListAPIView(ListAPIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        user = User.objects.get(id=self.request.user.id)
+        try:
+            user = User.objects.get(id=self.request.user.id)
+        except ObjectDoesNotExist:
+            return Response({'status': 'user is not found'})
         user_organizers = FollowOrganizer.objects.filter(follower=user, is_followed=True).values_list('following',
                                                                                                       flat=True)
         organizers = Organizer.objects.exclude(id__in=user_organizers)
-        print(organizers)
 
         data = []
         for organizer in organizers:
@@ -121,41 +126,57 @@ class EventListAPIView(ListAPIView):
     permission_classes = [AllowAny]
 
     def get(self, request, *args, **kwargs):
-        data = {}
-        for event in BaseEvent.objects.all():
-            serializer_data = EventSerializer(event).data
-            serializer_data['followers'] = event.users.count()
-            data.setdefault('events', []).append(serializer_data)
-        for perEvent in PermanentEvent.objects.all():
-            serializer_data = PermanentEventSerializer(perEvent).data
-            serializer_data['followers'] = perEvent.users.count()
-            data.setdefault('perEvents', []).append(serializer_data)
-        for temEvent in TemporaryEvent.objects.all():
-            serializer_data = TemporaryEventSerializer(temEvent).data
-            serializer_data['followers'] = temEvent.users.count()
-            data.setdefault('temEvents', []).append(serializer_data)
-        for freeEvent in BaseEvent.objects.all():
-            if freeEvent.price == 0:
+        data = {
+            'events': [],
+            'perEvents': [],
+            'temEvents': [],
+            'freeEvents': [],
+            'paidEvents': [],
+        }
+        events = BaseEvent.objects.all()
+        if events.exists():
+            for event in events:
+                serializer_data = EventSerializer(event).data
+                serializer_data['followers'] = event.users.count()
+                data['events'].append(serializer_data)
+
+        perEvents = PermanentEvent.objects.all()
+        if perEvents.exists():
+            for perEvent in perEvents:
+                serializer_data = PermanentEventSerializer(perEvent).data
+                serializer_data['followers'] = perEvent.users.count()
+                data['perEvents'].append(serializer_data)
+
+        temEvents = TemporaryEvent.objects.all()
+        if temEvents.exists():
+            for temEvent in temEvents:
+                serializer_data = TemporaryEventSerializer(temEvent).data
+                serializer_data['followers'] = temEvent.users.count()
+                data['temEvents'].append(serializer_data)
+
+        freeEvents = BaseEvent.objects.filter(price=0)
+        if freeEvents.exists():
+            for freeEvent in freeEvents:
                 serializer_data = EventSerializer(freeEvent).data
                 serializer_data['followers'] = freeEvent.users.count()
-                data.setdefault('freeEvents', []).append(serializer_data)
-        for paidEvent in BaseEvent.objects.all():
-            if paidEvent.price > 0:
+                data['freeEvents'].append(serializer_data)
+
+        paidEvents = BaseEvent.objects.filter(price__gt=0)
+        if paidEvents.exists():
+            for paidEvent in paidEvents:
                 serializer_data = EventSerializer(paidEvent).data
                 serializer_data['followers'] = paidEvent.users.count()
-                data.setdefault('paidEvents', []).append(serializer_data)
+                data['paidEvents'].append(serializer_data)
 
-        keys_to_check = ['events', 'perEvents', 'temEvents', 'freeEvents', 'paidEvents']
-        if all(key in data for key in keys_to_check):
-            sorted_data = {
-                'events': sorted(data.get('events'), key=itemgetter('followers'), reverse=True),
-                'perEvents': sorted(data.get('perEvents'), key=itemgetter('followers'), reverse=True),
-                'temEvents': sorted(data.get('temEvents'), key=itemgetter('followers'), reverse=True),
-                'freeEvents': sorted(data.get('freeEvents'), key=itemgetter('followers'), reverse=True),
-                'paidEvents': sorted(data.get('paidEvents'), key=itemgetter('followers'), reverse=True),
-            }
-            return Response(sorted_data)
-        return Response({'error': 'One or more event types event do not exist'})
+        sorted_data = [
+            {'type': 'events', 'events': sorted(data['events'], key=itemgetter('followers'), reverse=True)},
+            {'type': 'perEvents', 'events': sorted(data['perEvents'], key=itemgetter('followers'), reverse=True)},
+            {'type': 'temEvents', 'events': sorted(data['temEvents'], key=itemgetter('followers'), reverse=True)},
+            {'type': 'freeEvents', 'events': sorted(data['freeEvents'], key=itemgetter('followers'), reverse=True)},
+            {'type': 'paidEvents', 'events': sorted(data['paidEvents'], key=itemgetter('followers'), reverse=True)}
+        ]
+
+        return Response(sorted_data)
 
 
 class FollowEventAPIView(CreateAPIView):
@@ -169,7 +190,7 @@ class FollowEventAPIView(CreateAPIView):
             user = User.objects.get(id=self.request.user.id)
             event = BaseEvent.objects.get(id=event_id)
             if not user.events.filter(id=event.id).exists():
-                user.events.add(event)
+                user.add(event)
                 user.save()
                 return Response({'message': 'Followed to Event', 'is_followed': True}, status=status.HTTP_200_OK)
             return Response({'status': 'Already following this event'}, status=status.HTTP_400_BAD_REQUEST)
@@ -208,7 +229,7 @@ class SendResetAPiView(UpdateAPIView):
         except ObjectDoesNotExist:
             return Response({'status': 'Invalid email'})
         send_verification_mail(email)
-        return Response({'message': 'Reset code have sent successfully'})
+        return Response({'status': 'success'})
 
 
 class CheckResetCodeAPIView(UpdateAPIView):
@@ -223,12 +244,12 @@ class CheckResetCodeAPIView(UpdateAPIView):
                 user.code = None
                 user.save()
             except ObjectDoesNotExist:
-                return Response({'status': 'Invalid code'})
+                return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
             else:
                 access_token = AccessToken.for_user(user)
                 access_token.set_exp(lifetime=timedelta(minutes=15))
                 return Response({'status': 'success', 'access_token': str(access_token)}, status=status.HTTP_200_OK)
-        return Response({'error': 'invalid serializer'})
+        return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ChangePasswordAPIVIew(UpdateAPIView):
@@ -248,7 +269,44 @@ class ChangePasswordAPIVIew(UpdateAPIView):
                 user = self.get_object()
                 user.password = make_password(confirming_new_password)
                 user.save()
-                return Response({'status': 'password changed successfully'}, status=status.HTTP_200_OK)
+                return Response({'status': 'success'}, status=status.HTTP_200_OK)
             else:
                 return Response({'status': 'password is not match'}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors)
+
+
+class LastViewedEvents(ListCreateAPIView):
+    serializer_class = LastViewedEventSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return LastViewedEventSerializer
+        else:
+            return LastViewedEventReadSerializer
+
+    def get_queryset(self):
+        user = User.objects.get(id=self.request.user.id)
+        return user.last_viewed_events.order_by('-timestamp')
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=self.request.data)
+        if serializer.is_valid():
+            user = User.objects.get(id=self.request.user.id)
+            event = BaseEvent.objects.get(id=self.request.data.get('event'))
+            viewed_event = ViewedEvent.objects.filter(user=user, event=event)
+            if not viewed_event:
+                viewed_event = ViewedEvent.objects.create(user=user, event=event)
+                viewed_event.save()
+                user.last_viewed_events.add(viewed_event)
+                user.save()
+                return Response({'status': 'success'})
+            else:
+                # viewed_event.delete()
+                viewed_event = viewed_event[0]
+                viewed_event.timestamp = timezone.now()
+                viewed_event.save()
+                user.last_viewed_events.add(viewed_event)
+                user.save()
+                return Response({'status': 'success'})
+        return Response({'status': 'event is not found'})
