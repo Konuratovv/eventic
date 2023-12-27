@@ -23,7 +23,7 @@ class Region(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.region_name}, {self.country.country_name}"
+        return f"{self.region_name},"
 
 class City(models.Model):
     region = models.ForeignKey(Region, on_delete=models.CASCADE)
@@ -35,7 +35,7 @@ class City(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.city_name}, {self.region.region_name}, {self.region.country.country_name}"
+        return f"{self.city_name},"
 
 class Adress(models.Model):
     city = models.ForeignKey(City, on_delete=models.CASCADE)
@@ -47,4 +47,4 @@ class Adress(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.adress_name}, {self.city.city_name}, {self.city.region.region_name}, {self.city.region.country.country_name}"
+        return f"{self.adress_name}"
