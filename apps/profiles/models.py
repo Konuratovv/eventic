@@ -15,6 +15,7 @@ class User(BaseProfile):
     first_name = models.CharField(max_length=155)
     last_name = models.CharField(max_length=255)
     events = models.ManyToManyField(BaseEvent, related_name='users')
+    last_viewed_events = models.ManyToManyField('profiles.ViewedEvent', related_name='users')
 
 
 
@@ -29,5 +30,16 @@ class FollowOrganizer(models.Model):
     following = models.ForeignKey(Organizer, related_name='followers', on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     is_followed = models.BooleanField(default=False)
+
+    objects = models.Manager()
+
+
+class ViewedEvent(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    event = models.ForeignKey(BaseEvent, on_delete=models.CASCADE)
+    timestamp = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-timestamp']
 
     objects = models.Manager()
