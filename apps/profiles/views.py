@@ -244,12 +244,12 @@ class CheckResetCodeAPIView(UpdateAPIView):
                 user.code = None
                 user.save()
             except ObjectDoesNotExist:
-                return Response({'status': 'Invalid code'})
+                return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
             else:
                 access_token = AccessToken.for_user(user)
                 access_token.set_exp(lifetime=timedelta(minutes=15))
                 return Response({'status': 'success', 'access_token': str(access_token)}, status=status.HTTP_200_OK)
-        return Response({'error': 'invalid serializer'})
+        return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ChangePasswordAPIVIew(UpdateAPIView):
@@ -269,7 +269,7 @@ class ChangePasswordAPIVIew(UpdateAPIView):
                 user = self.get_object()
                 user.password = make_password(confirming_new_password)
                 user.save()
-                return Response({'status': 'password changed successfully'}, status=status.HTTP_200_OK)
+                return Response({'status': 'success'}, status=status.HTTP_200_OK)
             else:
                 return Response({'status': 'password is not match'}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors)
