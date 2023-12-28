@@ -16,9 +16,10 @@ class ProfileSerializer(ModelSerializer):
 
 
 class OrganizerSerializer(ModelSerializer):
+
     class Meta:
         model = Organizer
-        exclude = ['code', 'password', 'groups', 'user_permissions']
+        exclude = ['code', 'password', 'groups', 'user_permissions', 'last_login', 'is_superuser', 'is_staff', 'is_verified']
 
 
 class FollowOrganizerSerializer(ModelSerializer):

@@ -12,12 +12,12 @@ class BaseProfile(CustomUser):
 
 
 class User(BaseProfile):
-    favourites = models.ManyToManyField('events.BaseEvent')
+    favourites = models.ManyToManyField('events.BaseEvent', blank=True)
     description = models.TextField(blank=True)
     first_name = models.CharField(max_length=155)
     last_name = models.CharField(max_length=255)
-    events = models.ManyToManyField(BaseEvent, related_name='users')
-    last_viewed_events = models.ManyToManyField('profiles.ViewedEvent', related_name='users')
+    events = models.ManyToManyField(BaseEvent, related_name='users', blank=True)
+    last_viewed_events = models.ManyToManyField('profiles.ViewedEvent', related_name='users', blank=True)
 
 
 class Organizer(BaseProfile):
