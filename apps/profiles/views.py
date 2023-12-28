@@ -1,6 +1,4 @@
 from datetime import timedelta
-
-from django.conf import settings
 from django.db.models import BooleanField, Case, When, Value
 from django.utils import timezone
 
