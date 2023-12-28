@@ -12,19 +12,18 @@ class BaseProfile(CustomUser):
 
 
 class User(BaseProfile):
-    favourites = models.ManyToManyField('events.BaseEvent')
+    favourites = models.ManyToManyField('events.BaseEvent', null=True, blank=True)
     description = models.TextField(blank=True)
     first_name = models.CharField(max_length=155)
     last_name = models.CharField(max_length=255)
-    events = models.ManyToManyField(BaseEvent, related_name='users')
-    last_viewed_events = models.ManyToManyField('profiles.ViewedEvent', related_name='users')
-    user_city = models.ForeignKey('locations.City',on_delete=models.CASCADE)
+    events = models.ManyToManyField(BaseEvent, related_name='users', null=True, blank=True)
+    last_viewed_events = models.ManyToManyField('profiles.ViewedEvent', related_name='users', null=True, blank=True)
+
 
 
 class Organizer(BaseProfile):
     title = models.CharField(max_length=255)
     back_img = models.ImageField()
-
 
 class FollowOrganizer(models.Model):
     follower = models.ForeignKey(User, related_name='following', on_delete=models.CASCADE)
