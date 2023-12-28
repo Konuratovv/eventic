@@ -18,6 +18,7 @@ class User(BaseProfile):
     last_name = models.CharField(max_length=255)
     events = models.ManyToManyField(BaseEvent, related_name='users')
     last_viewed_events = models.ManyToManyField('profiles.ViewedEvent', related_name='users')
+    user_city = models.ForeignKey('locations.City',on_delete=models.CASCADE)
 
 
 class Organizer(BaseProfile):

@@ -58,7 +58,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'drf_spectacular',
     'django_filters',
-    'drf_multiple_model',
+    # 'drf_multiple_model',
 ]
 
 MIDDLEWARE = [
