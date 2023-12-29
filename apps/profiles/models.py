@@ -12,6 +12,7 @@ class BaseProfile(CustomUser):
 
 
 class User(BaseProfile):
+    """ Если что я удалил все null=True у всех M2M полей. Улукбек """
     favourites = models.ManyToManyField('events.BaseEvent', blank=True)
     description = models.TextField(blank=True)
     first_name = models.CharField(max_length=155)

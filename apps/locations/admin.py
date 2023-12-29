@@ -1,9 +1,9 @@
 # Ваше приложение/account/admin.py
 from django.contrib import admin
-from .models import Country, Region, City, Adress
+from .models import Country, Region, City, Address
 
 class AdressInline(admin.StackedInline):
-    model = Adress
+    model = Address
     extra = 1
     fk_name = 'city'  # Указываем имя ForeignKey, к которому относится этот Inline
 
@@ -29,4 +29,4 @@ class CityAdmin(admin.ModelAdmin):
 admin.site.register(Country, CountryAdmin)
 admin.site.register(Region, RegionAdmin)
 admin.site.register(City, CityAdmin)
-admin.site.register(Adress)
+admin.site.register(Address)

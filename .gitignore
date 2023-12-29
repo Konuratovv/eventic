@@ -101,7 +101,7 @@ celerybeat-schedule.*
 
 
 #Environments
-#.env
+.env
 .venv
 env/
 venv/
@@ -142,3 +142,4 @@ GitHub.sublime-settings
 
 #migrations
 task.txt
+events_dump_no_slug.json

@@ -20,5 +20,5 @@ urlpatterns = [
     path('send_reset_code/', SendResetAPiView.as_view()),
     path('check_reset_code/', CheckResetCodeAPIView.as_view()),
     path('change_password/', ChangePasswordAPIVIew.as_view()),
-    path('last_viewed_events/', LastViewedEvents.as_view()),
+    path('last_viewed_events/', LastViewedEvents.as_view())
 ]

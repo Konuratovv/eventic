@@ -20,9 +20,6 @@ class EventRetrieveAPIView(generics.RetrieveAPIView):
         return Response(serializer.data)
 
 
-
-
-
 class EventListAPIView(generics.ListAPIView):
     """
     Вывод списка эвентов.
@@ -33,14 +30,14 @@ class EventListAPIView(generics.ListAPIView):
     serializer_class = EventSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_class = EventFilter
+
     def gs(self):
         queryset = super().get_queryset()
         user = User.objects.get(id=self.request.user.id)
-        # Примените фильтр для исключения завершившихся мероприятий
         queryset = queryset.filter(BaseEvent__event_city=user.city)
         return queryset
+
 
 class FreeEventListAPIView(generics.ListAPIView):
     serializer_class = EventSerializer
     queryset = BaseEvent.objects.filter(price=0.0)
-
