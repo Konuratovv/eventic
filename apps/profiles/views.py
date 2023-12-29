@@ -122,7 +122,7 @@ class SubscribersUserAPIView(ListAPIView):
         return Response(serializer.data)
 
 
-class EventListAPIView(ListAPIView):
+class EventTypeListAPIView(ListAPIView):
     permission_classes = [AllowAny]
 
     def get(self, request, *args, **kwargs):

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Category, EventDate, BaseEvent, EventWeek, Interests
+from .models import Category, EventDate, BaseEvent, EventWeek, Interests, EventBanner
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -27,11 +27,20 @@ class EventWeekSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class EventBannerSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = EventBanner
+        fields = '__all__'
+
+
 class EventSerializer(serializers.ModelSerializer):
     category = CategorySerializer(many=True)
     interests = InterestSerializer(many=True)
     event_dates = EventDateSerializer(many=True, source='temporaryevent.dates')
     event_weeks = EventWeekSerializer(many=True, source='permanentevent.weeks')
+    banners = EventBannerSerializer(many=True)
+    organizer = serializers.SerializerMethodField()
 
     class Meta:
         model = BaseEvent
@@ -40,13 +49,18 @@ class EventSerializer(serializers.ModelSerializer):
             'title',
             'description',
             'language',
-            'banner',
+            'banners',
             'price',
             'event_dates',
             'event_weeks',
             'category',
             'interests',
             'event_city',
-            'adress',
+            'address',
+            'organizer',
         )
 
+    def get_organizer(self, obj):
+        """ Получение заголовков организаторов """
+        return obj.organizer.title if obj.organizer else 'No Organizer'
+    get_organizer.short_description = 'Organizer'

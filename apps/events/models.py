@@ -41,14 +41,13 @@ class BaseEvent(models.Model):
     """ Базовая модель мероприятии """
     title = models.CharField(max_length=150, verbose_name="Заголовок")
     description = models.TextField(verbose_name="Описание")
-    banner = models.ImageField(upload_to='media/', verbose_name="Банер")
     language = models.CharField(max_length=100, verbose_name="Язык")
     price = models.DecimalField(max_digits=7, decimal_places=2, verbose_name="Цена")
     category = models.ManyToManyField(Category, verbose_name="Категория", related_name="category")
-    interests = models.ManyToManyField(Interests, verbose_name="Интересы", related_name="interests", null=True, blank=True)
+    interests = models.ManyToManyField(Interests, verbose_name="Интересы", related_name="interests")
     organizer = models.ForeignKey('profiles.Organizer', on_delete=models.CASCADE, null=True, blank=True)
-    city= models.ForeignKey('locations.City',on_delete=models.CASCADE)
-    adress = models.ForeignKey('locations.Adress',on_delete=models.CASCADE)
+    city = models.ForeignKey('locations.City', on_delete=models.CASCADE)
+    address = models.ForeignKey('locations.Address', on_delete=models.CASCADE)
     objects = models.Manager()
 
     class Meta:
@@ -57,6 +56,18 @@ class BaseEvent(models.Model):
 
     def __str__(self):
         return f'{self.title}'
+
+
+class EventBanner(models.Model):
+    event = models.ForeignKey(BaseEvent, verbose_name="Баннеры", on_delete=models.CASCADE, related_name="banners", null=True, blank=True)
+    image = models.ImageField(upload_to='media/banner')
+
+    class Meta:
+        verbose_name = 'Баннер'
+        verbose_name_plural = 'Баннеры'
+
+    def __str__(self):
+        return f"{self.event}"
 
 
 class EventDate(models.Model):

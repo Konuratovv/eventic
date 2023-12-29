@@ -1,23 +1,19 @@
 from django.contrib import admin
-from .models import Category, TemporaryEvent, PermanentEvent, EventWeek, EventDate, Interests, BaseEvent
+from .models import Category, TemporaryEvent, PermanentEvent, EventWeek, EventDate, Interests, BaseEvent, EventBanner
 
 
-# @admin.register(BaseEvent)
-# class BaseEventAdmin(admin.ModelAdmin):
-#     list_display = [
-#         "id",
-#         "title",
-#         "language",
-#         "price"
-#     ]
+class EventBannerInline(admin.TabularInline):
+    model = EventBanner
+    extra = 1
+
 
 @admin.register(TemporaryEvent)
 class TemporaryEventAdmin(admin.ModelAdmin):
+    inlines = [EventBannerInline]
     list_display = [
         "id",
         "title",
         "description",
-        # "banner",
         "language",
         "price",
         "get_categories",
@@ -44,11 +40,11 @@ class TemporaryEventAdmin(admin.ModelAdmin):
 
 @admin.register(PermanentEvent)
 class PermanentEventAdmin(admin.ModelAdmin):
+    inlines = [EventBannerInline]
     list_display = [
         "id",
         "title",
         "description",
-        # "banner",
         "language",
         "price",
         "get_categories",
