@@ -1,4 +1,6 @@
 from datetime import timedelta
+
+from django.db.models import BooleanField, Case, When, Value
 from django.utils import timezone
 
 from django.contrib.auth.hashers import make_password
@@ -50,6 +52,9 @@ class FollowOrganizerAPIView(CreateAPIView):
             return Response({'error': 'Organizer not found'}, status=status.HTTP_404_NOT_FOUND)
 
         if serializer.is_valid():
+            follow = FollowOrganizer.objects.filter(follower=user, following=organizer, is_followed=True)
+            if follow:
+                return Response({'status': 'you are already exists'})
             try:
                 follow = FollowOrganizer.objects.get(follower=user, following=organizer, is_followed=False)
                 follow.is_followed = True
@@ -96,9 +101,16 @@ class OrganizerListAPIView(ListAPIView):
             user = User.objects.get(id=self.request.user.id)
         except ObjectDoesNotExist:
             return Response({'status': 'user is not found'})
-        user_organizers = FollowOrganizer.objects.filter(follower=user, is_followed=True).values_list('following',
-                                                                                                      flat=True)
-        organizers = Organizer.objects.exclude(id__in=user_organizers)
+
+        is_follow_sub = FollowOrganizer.objects.filter(follower=user, is_followed=True).values('following__pk')
+        print(is_follow_sub)
+        organizers = Organizer.objects.annotate(
+            is_follow=Case(
+                When(id__in=is_follow_sub, then=Value(True)),
+                default=Value(False),
+                output_field=BooleanField()
+            )
+        )
 
         data = []
         for organizer in organizers:
