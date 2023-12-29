@@ -55,7 +55,7 @@ class EventSerializer(serializers.ModelSerializer):
             'event_weeks',
             'category',
             'interests',
-            'event_city',
+            'city',
             'address',
             'organizer',
         )
