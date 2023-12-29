@@ -6,4 +6,4 @@ class NotificationConfig(AppConfig):
     name = 'apps.notifications'
 
     def ready(self):
-        import apps.notifications.signals
+        pass

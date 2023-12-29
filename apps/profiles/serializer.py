@@ -16,9 +16,11 @@ class ProfileSerializer(ModelSerializer):
 
 
 class OrganizerSerializer(ModelSerializer):
+    is_follow = serializers.BooleanField(default=False)
+
     class Meta:
         model = Organizer
-        exclude = ['code']
+        exclude = ['code', 'password', 'groups', 'user_permissions', 'last_login', 'is_superuser', 'is_staff', 'is_verified']
 
 
 class FollowOrganizerSerializer(ModelSerializer):

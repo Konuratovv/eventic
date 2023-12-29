@@ -101,7 +101,7 @@ celerybeat-schedule.*
 
 
 #Environments
-.env
+#.env
 .venv
 env/
 venv/
@@ -140,5 +140,5 @@ GitHub.sublime-settings
 !.vscode/extensions.json
 .history
 
-migrations
+#migrations
 task.txt

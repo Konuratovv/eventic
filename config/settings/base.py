@@ -30,7 +30,7 @@ if DEBUG:
 else:
     from .production import *
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 
@@ -49,8 +49,6 @@ INSTALLED_APPS = [
     'apps.events',
     'apps.locations',
     'apps.notifications',
-    # 'apps.invitations',
-    # 'apps.favourite',
 
     # my_libraries
     'rest_framework',
@@ -58,7 +56,6 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'drf_spectacular',
     'django_filters',
-    # 'drf_multiple_model',
 ]
 
 MIDDLEWARE = [
@@ -119,7 +116,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'ru-RU'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Bishkek'
 
 USE_I18N = True
 
@@ -164,6 +161,8 @@ REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': [
         'django_filters.rest_framework.DjangoFilterBackend'
     ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    'PAGE_SIZE': 2,
 }
 
 EMAIL_BACKEND = config('EMAIL_BACKEND')
