@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+from django.conf import settings
 from django.db.models import BooleanField, Case, When, Value
 from django.utils import timezone
 
@@ -21,6 +22,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.utils.crypto import constant_time_compare
 from rest_framework_simplejwt.tokens import AccessToken
 from operator import itemgetter
+from django.contrib.sites.shortcuts import get_current_site
 
 from apps.users.serializer import CodeSerializer
 from apps.users.utils import send_verification_mail
@@ -103,7 +105,7 @@ class OrganizerListAPIView(ListAPIView):
             return Response({'status': 'user is not found'})
 
         is_follow_sub = FollowOrganizer.objects.filter(follower=user, is_followed=True).values('following__pk')
-        print(is_follow_sub)
+
         organizers = Organizer.objects.annotate(
             is_follow=Case(
                 When(id__in=is_follow_sub, then=Value(True)),
@@ -116,6 +118,7 @@ class OrganizerListAPIView(ListAPIView):
         for organizer in organizers:
             followers = organizer.followers.count()
             serializer_data = self.get_serializer(organizer).data
+
             data.append({"organizer_data": serializer_data, 'followers_count': followers})
 
         sorted_data = sorted(data, key=lambda x: x['followers_count'], reverse=True)
@@ -170,6 +173,9 @@ class EventTypeListAPIView(ListAPIView):
             for event in events_paginated:
                 serializer_data = EventSerializer(event).data
                 serializer_data['followers'] = event.users.count()
+
+                current_site = get_current_site(request).domain
+                serializer_data['banner'] = f"{current_site}{serializer_data['banner']}"
                 data['events'].append(serializer_data)
 
         perEvents = PermanentEvent.objects.all().order_by('id')
@@ -178,6 +184,9 @@ class EventTypeListAPIView(ListAPIView):
             for perEvent in per_events_paginated:
                 serializer_data = PermanentEventSerializer(perEvent).data
                 serializer_data['followers'] = perEvent.users.count()
+
+                current_site = get_current_site(request).domain
+                serializer_data['banner'] = f"{current_site}{serializer_data['banner']}"
                 data['perEvents'].append(serializer_data)
 
         temEvents = TemporaryEvent.objects.all().order_by('id')
@@ -186,6 +195,9 @@ class EventTypeListAPIView(ListAPIView):
             for temEvent in tem_events_paginated:
                 serializer_data = TemporaryEventSerializer(temEvent).data
                 serializer_data['followers'] = temEvent.users.count()
+
+                current_site = get_current_site(request).domain
+                serializer_data['banner'] = f"{current_site}{serializer_data['banner']}"
                 data['temEvents'].append(serializer_data)
 
         freeEvents = BaseEvent.objects.filter(price=0).order_by('id')
@@ -194,6 +206,9 @@ class EventTypeListAPIView(ListAPIView):
             for freeEvent in free_events_paginated:
                 serializer_data = EventSerializer(freeEvent).data
                 serializer_data['followers'] = freeEvent.users.count()
+
+                current_site = get_current_site(request).domain
+                serializer_data['banner'] = f"{current_site}{serializer_data['banner']}"
                 data['freeEvents'].append(serializer_data)
 
         paidEvents = BaseEvent.objects.filter(price__gt=0).order_by('id')
@@ -202,6 +217,9 @@ class EventTypeListAPIView(ListAPIView):
             for paidEvent in paid_events_paginated:
                 serializer_data = EventSerializer(paidEvent).data
                 serializer_data['followers'] = paidEvent.users.count()
+
+                current_site = get_current_site(request).domain
+                serializer_data['banner'] = f"{current_site}{serializer_data['banner']}"
                 data['paidEvents'].append(serializer_data)
 
         sorted_data = [
