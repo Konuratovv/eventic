@@ -175,7 +175,7 @@ class EventTypeListAPIView(ListAPIView):
                 serializer_data['followers'] = event.users.count()
 
                 current_site = get_current_site(request).domain
-                serializer_data['banner'] = f"{current_site}{serializer_data['banner']}"
+                serializer_data['banner'] = f"{request.scheme}://{current_site}{serializer_data['banner']}"
                 data['events'].append(serializer_data)
 
         perEvents = PermanentEvent.objects.all().order_by('id')
@@ -186,7 +186,7 @@ class EventTypeListAPIView(ListAPIView):
                 serializer_data['followers'] = perEvent.users.count()
 
                 current_site = get_current_site(request).domain
-                serializer_data['banner'] = f"{current_site}{serializer_data['banner']}"
+                serializer_data['banner'] = f"{request.scheme}://{current_site}{serializer_data['banner']}"
                 data['perEvents'].append(serializer_data)
 
         temEvents = TemporaryEvent.objects.all().order_by('id')
@@ -197,7 +197,7 @@ class EventTypeListAPIView(ListAPIView):
                 serializer_data['followers'] = temEvent.users.count()
 
                 current_site = get_current_site(request).domain
-                serializer_data['banner'] = f"{current_site}{serializer_data['banner']}"
+                serializer_data['banner'] = f"{request.scheme}://{current_site}{serializer_data['banner']}"
                 data['temEvents'].append(serializer_data)
 
         freeEvents = BaseEvent.objects.filter(price=0).order_by('id')
@@ -208,7 +208,7 @@ class EventTypeListAPIView(ListAPIView):
                 serializer_data['followers'] = freeEvent.users.count()
 
                 current_site = get_current_site(request).domain
-                serializer_data['banner'] = f"{current_site}{serializer_data['banner']}"
+                serializer_data['banner'] = f"{request.scheme}://{current_site}{serializer_data['banner']}"
                 data['freeEvents'].append(serializer_data)
 
         paidEvents = BaseEvent.objects.filter(price__gt=0).order_by('id')
@@ -219,7 +219,7 @@ class EventTypeListAPIView(ListAPIView):
                 serializer_data['followers'] = paidEvent.users.count()
 
                 current_site = get_current_site(request).domain
-                serializer_data['banner'] = f"{current_site}{serializer_data['banner']}"
+                serializer_data['banner'] = f"{request.scheme}://{current_site}{serializer_data['banner']}"
                 data['paidEvents'].append(serializer_data)
 
         sorted_data = [
