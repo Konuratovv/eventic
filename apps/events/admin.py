@@ -83,7 +83,7 @@ class InterestsAdmin(admin.ModelAdmin):
     list_display = [
         "id",
         "name",
-        "slug",
+
     ]
     prepopulated_fields = {'slug': ('name',)}
 
