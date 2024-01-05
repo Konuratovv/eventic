@@ -25,18 +25,6 @@ class Interests(models.Model):
         return f"{self.name}"
 
 
-class EventWeek(models.Model):
-    week = models.CharField(max_length=150, verbose_name="Недели")
-    slug = models.SlugField(max_length=80)
-
-    class Meta:
-        verbose_name = 'Неделя'
-        verbose_name_plural = 'Недели'
-
-    def __str__(self):
-        return f"{self.week}"
-
-
 class BaseEvent(models.Model):
     """ Базовая модель мероприятии """
     title = models.CharField(max_length=150, verbose_name="Заголовок")
@@ -46,9 +34,12 @@ class BaseEvent(models.Model):
     category = models.ManyToManyField(Category, verbose_name="Категория", related_name="category")
     interests = models.ManyToManyField(Interests, verbose_name="Интересы", related_name="interests")
     organizer = models.ForeignKey('profiles.Organizer', on_delete=models.CASCADE, null=True, blank=True)
-    city = models.ForeignKey('locations.City', on_delete=models.CASCADE)
     address = models.ForeignKey('locations.Address', on_delete=models.CASCADE)
     objects = models.Manager()
+
+    @property
+    def city(self):
+        return self.address.city
 
     class Meta:
         verbose_name = 'Мероприятие'
@@ -70,22 +61,8 @@ class EventBanner(models.Model):
         return f"{self.event}"
 
 
-class EventDate(models.Model):
-    """ Дата мероприятия """
-    start_date = models.DateTimeField()
-    end_date = models.DateTimeField()
-
-    class Meta:
-        verbose_name = 'Дата мероприятия'
-        verbose_name_plural = 'Даты мероприятии'
-
-    def __str__(self):
-        return f"{self.start_date}, {self.end_date}"
-
-
 class TemporaryEvent(BaseEvent):
     """ Временное мероприятие наследуется от BaseEvent """
-    dates = models.ManyToManyField(EventDate, verbose_name="Временное мероприятие", related_name="temporaryevent")
 
     class Meta:
         verbose_name = 'Временное мероприятие'
@@ -97,7 +74,6 @@ class TemporaryEvent(BaseEvent):
 
 class PermanentEvent(BaseEvent):
     """ Постоянное мероприятие наследуется от BaseEvent """
-    weeks = models.ManyToManyField(EventWeek, verbose_name="Постоянное мероприятие", related_name="permanentevent")
 
     class Meta:
         verbose_name = 'Постоянное мероприятие'
@@ -105,3 +81,30 @@ class PermanentEvent(BaseEvent):
 
     def __str__(self):
         return f"{self.weeks}"
+
+
+class EventWeek(models.Model):
+    perm = models.ForeignKey(PermanentEvent, on_delete=models.CASCADE, related_name='weeks')
+    week = models.CharField(max_length=150, verbose_name="Недели")
+    slug = models.SlugField(max_length=80)
+
+    class Meta:
+        verbose_name = 'Неделя'
+        verbose_name_plural = 'Недели'
+
+    def __str__(self):
+        return f"{self.week}"
+
+
+class EventDate(models.Model):
+    """ Дата мероприятия """
+    temp = models.ForeignKey(TemporaryEvent, on_delete=models.CASCADE, related_name='dates')
+    start_date = models.DateTimeField()
+    end_date = models.DateTimeField()
+
+    class Meta:
+        verbose_name = 'Дата мероприятия'
+        verbose_name_plural = 'Даты мероприятии'
+
+    def __str__(self):
+        return f"{self.start_date}, {self.end_date}"
