@@ -7,9 +7,19 @@ class EventBannerInline(admin.TabularInline):
     extra = 1
 
 
+class EventDateInline(admin.TabularInline):
+    model = EventDate
+    extra = 1
+
+
+class EventWeekInline(admin.TabularInline):
+    model = EventWeek
+    extra = 1
+
+
 @admin.register(TemporaryEvent)
 class TemporaryEventAdmin(admin.ModelAdmin):
-    inlines = [EventBannerInline]
+    inlines = [EventBannerInline, EventDateInline]
     list_display = [
         "id",
         "title",
@@ -40,7 +50,7 @@ class TemporaryEventAdmin(admin.ModelAdmin):
 
 @admin.register(PermanentEvent)
 class PermanentEventAdmin(admin.ModelAdmin):
-    inlines = [EventBannerInline]
+    inlines = [EventBannerInline, EventWeekInline]
     list_display = [
         "id",
         "title",
