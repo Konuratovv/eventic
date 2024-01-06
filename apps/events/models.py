@@ -68,8 +68,8 @@ class TemporaryEvent(BaseEvent):
         verbose_name = 'Временное мероприятие'
         verbose_name_plural = 'Временое мероприятия'
 
-    def __str__(self):
-        return f"{self.dates}"
+    # def __str__(self):
+    #     return f"{self.dates}"
 
 
 class PermanentEvent(BaseEvent):
@@ -79,8 +79,8 @@ class PermanentEvent(BaseEvent):
         verbose_name = 'Постоянное мероприятие'
         verbose_name_plural = 'Постоянные мероприятия'
 
-    def __str__(self):
-        return f"{self.weeks}"
+    # def __str__(self):
+    #     return f"{self.weeks}"
 
 
 class EventWeek(models.Model):

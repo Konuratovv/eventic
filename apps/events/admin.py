@@ -21,7 +21,6 @@ class EventWeekInline(admin.TabularInline):
 class TemporaryEventAdmin(admin.ModelAdmin):
     inlines = [EventBannerInline, EventDateInline]
     list_display = [
-        "id",
         "title",
         "description",
         "language",
@@ -29,6 +28,7 @@ class TemporaryEventAdmin(admin.ModelAdmin):
         "get_categories",
         "get_interests",
         "get_dates",
+        "id",
     ]
 
     def get_categories(self, obj):
