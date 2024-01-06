@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'apps.events',
     'apps.locations',
     'apps.notifications',
+    'apps.favorite',
 
     # my_libraries
     'rest_framework',

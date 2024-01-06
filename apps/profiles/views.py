@@ -11,7 +11,7 @@ from rest_framework.generics import RetrieveAPIView, ListAPIView, CreateAPIView,
 from rest_framework.pagination import PageNumberPagination
 
 from apps.events.models import BaseEvent, TemporaryEvent, PermanentEvent
-from apps.events.serializers import EventSerializer
+from apps.events.serializers import BaseEventSerializer
 from apps.profiles.models import User, Organizer, FollowOrganizer, ViewedEvent
 from apps.profiles.serializer import ProfileSerializer, OrganizerSerializer, FollowOrganizerSerializer, \
     FollowEventSerializer, ChangePasswordSerializer, PermanentEventSerializer, TemporaryEventSerializer, \
@@ -171,7 +171,7 @@ class EventTypeListAPIView(ListAPIView):
         if events:
             events_paginated = self.paginate_queryset(events)
             for event in events_paginated:
-                serializer_data = EventSerializer(event).data
+                serializer_data = BaseEventSerializer(event).data
                 serializer_data['followers'] = event.users.count()
 
                 if serializer_data['banner'] is not None:
@@ -207,7 +207,7 @@ class EventTypeListAPIView(ListAPIView):
         if freeEvents:
             free_events_paginated = self.paginate_queryset(freeEvents)
             for freeEvent in free_events_paginated:
-                serializer_data = EventSerializer(freeEvent).data
+                serializer_data = BaseEventSerializer(freeEvent).data
                 serializer_data['followers'] = freeEvent.users.count()
 
                 if serializer_data['banner'] is not None:
@@ -219,7 +219,7 @@ class EventTypeListAPIView(ListAPIView):
         if paidEvents:
             paid_events_paginated = self.paginate_queryset(paidEvents)
             for paidEvent in paid_events_paginated:
-                serializer_data = EventSerializer(paidEvent).data
+                serializer_data = BaseEventSerializer(paidEvent).data
                 serializer_data['followers'] = paidEvent.users.count()
 
                 if serializer_data['banner'] is not None:
