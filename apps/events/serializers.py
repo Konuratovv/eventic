@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import Category, EventDate, BaseEvent, EventWeek, Interests, EventBanner, TemporaryEvent, PermanentEvent
+from .models import Category, EventDate, BaseEvent, EventWeek, Interests, EventBanner, TemporaryEvent, PermanentEvent, \
+    EventTime
 
 from ..locations.models import Address
 
@@ -19,6 +20,12 @@ class InterestSerializer(serializers.ModelSerializer):
 class EventDateSerializer(serializers.ModelSerializer):
     class Meta:
         model = EventDate
+        fields = "__all__"
+
+
+class EventTimeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EventTime
         fields = "__all__"
 
 
@@ -50,6 +57,7 @@ class BaseEventSerializer(serializers.ModelSerializer):
     address = AddressSerializer(read_only=True)
     event_dates = EventDateSerializer(many=True, source='temporaryevent.dates')
     event_weeks = EventWeekSerializer(many=True, source='permanentevent.weeks')
+    event_times = EventTimeSerializer(many=True, source='permanentevent.times')
 
     class Meta:
         model = BaseEvent
@@ -61,6 +69,7 @@ class BaseEventSerializer(serializers.ModelSerializer):
             'banners',
             'event_dates',
             'event_weeks',
+            'event_times',
             'price',
             'category',
             'interests',
@@ -68,19 +77,3 @@ class BaseEventSerializer(serializers.ModelSerializer):
             'address',
             'address_city',
         )
-
-
-# class TemporaryEventSerializer(BaseEventSerializer):
-#     dates = EventDateSerializer(many=True, read_only=True, source='dates')
-#
-#     class Meta(BaseEventSerializer.Meta):
-#         model = TemporaryEvent
-#         fields = BaseEventSerializer.Meta.fields + ('dates',)
-#
-#
-# class PermanentEventSerializer(BaseEventSerializer):
-#     weeks = EventWeekSerializer(many=True, read_only=True, source='weeks')
-#
-#     class Meta(BaseEventSerializer.Meta):
-#         model = PermanentEvent
-#         fields = BaseEventSerializer.Meta.fields + ('weeks',)
