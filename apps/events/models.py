@@ -88,6 +88,9 @@ class EventWeek(models.Model):
     week = models.CharField(max_length=150, verbose_name="Недели")
     slug = models.SlugField(max_length=80)
 
+    start_time = models.TimeField()
+    end_time = models.TimeField(blank=True)
+
     class Meta:
         verbose_name = 'Неделя'
         verbose_name_plural = 'Недели'
