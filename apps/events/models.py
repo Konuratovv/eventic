@@ -1,5 +1,7 @@
 from django.db import models
 
+from apps.base.models import nb
+
 
 class Category(models.Model):
     name = models.CharField(max_length=150, verbose_name="Категория")
@@ -87,6 +89,8 @@ class EventWeek(models.Model):
     perm = models.ForeignKey(PermanentEvent, on_delete=models.CASCADE, related_name='weeks')
     week = models.CharField(max_length=150, verbose_name="Недели")
     slug = models.SlugField(max_length=80)
+    start_time = models.TimeField()
+    end_time = models.TimeField(**nb)
 
     class Meta:
         verbose_name = 'Неделя'
