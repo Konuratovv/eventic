@@ -1,11 +1,19 @@
+from datetime import timedelta
+
+from django.contrib.auth.hashers import make_password
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status
+from rest_framework_simplejwt.tokens import AccessToken
+from django.utils.crypto import constant_time_compare
+from rest_framework.response import Response
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework_simplejwt.views import TokenObtainPairView
+
 from rest_framework.generics import CreateAPIView, UpdateAPIView
 from apps.profiles.models import User
 from apps.users.models import CustomUser
+from apps.profiles.serializer import SendResetCodeSerializer, ChangePasswordSerializer
 from apps.users.serializer import RegisterSerializer, CodeSerializer, SendCodeSerializer
-from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework.response import Response
 from apps.users.utils import send_verification_mail
 
 
@@ -26,7 +34,7 @@ class LoginViewSet(TokenObtainPairView):
     permission_classes = [AllowAny]
 
 
-class SendCodeAPIView(UpdateAPIView):
+class SendEmailCodeAPIView(UpdateAPIView):
     serializer_class = SendCodeSerializer
     permission_classes = [IsAuthenticated]
 
@@ -37,10 +45,10 @@ class SendCodeAPIView(UpdateAPIView):
     def patch(self, request, *args, **kwargs):
         email = self.get_object().email
         send_verification_mail(email)
-        return Response({'message': 'Verify code have sent successfully'})
+        return Response({'status': 'success'})
 
 
-class VerifyAPIView(UpdateAPIView):
+class VerifyEmailAPIView(UpdateAPIView):
     serializer_class = CodeSerializer
     permission_classes = [IsAuthenticated]
 
@@ -55,8 +63,68 @@ class VerifyAPIView(UpdateAPIView):
             code = serializer.validated_data['code']
             if user.code == code:
                 user.is_verified = True
+                user.code = None
                 user.save()
                 return Response({'status': 'success'})
             return Response({'status': 'error'})
 
         return Response({'message': 'Serializer is not valid'})
+
+
+class SendResetAPiView(UpdateAPIView):
+    serializer_class = SendResetCodeSerializer
+
+    def get_object(self):
+        user = CustomUser.objects.get(email=self.request.data.get('email'))
+        return user
+
+    def patch(self, request, *args, **kwargs):
+        try:
+            email = self.get_object().email
+        except ObjectDoesNotExist:
+            return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
+        send_verification_mail(email)
+        return Response({'status': 'success'}, status=status.HTTP_200_OK)
+
+
+class CheckResetCodeAPIView(UpdateAPIView):
+    serializer_class = CodeSerializer
+
+    def patch(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            code = self.request.data.get('code')
+            try:
+                user = CustomUser.objects.get(code=code)
+                user.code = None
+                user.save()
+            except ObjectDoesNotExist:
+                return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                access_token = AccessToken.for_user(user)
+                access_token.set_exp(lifetime=timedelta(minutes=5))
+                return Response({'status': 'success', 'access_token': str(access_token)}, status=status.HTTP_200_OK)
+        return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ChangePasswordAPIVIew(UpdateAPIView):
+    serializer_class = ChangePasswordSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        user = User.objects.get(id=self.request.user.id)
+        return user
+
+    def patch(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=self.request.data)
+        if serializer.is_valid():
+            new_password = self.request.data.get('new_password')
+            confirming_new_password = self.request.data.get('confirming_new_password')
+            if constant_time_compare(new_password, confirming_new_password):
+                user = self.get_object()
+                user.password = make_password(confirming_new_password)
+                user.save()
+                return Response({'status': 'success'}, status=status.HTTP_200_OK)
+            else:
+                return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors)

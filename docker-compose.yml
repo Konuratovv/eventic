@@ -49,8 +49,19 @@ services:
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
       - static_volume:/usr/src/app/static
       - media_volume:/usr/src/app/media
+      - etc-letsencrypt:/etc/letsencrypt
     depends_on:
       - api
+
+  certbot:
+    image: certbot/certbot
+    depends_on:
+      - nginx
+    volumes:
+      - etc-letsencrypt:/etc/letsencrypt
+      - www-html:/var/www/html
+    command: certonly --webroot --webroot-path=/var/www/html --email bekbolsuntk@gmail.com --agree-tos --no-eff-email -d 34.83.117.144
+
 
 #  redis:
 #    image: redis
@@ -72,3 +83,5 @@ volumes:
   postgres_data:
   static_volume:
   media_volume:
+  etc-letsencrypt:
+  www-html:
