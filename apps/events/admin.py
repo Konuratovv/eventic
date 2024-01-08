@@ -15,6 +15,7 @@ class EventDateInline(admin.TabularInline):
 
 class EventWeekInline(admin.TabularInline):
     model = EventWeek
+    prepopulated_fields = {'slug': ('week',)}
     extra = 1
 
 

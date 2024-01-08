@@ -110,6 +110,7 @@ class EventWeek(models.Model):
     class Meta:
         verbose_name = 'Неделя'
         verbose_name_plural = 'Недели'
+        unique_together = ['perm', 'week']
 
     def __str__(self):
         return f"{self.week}"
