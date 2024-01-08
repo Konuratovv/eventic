@@ -1,6 +1,5 @@
 from django.contrib import admin
-from .models import Category, TemporaryEvent, PermanentEvent, EventWeek, EventDate, Interests, BaseEvent, EventBanner, \
-    EventTime
+from .models import Category, TemporaryEvent, PermanentEvent, EventWeek, EventDate, Interests, BaseEvent, EventBanner
 
 
 class EventBannerInline(admin.TabularInline):
@@ -13,14 +12,9 @@ class EventDateInline(admin.TabularInline):
     extra = 1
 
 
-class EventWeekInline(admin.TabularInline):
+class EventWeekInline(admin.StackedInline):
     model = EventWeek
     prepopulated_fields = {'slug': ('week',)}
-    extra = 1
-
-
-class EventTimeStart(admin.TabularInline):
-    model = EventTime
     extra = 1
 
 
@@ -57,7 +51,7 @@ class TemporaryEventAdmin(admin.ModelAdmin):
 
 @admin.register(PermanentEvent)
 class PermanentEventAdmin(admin.ModelAdmin):
-    inlines = [EventBannerInline, EventWeekInline, EventTimeStart]
+    inlines = [EventBannerInline, EventWeekInline]
     list_display = [
         "id",
         "title",

@@ -11,7 +11,7 @@ from ..profiles.models import User
 
 
 class EventRetrieveAPIView(generics.RetrieveAPIView):
-    """ Вывод Eventa по id """
+    """ Вывод эвента по id """
     serializer_class = BaseEventSerializer
 
     def get(self, request, pk):
@@ -24,7 +24,8 @@ class EventListAPIView(generics.ListAPIView):
     """
     Вывод списка эвентов.
     Фильтрация по категориям.
-    Фильтрация по дате евентов работает пока условно.
+    Фильтрация по интересам.
+    Фильтрация по диапазону дат.
     """
     queryset = BaseEvent.objects.all()
     serializer_class = BaseEventSerializer
@@ -39,5 +40,9 @@ class EventListAPIView(generics.ListAPIView):
 
 
 class FreeEventListAPIView(generics.ListAPIView):
+    """
+    Фильтрация по бесплатным эвентам.
+    Выведутся все эвенты у которых price == 0.0
+    """
     serializer_class = BaseEventSerializer
     queryset = BaseEvent.objects.filter(price=0.0)
