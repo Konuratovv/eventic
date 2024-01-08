@@ -48,14 +48,14 @@ services:
     depends_on:
       - api
 
-#  certbot:
-#    image: certbot/certbot
-#    depends_on:
-#      - nginx
-#    volumes:
-#      - etc-letsencrypt:/etc/letsencrypt
-#      - www-html:/var/www/html
-#    command: certonly --webroot --webroot-path=/var/www/html --email bekbolsuntk@gmail.com --agree-tos --no-eff-email -d 34.83.117.144
+  certbot:
+    image: certbot/certbot
+    depends_on:
+      - nginx
+    volumes:
+      - etc-letsencrypt:/etc/letsencrypt
+      - www-html:/var/www/html
+    command: certonly --webroot --webroot-path=/var/www/html --email bekbolsuntk@gmail.com --agree-tos --no-eff-email -d eventic.pp.ua
 
 
 #  redis:
