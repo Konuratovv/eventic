@@ -32,11 +32,11 @@ class EventListAPIView(generics.ListAPIView):
     filter_backends = (DjangoFilterBackend,)
     filterset_class = EventFilter
 
-    def gs(self):
-        queryset = super().get_queryset()
-        user = User.objects.get(id=self.request.user.id)
-        queryset = queryset.filter(BaseEvent__event_city=user.city)
-        return queryset
+    # def gs(self):
+    #     queryset = super().get_queryset()
+    #     user = User.objects.get(id=self.request.user.id)
+    #     queryset = queryset.filter(BaseEvent__event_city=user.city)
+    #     return queryset
 
 
 class FreeEventListAPIView(generics.ListAPIView):

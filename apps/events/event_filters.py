@@ -11,8 +11,16 @@ class EventFilter(filters.FilterSet):
     category = CharFilterInFilter(field_name='category__name', lookup_expr='in')
     interests = CharFilterInFilter(field_name='interests__name', lookup_expr='in')
     date_range = filters.DateFromToRangeFilter(field_name='temporaryevent__dates__start_date')
+    address = CharFilterInFilter(field_name='address__address_name', lookup_expr='in')
 
     class Meta:
         model = BaseEvent
-        fields = ['category', 'interests', 'date_range']
+        fields = ['category', 'interests', 'date_range', 'address']
+
+class LocationFilter(filters.FilterSet):
+
+
+    class Meta:
+        model = BaseEvent
+        fields = ['address']
 
