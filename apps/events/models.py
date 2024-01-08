@@ -4,6 +4,7 @@ from apps.base.models import nb
 
 
 class Category(models.Model):
+    """ Категории мероприятии """
     name = models.CharField(max_length=150, verbose_name="Категория")
     slug = models.SlugField(max_length=80)
 
@@ -16,6 +17,7 @@ class Category(models.Model):
 
 
 class Interests(models.Model):
+    """ Интересы мероприятии """
     name = models.CharField(max_length=150, verbose_name="Интересы")
     slug = models.SlugField(max_length=80)
 
@@ -35,8 +37,9 @@ class BaseEvent(models.Model):
     price = models.DecimalField(max_digits=7, decimal_places=2, verbose_name="Цена")
     category = models.ManyToManyField(Category, verbose_name="Категория", related_name="category")
     interests = models.ManyToManyField(Interests, verbose_name="Интересы", related_name="interests")
-    organizer = models.ForeignKey('profiles.Organizer', on_delete=models.CASCADE, null=True, blank=True)
-    address = models.ForeignKey('locations.Address', on_delete=models.CASCADE)
+    organizer = models.ForeignKey('profiles.Organizer', on_delete=models.CASCADE, null=True, blank=True,
+                                  verbose_name='Организатор мероприятия')
+    address = models.ForeignKey('locations.Address', on_delete=models.CASCADE, verbose_name='Адрес')
     objects = models.Manager()
 
     @property
@@ -52,8 +55,10 @@ class BaseEvent(models.Model):
 
 
 class EventBanner(models.Model):
-    event = models.ForeignKey(BaseEvent, verbose_name="Баннеры", on_delete=models.CASCADE, related_name="banners", null=True, blank=True)
-    image = models.ImageField(upload_to='media/banner')
+    """ Модель Баннера связана с BaseEvent """
+    event = models.ForeignKey(BaseEvent, verbose_name="Баннеры", on_delete=models.CASCADE,
+                              related_name="banners", null=True, blank=True)
+    image = models.ImageField(verbose_name="Баннер", upload_to='media/banner')
 
     class Meta:
         verbose_name = 'Баннер'
@@ -70,9 +75,6 @@ class TemporaryEvent(BaseEvent):
         verbose_name = 'Временное мероприятие'
         verbose_name_plural = 'Временое мероприятия'
 
-    # def __str__(self):
-    #     return f"{self.dates}"
-
 
 class PermanentEvent(BaseEvent):
     """ Постоянное мероприятие наследуется от BaseEvent """
@@ -81,12 +83,29 @@ class PermanentEvent(BaseEvent):
         verbose_name = 'Постоянное мероприятие'
         verbose_name_plural = 'Постоянные мероприятия'
 
-    # def __str__(self):
-    #     return f"{self.weeks}"
+
+class EventTime(models.Model):
+    """
+    Модель времени начала и конца постоянного мероприятития,
+    связана с PermanentEvent
+    """
+    perm = models.ForeignKey(PermanentEvent, on_delete=models.CASCADE, related_name='times',
+                             verbose_name='Выберите постоянное событие')
+    start_time = models.TimeField(verbose_name='Время начала события')
+    end_time = models.TimeField(verbose_name='Время окончания события', null=True, blank=True)
+
+    class Meta:
+        verbose_name = 'Время'
+        verbose_name_plural = 'Время'
+
+    def __str__(self):
+        return f"{self.start_time}, {self.end_time}"
 
 
 class EventWeek(models.Model):
-    perm = models.ForeignKey(PermanentEvent, on_delete=models.CASCADE, related_name='weeks')
+    """"""
+    perm = models.ForeignKey(PermanentEvent, on_delete=models.CASCADE, related_name='weeks',
+                             verbose_name='Выберите постоянное событие')
     week = models.CharField(max_length=150, verbose_name="Недели")
     slug = models.SlugField(max_length=80)
     start_time = models.TimeField()
@@ -95,20 +114,22 @@ class EventWeek(models.Model):
     class Meta:
         verbose_name = 'Неделя'
         verbose_name_plural = 'Недели'
+        unique_together = ['perm', 'week']
 
     def __str__(self):
         return f"{self.week}"
 
 
 class EventDate(models.Model):
-    """ Дата мероприятия """
-    temp = models.ForeignKey(TemporaryEvent, on_delete=models.CASCADE, related_name='dates')
-    start_date = models.DateTimeField()
-    end_date = models.DateTimeField()
+    """ Дата и время, временного мероприятия связана с TemporaryEvent """
+    temp = models.ForeignKey(TemporaryEvent, on_delete=models.CASCADE, related_name='dates',
+                             verbose_name='Выберите временное событие')
+    start_date = models.DateTimeField(verbose_name='Дата начала')
+    end_date = models.DateTimeField(verbose_name='Дата окончания')
 
     class Meta:
-        verbose_name = 'Дата мероприятия'
-        verbose_name_plural = 'Даты мероприятии'
+        verbose_name = 'Дата и время мероприятия'
+        verbose_name_plural = 'Даты и время мероприятий'
 
     def __str__(self):
         return f"{self.start_date}, {self.end_date}"

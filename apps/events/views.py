@@ -4,8 +4,8 @@ from rest_framework.response import Response
 
 from django_filters.rest_framework import DjangoFilterBackend
 
-from .models import BaseEvent
-from .serializers import BaseEventSerializer
+from .models import BaseEvent, Category
+from .serializers import BaseEventSerializer, CategorySerializer
 from .event_filters import EventFilter
 from ..profiles.models import User
 
