@@ -253,7 +253,7 @@ class FollowEventAPIView(CreateAPIView):
             user = User.objects.get(id=self.request.user.id)
             event = BaseEvent.objects.get(id=event_id)
             if not user.events.filter(id=event.id).exists():
-                user.add(event)
+                user.events.add(event)
                 user.save()
                 return Response({'message': 'Followed to Event', 'is_followed': True}, status=status.HTTP_200_OK)
             return Response({'status': 'Already following this event'}, status=status.HTTP_400_BAD_REQUEST)
