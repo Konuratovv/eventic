@@ -140,6 +140,6 @@ GitHub.sublime-settings
 !.vscode/extensions.json
 .history
 
-#migrations
+migrations
 task.txt
 events_dump_no_slug.json
