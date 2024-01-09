@@ -1,30 +1,17 @@
-from datetime import timedelta
-
-from django.conf import settings
 from django.db.models import BooleanField, Case, When, Value
 from django.utils import timezone
 
-from django.contrib.auth.hashers import make_password
 from rest_framework import status
 from rest_framework.generics import RetrieveAPIView, ListAPIView, CreateAPIView, DestroyAPIView, UpdateAPIView, \
     ListCreateAPIView
-from rest_framework.pagination import PageNumberPagination
 
 from apps.events.models import BaseEvent
 from apps.profiles.models import User, Organizer, FollowOrganizer, ViewedEvent
 from apps.profiles.serializer import ProfileSerializer, OrganizerSerializer, FollowOrganizerSerializer, \
-    FollowEventSerializer, ChangePasswordSerializer, LastViewedEventSerializer, LastViewedEventReadSerializer
+    FollowEventSerializer, LastViewedEventSerializer
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 from django.core.exceptions import ObjectDoesNotExist
-from django.utils.crypto import constant_time_compare
-from rest_framework_simplejwt.tokens import AccessToken
-
-from apps.users.serializer import CodeSerializer
-from apps.users.utils import send_verification_mail
-
-from apps.users.models import CustomUser
-from apps.profiles.serializer import SendResetCodeSerializer
 
 
 class ProfileViewSet(RetrieveAPIView):
@@ -144,6 +131,8 @@ class SubscribersUserAPIView(ListAPIView):
         return Response(serializer.data)
 
 
+
+
 class FollowEventAPIView(CreateAPIView):
     serializer_class = FollowEventSerializer
     permission_classes = [IsAuthenticated]
@@ -155,7 +144,7 @@ class FollowEventAPIView(CreateAPIView):
             user = User.objects.get(id=self.request.user.id)
             event = BaseEvent.objects.get(id=event_id)
             if not user.events.filter(id=event.id).exists():
-                user.add(event)
+                user.events.add(event)
                 user.save()
                 return Response({'message': 'Followed to Event', 'is_followed': True}, status=status.HTTP_200_OK)
             return Response({'status': 'Already following this event'}, status=status.HTTP_400_BAD_REQUEST)
@@ -181,78 +170,9 @@ class UnFollowEventAPIView(DestroyAPIView):
         return Response({'status': 'event is not found'}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class SendResetAPiView(UpdateAPIView):
-    serializer_class = SendResetCodeSerializer
-
-    def get_object(self):
-        user = CustomUser.objects.get(email=self.request.data.get('email'))
-        return user
-
-    def patch(self, request, *args, **kwargs):
-        try:
-            email = self.get_object().email
-        except ObjectDoesNotExist:
-            return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
-        send_verification_mail(email)
-        return Response({'status': 'success'}, status=status.HTTP_200_OK)
-
-
-class CheckResetCodeAPIView(UpdateAPIView):
-    serializer_class = CodeSerializer
-
-    def patch(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            code = self.request.data.get('code')
-            try:
-                user = CustomUser.objects.get(code=code)
-                user.code = None
-                user.save()
-            except ObjectDoesNotExist:
-                return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
-            else:
-                access_token = AccessToken.for_user(user)
-                access_token.set_exp(lifetime=timedelta(minutes=15))
-                return Response({'status': 'success', 'access_token': str(access_token)}, status=status.HTTP_200_OK)
-        return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
-
-
-class ChangePasswordAPIVIew(UpdateAPIView):
-    serializer_class = ChangePasswordSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_object(self):
-        user = User.objects.get(id=self.request.user.id)
-        return user
-
-    def patch(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=self.request.data)
-        if serializer.is_valid():
-            new_password = self.request.data.get('new_password')
-            confirming_new_password = self.request.data.get('confirming_new_password')
-            if constant_time_compare(new_password, confirming_new_password):
-                user = self.get_object()
-                user.password = make_password(confirming_new_password)
-                user.save()
-                return Response({'status': 'success'}, status=status.HTTP_200_OK)
-            else:
-                return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
-        return Response(serializer.errors)
-
-
 class LastViewedEvents(ListCreateAPIView):
     serializer_class = LastViewedEventSerializer
     permission_classes = [IsAuthenticated]
-
-    def get_serializer_class(self):
-        if self.request.method == 'POST':
-            return LastViewedEventSerializer
-        else:
-            return LastViewedEventReadSerializer
-
-    def get_queryset(self):
-        user = User.objects.get(id=self.request.user.id)
-        return user.last_viewed_events.order_by('-timestamp')
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=self.request.data)
