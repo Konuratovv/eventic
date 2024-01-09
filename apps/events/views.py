@@ -1,13 +1,19 @@
+from operator import itemgetter
+
+from django.contrib.sites.shortcuts import get_current_site
 from django.utils import timezone
 from rest_framework import generics
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from django_filters.rest_framework import DjangoFilterBackend
 
-from .models import BaseEvent, Category
+from .models import BaseEvent, Category, PermanentEvent, TemporaryEvent
 from .serializers import BaseEventSerializer, CategorySerializer
 from .event_filters import EventFilter
 from ..profiles.models import User
+from ..profiles.serializer import PermanentEventSerializer, TemporaryEventSerializer
 
 
 class EventRetrieveAPIView(generics.RetrieveAPIView):
@@ -32,11 +38,11 @@ class EventListAPIView(generics.ListAPIView):
     filter_backends = (DjangoFilterBackend,)
     filterset_class = EventFilter
 
-    # def gs(self):
-    #     queryset = super().get_queryset()
-    #     user = User.objects.get(id=self.request.user.id)
-    #     queryset = queryset.filter(BaseEvent__event_city=user.city)
-    #     return queryset
+    def gs(self):
+        queryset = super().get_queryset()
+        user = User.objects.get(id=self.request.user.id)
+        queryset = queryset.filter(BaseEvent__event_city=user.city)
+        return queryset
 
 
 class FreeEventListAPIView(generics.ListAPIView):
@@ -46,3 +52,93 @@ class FreeEventListAPIView(generics.ListAPIView):
     """
     serializer_class = BaseEventSerializer
     queryset = BaseEvent.objects.filter(price=0.0)
+
+
+class CustomPagination(PageNumberPagination):
+    page_size = 15
+    page_size_query_param = 'page_size'
+    max_page_size = 15
+
+
+class EventTypeListAPIView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+    pagination_class = CustomPagination
+
+    def get(self, request, *args, **kwargs):
+        data = {
+            'events': [],
+            'perEvents': [],
+            'temEvents': [],
+            'freeEvents': [],
+            'paidEvents': [],
+        }
+
+        events = BaseEvent.objects.all().order_by('id')
+        if events:
+            events_paginated = self.paginate_queryset(events)
+            for event in events_paginated:
+                serializer_data = BaseEventSerializer(event).data
+                serializer_data['followers'] = event.users.count()
+
+                if serializer_data['banner'] is not None:
+                    current_site = get_current_site(request).domain
+                    serializer_data['banner'] = f"{request.scheme}://{current_site}{serializer_data['banner']}"
+                data['events'].append(serializer_data)
+
+        perEvents = PermanentEvent.objects.all().order_by('id')
+        if perEvents:
+            per_events_paginated = self.paginate_queryset(perEvents)
+            for perEvent in per_events_paginated:
+                serializer_data = PermanentEventSerializer(perEvent).data
+                serializer_data['followers'] = perEvent.users.count()
+
+                if serializer_data['banner'] is not None:
+                    current_site = get_current_site(request).domain
+                    serializer_data['banner'] = f"{request.scheme}://{current_site}{serializer_data['banner']}"
+                data['perEvents'].append(serializer_data)
+
+        temEvents = TemporaryEvent.objects.all().order_by('id')
+        if temEvents:
+            tem_events_paginated = self.paginate_queryset(temEvents)
+            for temEvent in tem_events_paginated:
+                serializer_data = TemporaryEventSerializer(temEvent).data
+                serializer_data['followers'] = temEvent.users.count()
+
+                if serializer_data['banner'] is not None:
+                    current_site = get_current_site(request).domain
+                    serializer_data['banner'] = f"{request.scheme}://{current_site}{serializer_data['banner']}"
+                data['temEvents'].append(serializer_data)
+
+        freeEvents = BaseEvent.objects.filter(price=0).order_by('id')
+        if freeEvents:
+            free_events_paginated = self.paginate_queryset(freeEvents)
+            for freeEvent in free_events_paginated:
+                serializer_data = BaseEventSerializer(freeEvent).data
+                serializer_data['followers'] = freeEvent.users.count()
+
+                if serializer_data['banner'] is not None:
+                    current_site = get_current_site(request).domain
+                    serializer_data['banner'] = f"{request.scheme}://{current_site}{serializer_data['banner']}"
+                data['freeEvents'].append(serializer_data)
+
+        paidEvents = BaseEvent.objects.filter(price__gt=0).order_by('id')
+        if paidEvents:
+            paid_events_paginated = self.paginate_queryset(paidEvents)
+            for paidEvent in paid_events_paginated:
+                serializer_data = BaseEventSerializer(paidEvent).data
+                serializer_data['followers'] = paidEvent.users.count()
+
+                if serializer_data['banner'] is not None:
+                    current_site = get_current_site(request).domain
+                    serializer_data['banner'] = f"{request.scheme}://{current_site}{serializer_data['banner']}"
+                data['paidEvents'].append(serializer_data)
+
+        sorted_data = [
+            {'type': 'events', 'events': sorted(data['events'], key=itemgetter('followers'), reverse=True)},
+            {'type': 'perEvents', 'events': sorted(data['perEvents'], key=itemgetter('followers'), reverse=True)},
+            {'type': 'temEvents', 'events': sorted(data['temEvents'], key=itemgetter('followers'), reverse=True)},
+            {'type': 'freeEvents', 'events': sorted(data['freeEvents'], key=itemgetter('followers'), reverse=True)},
+            {'type': 'paidEvents', 'events': sorted(data['paidEvents'], key=itemgetter('followers'), reverse=True)}
+        ]
+
+        return Response(sorted_data)

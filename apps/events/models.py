@@ -37,7 +37,7 @@ class BaseEvent(models.Model):
                                                                               ("ru", "Русский"),
                                                                               ("eng", "Английский"),
                                                                               ("kg-ru", "Кыргызский-Русский"),
-                                                                              ], default='ru')
+                                                                              ], default='kg')
     price = models.DecimalField(max_digits=7, decimal_places=2, verbose_name="Цена")
     category = models.ManyToManyField(Category, verbose_name="Категория", related_name="category")
     interests = models.ManyToManyField(Interests, verbose_name="Интересы", related_name="interests")
