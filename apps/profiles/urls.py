@@ -14,7 +14,6 @@ urlpatterns = [
     path('send_verify_code/', SendCodeAPIView.as_view()),
     path('verify/email/', VerifyAPIView.as_view()),
     path('follow/event/', FollowEventAPIView.as_view()),
-
     path('unfollow/event/', UnFollowEventAPIView.as_view()),
     path('send_reset_code/', SendResetAPiView.as_view()),
     path('check_reset_code/', CheckResetCodeAPIView.as_view()),
