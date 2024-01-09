@@ -4,25 +4,35 @@ from django.contrib.sites.shortcuts import get_current_site
 from rest_framework import generics
 from rest_framework.generics import ListAPIView
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 
 from django_filters.rest_framework import DjangoFilterBackend
 
 from .models import BaseEvent, PermanentEvent, TemporaryEvent
-from .serializers import BaseEventSerializer
+from .serializers import BaseEventSerializer, DetailEventSerializer
 from .event_filters import EventFilter
 from ..profiles.models import User
 from ..profiles.serializer import LastViewedEventReadSerializer, PermanentEventSerializer, TemporaryEventSerializer
 
 
 class EventRetrieveAPIView(generics.RetrieveAPIView):
-    """ Вывод Eventa по id """
+    """ Вывод Eventa по id 'Все поля' """
     serializer_class = BaseEventSerializer
 
     def get(self, request, pk):
         event = BaseEvent.objects.get(id=pk)
         serializer = BaseEventSerializer(event)
+        return Response(serializer.data)
+
+
+class EventDetailAPIView(generics.RetrieveAPIView):
+    """ Вывод Eventa по id """
+    serializer_class = BaseEventSerializer
+
+    def get(self, request, pk):
+        event = BaseEvent.objects.get(id=pk)
+        serializer = DetailEventSerializer(event)
         return Response(serializer.data)
 
 
@@ -43,8 +53,6 @@ class EventListAPIView(generics.ListAPIView):
         user = User.objects.get(id=self.request.user.id)
         queryset = queryset.filter(BaseEvent__event_city=user.city)
         return queryset
-
-
 
 
 class CustomPagination(PageNumberPagination):

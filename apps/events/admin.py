@@ -53,7 +53,6 @@ class TemporaryEventAdmin(admin.ModelAdmin):
 class PermanentEventAdmin(admin.ModelAdmin):
     inlines = [EventBannerInline, EventWeekInline]
     list_display = [
-        "id",
         "title",
         "description",
         "language",
@@ -61,6 +60,7 @@ class PermanentEventAdmin(admin.ModelAdmin):
         "get_categories",
         "get_interests",
         "get_weeks",
+        "id",
     ]
 
     def get_categories(self, obj):
