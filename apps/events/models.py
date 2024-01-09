@@ -63,7 +63,7 @@ class EventBanner(models.Model):
     """ Модель Баннера связана с BaseEvent """
     event = models.ForeignKey(BaseEvent, verbose_name="Баннеры", on_delete=models.CASCADE,
                               related_name="banners", null=True, blank=True)
-    image = models.ImageField(verbose_name="Баннер", upload_to='media/banner')
+    image = models.ImageField(verbose_name="Баннер", upload_to='banner')
 
     class Meta:
         verbose_name = 'Баннер'
