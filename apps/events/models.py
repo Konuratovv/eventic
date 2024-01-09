@@ -33,7 +33,11 @@ class BaseEvent(models.Model):
     """ Базовая модель мероприятии """
     title = models.CharField(max_length=150, verbose_name="Заголовок")
     description = models.TextField(verbose_name="Описание")
-    language = models.CharField(max_length=100, verbose_name="Язык")
+    language = models.CharField(max_length=100, verbose_name="Язык", choices=[("kg", "Кыргызский"),
+                                                                              ("ru", "Русский"),
+                                                                              ("eng", "Английский"),
+                                                                              ("kg-ru", "Кыргызский-Русский"),
+                                                                              ], default='ru')
     price = models.DecimalField(max_digits=7, decimal_places=2, verbose_name="Цена")
     category = models.ManyToManyField(Category, verbose_name="Категория", related_name="category")
     interests = models.ManyToManyField(Interests, verbose_name="Интересы", related_name="interests")
