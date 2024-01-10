@@ -50,26 +50,17 @@ class CityAddressSerializer(serializers.ModelSerializer):
 class OrganizerEventSerializer(serializers.ModelSerializer):
     event_dates = EventDateSerializer(many=True, source='temporaryevent.dates')
     event_weeks = EventWeekSerializer(many=True, source='permanentevent.weeks')
-    organizer_title = serializers.CharField(source='organizer.title', read_only=True) # это для проверки потом нужно удалить
+    banners = EventBannerSerializer(many=True, read_only=True)
 
     class Meta:
         model = BaseEvent
-        fields = ('id', 'banners', 'title', 'price', 'event_dates', 'event_weeks', 'organizer_title',)
+        fields = ('id', 'banners', 'title', 'price', 'event_dates', 'event_weeks', 'banners',)
 
 
 class OrganizerSerializer(serializers.ModelSerializer):
-    events = OrganizerEventSerializer(many=True, read_only=True, source='baseevent_set')
     class Meta:
         model = Organizer
-        fields = ('title', 'back_img', 'events',)
-
-
-# class OrganizerNextEventSerializer(serializers.ModelSerializer):
-#     events = OrganizerEventSerializer(many=True, read_only=True, source='events')
-#
-#     class Meta:
-#         model = Organizer
-#         fields = ('events',)
+        fields = ('title', 'back_img',)
 
 
 class BaseEventSerializer(serializers.ModelSerializer):
@@ -106,9 +97,9 @@ class DetailEventSerializer(serializers.ModelSerializer):
     banners = EventBannerSerializer(many=True)
     address = AddressSerializer(read_only=True)
     organizer = OrganizerSerializer(read_only=True)
-    # organizer_next_event = OrganizerNextEventSerializer(read_only=True)
     event_dates = EventDateSerializer(many=True, source='temporaryevent.dates')
     event_weeks = EventWeekSerializer(many=True, source='permanentevent.weeks')
+    next_events_org = serializers.SerializerMethodField()
 
     class Meta:
         model = BaseEvent
@@ -123,7 +114,19 @@ class DetailEventSerializer(serializers.ModelSerializer):
             'interests',
             'organizer',
             'address',
-            # 'organizer_next_event',
+            'next_events_org',
+
         )
 
-
+    def get_next_events_org(self, obj):
+        """
+        Метод в сериализаторе DetailEventSerializer извлекает и возвращает список событий,
+        организованных тем же организатором, что и текущее событие (obj),
+        за исключением самого этого события, используя сериализатор OrganizerEventSerializer.
+        Обеспечивает добавление информации о связанных мероприятиях в API-ответ.
+        """
+        organizer = obj.organizer
+        if organizer:
+            events = BaseEvent.objects.filter(organizer=organizer).exclude(id=obj.id)
+            return OrganizerEventSerializer(events, many=True).data
+        return []
