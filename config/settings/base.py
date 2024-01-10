@@ -24,9 +24,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 SECRET_KEY = 'django-insecure-+!gfq7wg)y_*innav%(2+6gq*s0+&on!yx4vw@8y$rvvsqjb%7'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 if DEBUG:
-    from .production import *
+    from .development import *
 else:
     from .production import *
 
@@ -176,3 +176,6 @@ EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 JAZZMIN_SETTINGS = {
     "site_logo": "media/Screenshot_from_2024-01-09_11-33-33.png",
 }
+
+CSRF_USE_SESSIONS = True
+CSRF_TRUSTED_ORIGINS = ['https://eventic.pp.ua']
