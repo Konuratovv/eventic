@@ -45,7 +45,7 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/vhost.d/default.conf
+      - ./nginx/default_location:/etc/nginx/vhost.d/default_location
       - static_volume:/usr/src/app/static
       - media_volume:/usr/src/app/media
       - /var/run/docker.sock:/tmp/docker.sock:ro
