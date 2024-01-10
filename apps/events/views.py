@@ -9,11 +9,23 @@ from rest_framework.response import Response
 
 from django_filters.rest_framework import DjangoFilterBackend
 
-from .models import BaseEvent, PermanentEvent, TemporaryEvent
-from .serializers import BaseEventSerializer, DetailEventSerializer
+from .models import BaseEvent, PermanentEvent, TemporaryEvent, Category, Interests
+from .serializers import BaseEventSerializer, DetailEventSerializer, CategorySerializer, InterestSerializer
 from .event_filters import EventFilter
 from ..profiles.models import User
 from ..profiles.serializer import LastViewedEventReadSerializer, PermanentEventSerializer, TemporaryEventSerializer
+
+
+class EventCategoryListAPIView(generics.ListAPIView):
+    """ Получение списка категориев"""
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+
+
+class EventInterestListAPIView(generics.ListAPIView):
+    """ Получение списка интересов """
+    queryset = Interests.objects.all()
+    serializer_class = InterestSerializer
 
 
 class EventRetrieveAPIView(generics.RetrieveAPIView):
