@@ -2,7 +2,7 @@ from rest_framework import serializers
 from .models import Category, EventDate, BaseEvent, EventWeek, Interests, EventBanner, TemporaryEvent, PermanentEvent
 
 from ..locations.models import Address, City
-from ..profiles.models import Organizer
+from ..profiles.models import Organizer, FollowOrganizer
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -58,9 +58,17 @@ class OrganizerEventSerializer(serializers.ModelSerializer):
 
 
 class OrganizerSerializer(serializers.ModelSerializer):
+    is_followed = serializers.SerializerMethodField()
+
     class Meta:
         model = Organizer
-        fields = ('title', 'back_img',)
+        fields = ('title', 'back_img', 'is_followed',)
+
+    def get_is_followed(self, obj):
+        user = self.context.get('request').user
+        if user.is_authenticated:
+            return FollowOrganizer.objects.filter(follower=user, following=obj).exists()
+        return False  # Возвращаем False, если пользователь не авторизован
 
 
 class BaseEventSerializer(serializers.ModelSerializer):
@@ -130,3 +138,7 @@ class DetailEventSerializer(serializers.ModelSerializer):
             events = BaseEvent.objects.filter(organizer=organizer).exclude(id=obj.id)
             return OrganizerEventSerializer(events, many=True).data
         return []
+
+    def __init__(self, *args, **kwargs):
+        super(DetailEventSerializer, self).__init__(*args, **kwargs)
+        self.fields['organizer'].context.update(self.context)
