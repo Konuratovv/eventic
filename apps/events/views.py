@@ -17,13 +17,13 @@ from ..profiles.serializer import LastViewedEventReadSerializer, PermanentEventS
 
 
 class EventCategoryListAPIView(generics.ListAPIView):
-    """ Получение списка категориев"""
+    """ Вывод списка категориев"""
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
 
 class EventInterestListAPIView(generics.ListAPIView):
-    """ Получение списка интересов """
+    """ Вывод списка интересов """
     queryset = Interests.objects.all()
     serializer_class = InterestSerializer
 
