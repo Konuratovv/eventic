@@ -20,6 +20,7 @@ class EventWeekInline(admin.TabularInline):
 @admin.register(TemporaryEvent)
 class TemporaryEventAdmin(admin.ModelAdmin):
     inlines = [EventBannerInline, EventDateInline]
+
     list_display = [
         "title",
         "description",
@@ -29,7 +30,9 @@ class TemporaryEventAdmin(admin.ModelAdmin):
         "get_interests",
         "get_dates",
         "id",
+
     ]
+    list_filter = ('dates', 'interests', 'category', 'language')
 
     def get_categories(self, obj):
         return ", ".join([category.name for category in obj.category.all()])
@@ -48,6 +51,7 @@ class TemporaryEventAdmin(admin.ModelAdmin):
     get_dates.short_description = 'Дата'
 
 
+
 @admin.register(PermanentEvent)
 class PermanentEventAdmin(admin.ModelAdmin):
     inlines = [EventBannerInline, EventWeekInline]
@@ -61,7 +65,7 @@ class PermanentEventAdmin(admin.ModelAdmin):
         "get_interests",
         "get_weeks",
     ]
-
+    list_filter = ('interests', 'category', 'language')
     def get_categories(self, obj):
         return ", ".join([category.name for category in obj.category.all()])
 

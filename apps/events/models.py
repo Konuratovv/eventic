@@ -37,6 +37,7 @@ class BaseEvent(models.Model):
     interests = models.ManyToManyField(Interests, verbose_name="Интересы", related_name="interests")
     organizer = models.ForeignKey('profiles.Organizer', on_delete=models.CASCADE, null=True, blank=True)
     address = models.ForeignKey('locations.Address', on_delete=models.CASCADE)
+    city = models.ForeignKey('locations.City' , on_delete=models.CASCADE)
     objects = models.Manager()
 
     @property
