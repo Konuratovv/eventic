@@ -1,7 +1,7 @@
 from operator import itemgetter
 
 from django.contrib.sites.shortcuts import get_current_site
-from rest_framework import generics
+from rest_framework import generics, status
 from rest_framework.generics import ListAPIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -12,7 +12,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from .models import BaseEvent, PermanentEvent, TemporaryEvent, Category, Interests
 from .serializers import BaseEventSerializer, DetailEventSerializer, CategorySerializer, InterestSerializer
 from .event_filters import EventFilter
-from ..profiles.models import User
+from ..profiles.models import User, FollowOrganizer
 from ..profiles.serializer import LastViewedEventReadSerializer, PermanentEventSerializer, TemporaryEventSerializer
 
 
@@ -40,11 +40,12 @@ class EventRetrieveAPIView(generics.RetrieveAPIView):
 
 class EventDetailAPIView(generics.RetrieveAPIView):
     """ Вывод Eventa по id """
+    permission_classes = [IsAuthenticated]
     serializer_class = BaseEventSerializer
 
     def get(self, request, pk):
         event = BaseEvent.objects.get(id=pk)
-        serializer = DetailEventSerializer(event)
+        serializer = DetailEventSerializer(event, context={'request': request})
         return Response(serializer.data)
 
 
@@ -65,6 +66,25 @@ class EventListAPIView(generics.ListAPIView):
         user = User.objects.get(id=self.request.user.id)
         queryset = queryset.filter(BaseEvent__event_city=user.city)
         return queryset
+
+
+class FollowOrganizerView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, organizer_id):
+        # Проверка, существует ли уже подписка
+        if not FollowOrganizer.objects.filter(follower=request.user, following_id=organizer_id).exists():
+            FollowOrganizer.objects.create(follower=request.user, following_id=organizer_id)
+            return Response({'status': 'subscribed'}, status=status.HTTP_201_CREATED)
+        return Response({'status': 'already subscribed'}, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, organizer_id):
+        try:
+            subscription = FollowOrganizer.objects.get(follower=request.user, following_id=organizer_id)
+            subscription.delete()
+            return Response({'status': 'unsubscribed'}, status=status.HTTP_204_NO_CONTENT)
+        except FollowOrganizer.DoesNotExist:
+            return Response({'status': 'not subscribed'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class CustomPagination(PageNumberPagination):
