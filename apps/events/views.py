@@ -39,13 +39,15 @@ class EventRetrieveAPIView(generics.RetrieveAPIView):
 
 
 class EventDetailAPIView(generics.RetrieveAPIView):
-    """ Вывод Eventa по id """
+    """
+    Вывод Eventa по id
+    """
     permission_classes = [IsAuthenticated]
-    serializer_class = BaseEventSerializer
+    serializer_class = DetailEventSerializer
 
     def get(self, request, pk):
         event = BaseEvent.objects.get(id=pk)
-        serializer = DetailEventSerializer(event, context={'request': request})
+        serializer = self.get_serializer(event)
         return Response(serializer.data)
 
 
@@ -66,25 +68,6 @@ class EventListAPIView(generics.ListAPIView):
         user = User.objects.get(id=self.request.user.id)
         queryset = queryset.filter(BaseEvent__event_city=user.city)
         return queryset
-
-
-class FollowOrganizerView(generics.GenericAPIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request, organizer_id):
-        # Проверка, существует ли уже подписка
-        if not FollowOrganizer.objects.filter(follower=request.user, following_id=organizer_id).exists():
-            FollowOrganizer.objects.create(follower=request.user, following_id=organizer_id)
-            return Response({'status': 'subscribed'}, status=status.HTTP_201_CREATED)
-        return Response({'status': 'already subscribed'}, status=status.HTTP_400_BAD_REQUEST)
-
-    def delete(self, request, organizer_id):
-        try:
-            subscription = FollowOrganizer.objects.get(follower=request.user, following_id=organizer_id)
-            subscription.delete()
-            return Response({'status': 'unsubscribed'}, status=status.HTTP_204_NO_CONTENT)
-        except FollowOrganizer.DoesNotExist:
-            return Response({'status': 'not subscribed'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class CustomPagination(PageNumberPagination):

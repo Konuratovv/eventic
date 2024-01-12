@@ -56,6 +56,14 @@ class OrganizerEventSerializer(serializers.ModelSerializer):
         model = BaseEvent
         fields = ('id', 'banners', 'title', 'price', 'event_dates', 'event_weeks', 'banners',)
 
+    def to_representation(self, instance):
+        """ Ограничиваем количество баннеров до одного """
+        representation = super(OrganizerEventSerializer, self).to_representation(instance)
+        banners_representation = representation.get('banners')
+        if banners_representation:
+            representation['banners'] = banners_representation[:1]
+        return representation
+
 
 class OrganizerSerializer(serializers.ModelSerializer):
     is_followed = serializers.SerializerMethodField()
@@ -66,9 +74,10 @@ class OrganizerSerializer(serializers.ModelSerializer):
 
     def get_is_followed(self, obj):
         user = self.context.get('request').user
-        if user.is_authenticated:
-            return FollowOrganizer.objects.filter(follower=user, following=obj).exists()
-        return False  # Возвращаем False, если пользователь не авторизован
+        try:
+            return FollowOrganizer.objects.get(follower=user, following=obj).is_followed
+        except FollowOrganizer.DoesNotExist:
+            return False
 
 
 class BaseEventSerializer(serializers.ModelSerializer):
@@ -135,10 +144,6 @@ class DetailEventSerializer(serializers.ModelSerializer):
         """
         organizer = obj.organizer
         if organizer:
-            events = BaseEvent.objects.filter(organizer=organizer).exclude(id=obj.id)
+            events = BaseEvent.objects.filter(organizer=organizer).exclude(id=obj.id)[:1]
             return OrganizerEventSerializer(events, many=True).data
         return []
-
-    def __init__(self, *args, **kwargs):
-        super(DetailEventSerializer, self).__init__(*args, **kwargs)
-        self.fields['organizer'].context.update(self.context)
