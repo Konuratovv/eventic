@@ -131,8 +131,6 @@ class SubscribersUserAPIView(ListAPIView):
         return Response(serializer.data)
 
 
-
-
 class FollowEventAPIView(CreateAPIView):
     serializer_class = FollowEventSerializer
     permission_classes = [IsAuthenticated]
