@@ -159,12 +159,11 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 
-
     'DEFAULT_FILTER_BACKENDS': [
         'django_filters.rest_framework.DjangoFilterBackend'
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
-    'PAGE_SIZE': 8,
+    'PAGE_SIZE': 15,
 }
 
 EMAIL_BACKEND = config('EMAIL_BACKEND')
@@ -175,6 +174,6 @@ EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 
 
-JAZZMIN_SETTINGS = {
-    "site_logo": "media/Screenshot_from_2024-01-09_11-33-33.png",
-}
+
+CSRF_USE_SESSIONS = True
+CSRF_TRUSTED_ORIGINS = ['https://eventic.pp.ua']

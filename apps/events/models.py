@@ -106,6 +106,9 @@ class EventWeek(models.Model):
     def __str__(self):
         return f"{self.week}"
 
+    # я добавил чтобы не давало предурпждение
+    objects = models.Manager()
+
 
 class EventDate(models.Model):
     """ Дата и время, временного мероприятия связана с TemporaryEvent """
@@ -120,3 +123,6 @@ class EventDate(models.Model):
 
     def __str__(self):
         return f"{self.start_date}, {self.end_date}"
+
+    # я добавил чтобы не давало предурпждение
+    objects = models.Manager()
