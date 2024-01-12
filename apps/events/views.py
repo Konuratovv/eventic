@@ -1,4 +1,5 @@
 from operator import itemgetter
+from django.db.models import BooleanField, Case, When, Value
 
 from django.contrib.sites.shortcuts import get_current_site
 from rest_framework import generics, status
@@ -11,6 +12,9 @@ from django_filters.rest_framework import DjangoFilterBackend
 
 from .models import BaseEvent, PermanentEvent, TemporaryEvent, Category, Interests
 from .serializers import BaseEventSerializer, DetailEventSerializer, CategorySerializer, InterestSerializer
+from .models import BaseEvent, PermanentEvent, TemporaryEvent
+from apps.profiles.serializer import PermanentEventSerializer, TemporaryEventSerializer, \
+    MainBaseEventSerializer
 from .event_filters import EventFilter
 from ..profiles.models import User, FollowOrganizer
 from ..profiles.serializer import LastViewedEventReadSerializer, PermanentEventSerializer, TemporaryEventSerializer
@@ -90,16 +94,27 @@ class EventTypeListAPIView(ListAPIView):
             'last_viewed_events': []
         }
 
-        events = BaseEvent.objects.all().order_by('id')
+        user_obj = User.objects.get(id=request.user.id)
+        followed_events = user_obj.events.all().values('pk')
+
+        events = BaseEvent.objects.annotate(
+            is_follow=Case(
+                When(id__in=followed_events, then=Value(True)),
+                default=Value(False),
+                output_field=BooleanField()
+            )
+        )
+
         if events:
             events_paginated = self.paginate_queryset(events)
             for event in events_paginated:
-                serializer_data = BaseEventSerializer(event).data
+                serializer_data = MainBaseEventSerializer(event).data
                 serializer_data['followers'] = event.users.count()
 
-                if serializer_data['banner'] is not None:
-                    current_site = get_current_site(request).domain
-                    serializer_data['banner'] = f"{request.scheme}://{current_site}{serializer_data['banner']}"
+                for banner in serializer_data['banners']:
+                    if banner['image'] is not None:
+                        current_site = get_current_site(request).domain
+                        banner['image'] = f"{request.scheme}://{current_site}{banner['image']}"
                 data['events'].append(serializer_data)
 
         perEvents = PermanentEvent.objects.all().order_by('id')
@@ -109,9 +124,10 @@ class EventTypeListAPIView(ListAPIView):
                 serializer_data = PermanentEventSerializer(perEvent).data
                 serializer_data['followers'] = perEvent.users.count()
 
-                if serializer_data['banner'] is not None:
-                    current_site = get_current_site(request).domain
-                    serializer_data['banner'] = f"{request.scheme}://{current_site}{serializer_data['banner']}"
+                for banner in serializer_data['banners']:
+                    if banner['image'] is not None:
+                        current_site = get_current_site(request).domain
+                        banner['image'] = f"{request.scheme}://{current_site}{banner['image']}"
                 data['perEvents'].append(serializer_data)
 
         temEvents = TemporaryEvent.objects.all().order_by('id')
@@ -121,46 +137,50 @@ class EventTypeListAPIView(ListAPIView):
                 serializer_data = TemporaryEventSerializer(temEvent).data
                 serializer_data['followers'] = temEvent.users.count()
 
-                if serializer_data['banner'] is not None:
-                    current_site = get_current_site(request).domain
-                    serializer_data['banner'] = f"{request.scheme}://{current_site}{serializer_data['banner']}"
+                for banner in serializer_data['banners']:
+                    if banner['image'] is not None:
+                        current_site = get_current_site(request).domain
+                        banner['image'] = f"{request.scheme}://{current_site}{banner['image']}"
                 data['temEvents'].append(serializer_data)
 
         freeEvents = BaseEvent.objects.filter(price=0).order_by('id')
         if freeEvents:
             free_events_paginated = self.paginate_queryset(freeEvents)
             for freeEvent in free_events_paginated:
-                serializer_data = BaseEventSerializer(freeEvent).data
+                serializer_data = MainBaseEventSerializer(freeEvent).data
                 serializer_data['followers'] = freeEvent.users.count()
 
-                if serializer_data['banner'] is not None:
-                    current_site = get_current_site(request).domain
-                    serializer_data['banner'] = f"{request.scheme}://{current_site}{serializer_data['banner']}"
+                for banner in serializer_data['banners']:
+                    if banner['image'] is not None:
+                        current_site = get_current_site(request).domain
+                        banner['image'] = f"{request.scheme}://{current_site}{banner['image']}"
                 data['freeEvents'].append(serializer_data)
 
         paidEvents = BaseEvent.objects.filter(price__gt=0).order_by('id')
         if paidEvents:
             paid_events_paginated = self.paginate_queryset(paidEvents)
             for paidEvent in paid_events_paginated:
-                serializer_data = BaseEventSerializer(paidEvent).data
+                serializer_data = MainBaseEventSerializer(paidEvent).data
                 serializer_data['followers'] = paidEvent.users.count()
 
-                if serializer_data['banner'] is not None:
-                    current_site = get_current_site(request).domain
-                    serializer_data['banner'] = f"{request.scheme}://{current_site}{serializer_data['banner']}"
+                for banner in serializer_data['banners']:
+                    if banner['image'] is not None:
+                        current_site = get_current_site(request).domain
+                        banner['image'] = f"{request.scheme}://{current_site}{banner['image']}"
                 data['paidEvents'].append(serializer_data)
 
         user = User.objects.get(id=self.request.user.id)
         user_viewed_events = user.last_viewed_events.order_by('-timestamp')
+
         if user_viewed_events:
             user_viewed_events_paginated = self.paginate_queryset(user_viewed_events)
             serializer_data = LastViewedEventReadSerializer(user_viewed_events_paginated, many=True).data
 
             for serialized_object in serializer_data:
-                if serialized_object['event']['banner'] is not None:
-                    current_site = get_current_site(request).domain
-                    serialized_object['event'][
-                        'banner'] = f"{request.scheme}://{current_site}{serialized_object['event']['banner']}"
+                for banner in serialized_object['event']['banners']:
+                    if banner['image'] is not None:
+                        current_site = get_current_site(request).domain
+                        banner['image'] = f"{request.scheme}://{current_site}{banner['image']}"
                 data['last_viewed_events'].append(serialized_object['event'])
 
         sorted_data = [
