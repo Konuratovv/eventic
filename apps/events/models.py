@@ -52,7 +52,8 @@ class BaseEvent(models.Model):
 
 
 class EventBanner(models.Model):
-    event = models.ForeignKey(BaseEvent, verbose_name="Баннеры", on_delete=models.CASCADE, related_name="banners", null=True, blank=True)
+    event = models.ForeignKey(BaseEvent, verbose_name="Баннеры", on_delete=models.CASCADE, related_name="banners",
+                              null=True, blank=True)
     image = models.ImageField(upload_to='media/banner')
 
     class Meta:
@@ -99,6 +100,9 @@ class EventWeek(models.Model):
     def __str__(self):
         return f"{self.week}"
 
+    # я добавил чтобы не давало предурпждение
+    objects = models.Manager()
+
 
 class EventDate(models.Model):
     """ Дата мероприятия """
@@ -112,3 +116,6 @@ class EventDate(models.Model):
 
     def __str__(self):
         return f"{self.start_date}, {self.end_date}"
+
+    # я добавил чтобы не давало предурпждение
+    objects = models.Manager()

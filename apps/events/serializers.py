@@ -70,17 +70,17 @@ class BaseEventSerializer(serializers.ModelSerializer):
         )
 
 
-class TemporaryEventSerializer(BaseEventSerializer):
-    dates = EventDateSerializer(many=True, read_only=True, source='dates')
-
-    class Meta(BaseEventSerializer.Meta):
-        model = TemporaryEvent
-        fields = BaseEventSerializer.Meta.fields + ('dates',)
-
-
-class PermanentEventSerializer(BaseEventSerializer):
-    weeks = EventWeekSerializer(many=True, read_only=True, source='weeks')
-
-    class Meta(BaseEventSerializer.Meta):
-        model = PermanentEvent
-        fields = BaseEventSerializer.Meta.fields + ('weeks',)
+# class TemporaryEventSerializer(BaseEventSerializer):
+#     dates = EventDateSerializer(many=True, read_only=True)
+#
+#     class Meta(BaseEventSerializer.Meta):
+#         model = TemporaryEvent
+#         fields = BaseEventSerializer.Meta.fields + ('dates',)
+#
+#
+# class PermanentEventSerializer(BaseEventSerializer):
+#     weeks = EventWeekSerializer(many=True, read_only=True)
+#
+#     class Meta(BaseEventSerializer.Meta):
+#         model = PermanentEvent
+#         fields = BaseEventSerializer.Meta.fields + ('weeks',)
