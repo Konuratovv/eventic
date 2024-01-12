@@ -2,7 +2,7 @@ from rest_framework import serializers
 from .models import Category, EventDate, BaseEvent, EventWeek, Interests, EventBanner, TemporaryEvent, PermanentEvent
 
 from ..locations.models import Address, City
-from ..profiles.models import Organizer
+from ..profiles.models import Organizer, FollowOrganizer
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -56,11 +56,28 @@ class OrganizerEventSerializer(serializers.ModelSerializer):
         model = BaseEvent
         fields = ('id', 'banners', 'title', 'price', 'event_dates', 'event_weeks', 'banners',)
 
+    def to_representation(self, instance):
+        """ Ограничиваем количество баннеров до одного """
+        representation = super(OrganizerEventSerializer, self).to_representation(instance)
+        banners_representation = representation.get('banners')
+        if banners_representation:
+            representation['banners'] = banners_representation[:1]
+        return representation
+
 
 class OrganizerSerializer(serializers.ModelSerializer):
+    is_followed = serializers.SerializerMethodField()
+
     class Meta:
         model = Organizer
-        fields = ('title', 'back_img',)
+        fields = ('title', 'back_img', 'is_followed',)
+
+    def get_is_followed(self, obj):
+        user = self.context.get('request').user
+        try:
+            return FollowOrganizer.objects.get(follower=user, following=obj).is_followed
+        except FollowOrganizer.DoesNotExist:
+            return False
 
 
 class BaseEventSerializer(serializers.ModelSerializer):
@@ -127,6 +144,6 @@ class DetailEventSerializer(serializers.ModelSerializer):
         """
         organizer = obj.organizer
         if organizer:
-            events = BaseEvent.objects.filter(organizer=organizer).exclude(id=obj.id)
+            events = BaseEvent.objects.filter(organizer=organizer).exclude(id=obj.id)[:1]
             return OrganizerEventSerializer(events, many=True).data
         return []

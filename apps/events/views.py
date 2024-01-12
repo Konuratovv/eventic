@@ -1,7 +1,7 @@
 from operator import itemgetter
 
 from django.contrib.sites.shortcuts import get_current_site
-from rest_framework import generics
+from rest_framework import generics, status
 from rest_framework.generics import ListAPIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -12,7 +12,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from .models import BaseEvent, PermanentEvent, TemporaryEvent, Category, Interests
 from .serializers import BaseEventSerializer, DetailEventSerializer, CategorySerializer, InterestSerializer
 from .event_filters import EventFilter
-from ..profiles.models import User
+from ..profiles.models import User, FollowOrganizer
 from ..profiles.serializer import LastViewedEventReadSerializer, PermanentEventSerializer, TemporaryEventSerializer
 
 
@@ -39,12 +39,15 @@ class EventRetrieveAPIView(generics.RetrieveAPIView):
 
 
 class EventDetailAPIView(generics.RetrieveAPIView):
-    """ Вывод Eventa по id """
-    serializer_class = BaseEventSerializer
+    """
+    Вывод Eventa по id
+    """
+    permission_classes = [IsAuthenticated]
+    serializer_class = DetailEventSerializer
 
     def get(self, request, pk):
         event = BaseEvent.objects.get(id=pk)
-        serializer = DetailEventSerializer(event)
+        serializer = self.get_serializer(event)
         return Response(serializer.data)
 
 
