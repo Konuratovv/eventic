@@ -1,5 +1,6 @@
-from apps.events.models import BaseEvent, PermanentEvent, TemporaryEvent
-from apps.events.serializers import EventWeekSerializer, EventDateSerializer
+from apps.events.models import BaseEvent, EventDate, EventWeek, TemporaryEvent, PermanentEvent, Interests
+from apps.events.serializers import EventBannerSerializer
+from apps.locations.models import Address
 from apps.profiles.models import Organizer, FollowOrganizer, ViewedEvent
 
 from apps.profiles.models import User
@@ -12,7 +13,7 @@ from apps.users.models import CustomUser
 class ProfileSerializer(ModelSerializer):
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'description', 'city', 'profile_picture', 'email','user_city',]
+        fields = ['first_name', 'last_name', 'description', 'city', 'profile_picture', 'email', 'city', ]
 
 
 class OrganizerSerializer(ModelSerializer):
@@ -50,26 +51,48 @@ class ChangePasswordSerializer(serializers.Serializer):
         fields = ['new_password', 'confirming_new_password']
 
 
-class BaseEventSerializer(serializers.ModelSerializer):
+class MainEventDateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EventDate
+        fields = "__all__"
+
+
+class MainEventWeekSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EventWeek
+        fields = '__all__'
+
+
+class AddressEventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Address
+        fields = '__all__'
+
+
+class InterestsEventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Interests
+        fields = '__all__'
+
+
+class MainBaseEventSerializer(serializers.ModelSerializer):
+    banners = EventBannerSerializer(many=True)
+    event_weeks = MainEventWeekSerializer(many=True, source='permanentevent.weeks')
+    event_dates = MainEventDateSerializer(many=True, source='temporaryevent.dates')
+    is_follow = serializers.BooleanField(default=False)
+
     class Meta:
         model = BaseEvent
-        fields = '__all__'
-
-
-class PermanentEventSerializer(serializers.ModelSerializer):
-    weeks = EventWeekSerializer(many=True)
-
-    class Meta:
-        model = PermanentEvent
-        fields = '__all__'
-
-
-class TemporaryEventSerializer(serializers.ModelSerializer):
-    dates = EventDateSerializer(many=True)
-
-    class Meta:
-        model = TemporaryEvent
-        fields = '__all__'
+        fields = [
+            'id',
+            'banners',
+            'title',
+            'price',
+            'organizer',
+            'event_weeks',
+            'event_dates',
+            'is_follow'
+        ]
 
 
 class LastViewedEventSerializer(serializers.ModelSerializer):
@@ -79,8 +102,20 @@ class LastViewedEventSerializer(serializers.ModelSerializer):
 
 
 class LastViewedEventReadSerializer(serializers.ModelSerializer):
-    event = BaseEventSerializer(read_only=True)
+    event = MainBaseEventSerializer(read_only=True)
 
     class Meta:
         model = ViewedEvent
         fields = ['event']
+
+
+class TemporaryEventSerializer(MainBaseEventSerializer):
+    class Meta:
+        model = TemporaryEvent
+        fields = '__all__'
+
+
+class PermanentEventSerializer(MainBaseEventSerializer):
+    class Meta:
+        model = PermanentEvent
+        fields = '__all__'

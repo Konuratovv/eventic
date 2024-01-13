@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import Group
 from apps.profiles.models import User, Organizer
 
@@ -8,8 +9,41 @@ admin.site.unregister(Group)
 
 
 @admin.register(User)
-class UserAdmin(admin.ModelAdmin):
-    exclude = ['code', 'groups', 'is_superuser', 'password']
+class UserAdmin(UserAdmin):
+    ordering = []
+    list_filter = []
+    fieldsets = (
+        (
+            None,
+            {
+                'fields': (
+                    'email',
+                    'first_name',
+                    'last_name',
+                    'description',
+                    'password',
+                    'is_verified',
+                )
+            },
+        ),
+    )
+    add_fieldsets = (
+        (
+            None,
+            {
+                'fields': (
+                    'email',
+                    'first_name',
+                    'last_name',
+                    'description',
+                    'password1',
+                    'password2',
+                    'is_verified',
+                )
+            },
+        ),
+    )
+    exclude = ['code', 'groups', 'is_superuser']
     list_display = [
         "id",
         'first_name',

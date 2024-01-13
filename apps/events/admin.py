@@ -12,8 +12,9 @@ class EventDateInline(admin.TabularInline):
     extra = 1
 
 
-class EventWeekInline(admin.TabularInline):
+class EventWeekInline(admin.StackedInline):
     model = EventWeek
+    prepopulated_fields = {'slug': ('week',)}
     extra = 1
 
 
@@ -28,9 +29,9 @@ class TemporaryEventAdmin(admin.ModelAdmin):
         "price",
         "get_categories",
         "get_interests",
+        "organizer",
         "get_dates",
         "id",
-
     ]
     list_filter = ('dates', 'interests', 'category', 'language')
 
@@ -51,7 +52,6 @@ class TemporaryEventAdmin(admin.ModelAdmin):
     get_dates.short_description = 'Дата'
 
 
-
 @admin.register(PermanentEvent)
 class PermanentEventAdmin(admin.ModelAdmin):
     inlines = [EventBannerInline, EventWeekInline]
@@ -63,6 +63,7 @@ class PermanentEventAdmin(admin.ModelAdmin):
         "price",
         "get_categories",
         "get_interests",
+        "organizer",
         "get_weeks",
     ]
     list_filter = ('interests', 'category', 'language')

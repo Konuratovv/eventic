@@ -7,7 +7,7 @@ from apps.users.models import CustomUser
 
 
 class BaseProfile(CustomUser):
-    profile_picture = models.ImageField()
+    profile_picture = models.ImageField(verbose_name="Аватарка", upload_to='avatars')
 
 
 class User(BaseProfile):
@@ -23,7 +23,7 @@ class User(BaseProfile):
 
 class Organizer(BaseProfile):
     title = models.CharField(max_length=255)
-    back_img = models.ImageField()
+    back_img = models.ImageField(verbose_name="Баннер", upload_to='organizers_banners')
     address = models.ManyToManyField(Address, related_name='organizer_address')
 
 
