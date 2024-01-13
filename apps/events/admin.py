@@ -20,6 +20,8 @@ class EventWeekInline(admin.StackedInline):
 
 @admin.register(TemporaryEvent)
 class TemporaryEventAdmin(admin.ModelAdmin):
+    inlines = [EventBannerInline, EventDateInline]
+
     list_display = [
         "title",
         "description",
@@ -31,7 +33,7 @@ class TemporaryEventAdmin(admin.ModelAdmin):
         "get_dates",
         "id",
     ]
-    inlines = [EventBannerInline, EventDateInline]
+    list_filter = ('dates', 'interests', 'category', 'language')
 
     def get_categories(self, obj):
         return ", ".join([category.name for category in obj.category.all()])
@@ -54,6 +56,7 @@ class TemporaryEventAdmin(admin.ModelAdmin):
 class PermanentEventAdmin(admin.ModelAdmin):
     inlines = [EventBannerInline, EventWeekInline]
     list_display = [
+        "id",
         "title",
         "description",
         "language",
@@ -62,9 +65,8 @@ class PermanentEventAdmin(admin.ModelAdmin):
         "get_interests",
         "organizer",
         "get_weeks",
-        "id",
     ]
-
+    list_filter = ('interests', 'category', 'language')
     def get_categories(self, obj):
         return ", ".join([category.name for category in obj.category.all()])
 
@@ -84,9 +86,9 @@ class PermanentEventAdmin(admin.ModelAdmin):
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     list_display = [
+        "id",
         "name",
         "slug",
-        "id",
     ]
     prepopulated_fields = {'slug': ('name',)}
 
@@ -94,8 +96,8 @@ class CategoryAdmin(admin.ModelAdmin):
 @admin.register(Interests)
 class InterestsAdmin(admin.ModelAdmin):
     list_display = [
-        "name",
         "id",
+        "name",
 
     ]
     prepopulated_fields = {'slug': ('name',)}
