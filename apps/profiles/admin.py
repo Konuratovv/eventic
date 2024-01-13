@@ -21,6 +21,7 @@ class UserAdmin(UserAdmin):
                     'first_name',
                     'last_name',
                     'description',
+                    'city',
                     'password',
                     'is_verified',
                 )
@@ -36,6 +37,7 @@ class UserAdmin(UserAdmin):
                     'first_name',
                     'last_name',
                     'description',
+                    'city',
                     'password1',
                     'password2',
                     'is_verified',
