@@ -89,7 +89,7 @@ class OrganizerListAPIView(ListAPIView):
         is_follow_sub = FollowOrganizer.objects.filter(follower=user, is_followed=True).values('following__pk')
 
         organizers = Organizer.objects.annotate(
-            is_follow=Case(
+            is_followed=Case(
                 When(id__in=is_follow_sub, then=Value(True)),
                 default=Value(False),
                 output_field=BooleanField()
