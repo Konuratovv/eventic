@@ -17,7 +17,7 @@ class ProfileSerializer(ModelSerializer):
 
 
 class OrganizerSerializer(ModelSerializer):
-    is_follow = serializers.BooleanField(default=False)
+    is_followed = serializers.BooleanField(default=False)
 
     class Meta:
         model = Organizer
@@ -79,7 +79,7 @@ class MainBaseEventSerializer(serializers.ModelSerializer):
     banners = EventBannerSerializer(many=True)
     event_weeks = MainEventWeekSerializer(many=True, source='permanentevent.weeks')
     event_dates = MainEventDateSerializer(many=True, source='temporaryevent.dates')
-    is_follow = serializers.BooleanField(default=False)
+    is_favourite = serializers.BooleanField(default=False)
 
     class Meta:
         model = BaseEvent
@@ -91,7 +91,7 @@ class MainBaseEventSerializer(serializers.ModelSerializer):
             'organizer',
             'event_weeks',
             'event_dates',
-            'is_follow'
+            'is_favourite'
         ]
 
 
@@ -110,12 +110,8 @@ class LastViewedEventReadSerializer(serializers.ModelSerializer):
 
 
 class TemporaryEventSerializer(MainBaseEventSerializer):
-    class Meta:
-        model = TemporaryEvent
-        fields = '__all__'
+    pass
 
 
 class PermanentEventSerializer(MainBaseEventSerializer):
-    class Meta:
-        model = PermanentEvent
-        fields = '__all__'
+    pass

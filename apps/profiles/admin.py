@@ -21,7 +21,26 @@ class UserAdmin(UserAdmin):
                     'first_name',
                     'last_name',
                     'description',
-                    'password'
+                    'city',
+                    'password',
+                    'is_verified',
+                )
+            },
+        ),
+    )
+    add_fieldsets = (
+        (
+            None,
+            {
+                'fields': (
+                    'email',
+                    'first_name',
+                    'last_name',
+                    'description',
+                    'city',
+                    'password1',
+                    'password2',
+                    'is_verified',
                 )
             },
         ),
