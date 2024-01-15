@@ -80,7 +80,7 @@ class SocialLink(models.Model):
         verbose_name_plural = 'Ссылки'
 
     def __str__(self):
-        return f"{self.event}"
+        return f"{self.social_link_type}"
 
 
 class FollowOrganizer(models.Model):
