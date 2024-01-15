@@ -1,11 +1,24 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import Group
-from apps.profiles.models import User, Organizer
-
-# Register your models here.
+from apps.profiles.models import User, Organizer, PhoneNumber, Email, SocialLink
 
 admin.site.unregister(Group)
+
+
+class EmailInline(admin.TabularInline):
+    model = Email
+    extra = 1
+
+
+class PhoneNumberInline(admin.TabularInline):
+    model = PhoneNumber
+    extra = 1
+
+
+class SocialLinkInline(admin.TabularInline):
+    model = SocialLink
+    extra = 1
 
 
 @admin.register(User)
@@ -45,6 +58,7 @@ class UserAdmin(UserAdmin):
             },
         ),
     )
+
     exclude = ['code', 'groups', 'is_superuser']
     list_display = [
         "id",
@@ -60,6 +74,7 @@ class UserAdmin(UserAdmin):
 @admin.register(Organizer)
 class OrganizerAdmin(admin.ModelAdmin):
     exclude = ['code', 'groups', 'is_superuser']
+    inlines = [EmailInline, PhoneNumberInline, SocialLinkInline]
     list_display = [
         "id",
         'title',

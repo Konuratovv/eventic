@@ -20,11 +20,67 @@ class User(BaseProfile):
     last_viewed_events = models.ManyToManyField('profiles.ViewedEvent', related_name='users', blank=True)
     city = models.ForeignKey(City, on_delete=models.SET_NULL, **nb)
 
+    class Meta:
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
+
+    def __str__(self):
+        return f"{self.email}"
+
 
 class Organizer(BaseProfile):
     title = models.CharField(max_length=255)
-    back_img = models.ImageField(verbose_name="Баннер", upload_to='organizers_banners')
+    back_img = models.ImageField(verbose_name="Баннер", upload_to='organizers_banners', blank=True, null=True)
     address = models.ManyToManyField(Address, related_name='organizer_address')
+
+    class Meta:
+        verbose_name = 'Организатор'
+        verbose_name_plural = 'Организаторы'
+
+    def __str__(self):
+        return f"{self.title}"
+
+
+class PhoneNumber(models.Model):
+    organizer = models.ForeignKey(Organizer, on_delete=models.CASCADE, related_name='phone_numbers')
+    phone_number = models.CharField(max_length=30)
+
+    class Meta:
+        verbose_name = 'Номер телефона'
+        verbose_name_plural = 'Номера телефонов'
+
+    def __str__(self):
+        return f"{self.phone_number}"
+
+
+class Email(models.Model):
+    organizer = models.ForeignKey(Organizer, on_delete=models.CASCADE, related_name='emails')
+    email = models.EmailField(max_length=50)
+
+    class Meta:
+        verbose_name = 'Почта'
+        verbose_name_plural = 'Почты'
+
+    def __str__(self):
+        return f"{self.email}"
+
+
+class SocialLink(models.Model):
+    organizer = models.ForeignKey(Organizer, on_delete=models.CASCADE, related_name='social_links')
+    social_link_choices = [
+        ('instagram', 'Instagram'),
+        ('facebook', 'Facebook'),
+        ('website', 'Website')
+    ]
+    social_link_type = models.CharField(max_length=50, choices=social_link_choices)
+    social_link = models.URLField(max_length=50)
+
+    class Meta:
+        verbose_name = 'Ссылка'
+        verbose_name_plural = 'Ссылки'
+
+    def __str__(self):
+        return f"{self.event}"
 
 
 class FollowOrganizer(models.Model):

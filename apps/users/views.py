@@ -3,13 +3,14 @@ from datetime import timedelta
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status
+from rest_framework.mixins import UpdateModelMixin
 from rest_framework_simplejwt.tokens import AccessToken
 from django.utils.crypto import constant_time_compare
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from rest_framework.generics import CreateAPIView, UpdateAPIView
+from rest_framework.generics import CreateAPIView, GenericAPIView
 from apps.profiles.models import User
 from apps.users.models import CustomUser
 from apps.profiles.serializer import SendResetCodeSerializer, ChangePasswordSerializer
@@ -34,7 +35,7 @@ class LoginViewSet(TokenObtainPairView):
     permission_classes = [AllowAny]
 
 
-class SendEmailCodeAPIView(UpdateAPIView):
+class SendEmailCodeAPIView(UpdateModelMixin, GenericAPIView):
     serializer_class = SendCodeSerializer
     permission_classes = [IsAuthenticated]
 
@@ -42,13 +43,13 @@ class SendEmailCodeAPIView(UpdateAPIView):
         user = CustomUser.objects.get(id=self.request.user.id)
         return user
 
-    def patch(self, request, *args, **kwargs):
+    def patch(self):
         email = self.get_object().email
         send_verification_mail(email)
         return Response({'status': 'success'})
 
 
-class VerifyEmailAPIView(UpdateAPIView):
+class VerifyEmailAPIView(UpdateModelMixin, GenericAPIView):
     serializer_class = CodeSerializer
     permission_classes = [IsAuthenticated]
 
@@ -56,7 +57,7 @@ class VerifyEmailAPIView(UpdateAPIView):
         user = CustomUser.objects.get(id=self.request.user.id)
         return user
 
-    def patch(self, request, *args, **kwargs):
+    def patch(self, request):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             user = self.get_object()
@@ -71,14 +72,14 @@ class VerifyEmailAPIView(UpdateAPIView):
         return Response({'message': 'Serializer is not valid'})
 
 
-class SendResetAPiView(UpdateAPIView):
+class SendResetAPiView(UpdateModelMixin, GenericAPIView):
     serializer_class = SendResetCodeSerializer
 
     def get_object(self):
         user = CustomUser.objects.get(email=self.request.data.get('email'))
         return user
 
-    def patch(self, request, *args, **kwargs):
+    def patch(self):
         try:
             email = self.get_object().email
         except ObjectDoesNotExist:
@@ -87,27 +88,26 @@ class SendResetAPiView(UpdateAPIView):
         return Response({'status': 'success'}, status=status.HTTP_200_OK)
 
 
-class CheckResetCodeAPIView(UpdateAPIView):
+class CheckResetCodeAPIView(UpdateModelMixin, GenericAPIView):
     serializer_class = CodeSerializer
 
-    def patch(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            code = self.request.data.get('code')
-            try:
-                user = CustomUser.objects.get(code=code)
+    def patch(self):
+        code = self.request.data.get('code')
+        email = self.request.data.get('email')
+        try:
+            user = CustomUser.objects.get(email=email)
+            if user.code == code:
                 user.code = None
                 user.save()
-            except ObjectDoesNotExist:
-                return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
-            else:
-                access_token = AccessToken.for_user(user)
-                access_token.set_exp(lifetime=timedelta(minutes=5))
-                return Response({'status': 'success', 'access_token': str(access_token)}, status=status.HTTP_200_OK)
-        return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
+        except ObjectDoesNotExist:
+            return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            access_token = AccessToken.for_user(user)
+            access_token.set_exp(lifetime=timedelta(minutes=5))
+            return Response({'status': 'success', 'access_token': str(access_token)})
 
 
-class ChangePasswordAPIVIew(UpdateAPIView):
+class ChangePasswordAPIVIew(UpdateModelMixin, GenericAPIView):
     serializer_class = ChangePasswordSerializer
     permission_classes = [IsAuthenticated]
 
@@ -115,7 +115,7 @@ class ChangePasswordAPIVIew(UpdateAPIView):
         user = User.objects.get(id=self.request.user.id)
         return user
 
-    def patch(self, request, *args, **kwargs):
+    def patch(self):
         serializer = self.get_serializer(data=self.request.data)
         if serializer.is_valid():
             new_password = self.request.data.get('new_password')

@@ -3,6 +3,6 @@ from django.urls import path
 from .views import FavouriteEventAPIView, UnFavouriteEventAPIView
 
 urlpatterns = [
-    path("favourite_event/", FavouriteEventAPIView.as_view()),
-    path("un_favourite_event/", UnFavouriteEventAPIView.as_view()),
+    path("add_to_favourites/", FavouriteEventAPIView.as_view()),
+    path("remove_from_favourites/", UnFavouriteEventAPIView.as_view()),
 ]
