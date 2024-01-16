@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'apps.locations',
     'apps.notifications',
     'apps.favorite',
+    'apps.invitations',
 
     # my_libraries
     'rest_framework',
