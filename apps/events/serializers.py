@@ -4,6 +4,8 @@ from .models import Category, EventDate, BaseEvent, EventWeek, Interests, EventB
 from ..locations.models import Address, City
 from ..profiles.models import Organizer, FollowOrganizer
 
+import datetime
+
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -117,6 +119,7 @@ class DetailEventSerializer(serializers.ModelSerializer):
     event_dates = EventDateSerializer(many=True, source='temporaryevent.dates')
     event_weeks = EventWeekSerializer(many=True, source='permanentevent.weeks')
     next_events_org = serializers.SerializerMethodField()
+    event_type = serializers.SerializerMethodField()
 
     class Meta:
         model = BaseEvent
@@ -125,6 +128,7 @@ class DetailEventSerializer(serializers.ModelSerializer):
             'title',
             'description',
             'banners',
+            'event_type',
             'event_dates',
             'event_weeks',
             'price',
@@ -144,6 +148,16 @@ class DetailEventSerializer(serializers.ModelSerializer):
         """
         organizer = obj.organizer
         if organizer:
-            events = BaseEvent.objects.filter(organizer=organizer).exclude(id=obj.id)[:1]
+            now = datetime.datetime.now()  # Получение текущей даты и времени
+            events = BaseEvent.objects.filter(
+                organizer=organizer,
+                temporaryevent__dates__start_date__gt=now
+            ).exclude(id=obj.id)[:5]
             return OrganizerEventSerializer(events, many=True).data
         return []
+
+    def get_event_type(self, obj):
+        if hasattr(obj, 'temporaryevent'):
+            return ["temporary"]
+        elif hasattr(obj, 'permanentevent'):
+            return ["permanent"]
