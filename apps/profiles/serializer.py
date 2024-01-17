@@ -15,7 +15,7 @@ from apps.users.models import CustomUser
 class ProfileSerializer(ModelSerializer):
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'description', 'city', 'profile_picture', 'email', 'city', ]
+        fields = ['first_name', 'last_name', 'city', 'profile_picture', 'email', 'city', ]
 
 
 class PhoneNumberSerializer(ModelSerializer):
