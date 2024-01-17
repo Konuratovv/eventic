@@ -176,8 +176,8 @@ EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 
-CSRF_USE_SESSIONS = True
-CSRF_TRUSTED_ORIGINS = ['https://eventic.pp.ua']
+# CSRF_USE_SESSIONS = True
+# CSRF_TRUSTED_ORIGINS = ['https://eventic.pp.ua']
 
 INTERNAL_IPS = [
     '127.0.0.1',
