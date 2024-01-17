@@ -15,7 +15,7 @@ from .serializers import BaseEventSerializer, DetailEventSerializer, CategorySer
 from .models import BaseEvent, PermanentEvent, TemporaryEvent
 from apps.profiles.serializer import PermanentEventSerializer, TemporaryEventSerializer, \
     MainBaseEventSerializer
-from .event_filters import EventFilter
+from .event_filters import EventFilter, EventTypeFilter
 from ..profiles.models import User, FollowOrganizer
 from ..profiles.serializer import LastViewedEventReadSerializer, PermanentEventSerializer, TemporaryEventSerializer
 
@@ -58,12 +58,13 @@ class EventDetailAPIView(generics.RetrieveAPIView):
 class EventListAPIView(generics.ListAPIView):
     """
     Вывод списка эвентов.
-    Фильтрация по категориям.
-    Фильтрация по интересам.
-    Фильтрация по диапазону дат.
+    Фильтрация по категориям: http://127.0.0.1:8000/events/?category=yarmarka
+    Фильтрация по интересам: http://127.0.0.1:8000/events/?interests=rasprodaja,nizkie_ceny
+    Фильтрация по диапазону дат: http://127.0.0.1:8000/events/?category=yarmarka
     """
+    permission_classes = [IsAuthenticated]
     queryset = BaseEvent.objects.all()
-    serializer_class = BaseEventSerializer
+    serializer_class = DetailEventSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_class = EventFilter
 
@@ -72,6 +73,19 @@ class EventListAPIView(generics.ListAPIView):
         user = User.objects.get(id=self.request.user.id)
         queryset = queryset.filter(BaseEvent__event_city=user.city)
         return queryset
+
+
+class EventTypeFilterAPIView(generics.ListAPIView):
+    """
+    Здесь происходит фильтрация по типу мероприятия,
+    Вывод всех постоянных: http://127.0.0.1:8000/events/type_filter/?event_type=permanent
+    Вывод всех временных: http://127.0.0.1:8000/events/type_filter/?event_type=temporary
+    """
+    permission_classes = [IsAuthenticated]
+    queryset = BaseEvent.objects.all()
+    serializer_class = DetailEventSerializer
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = EventTypeFilter
 
 
 class CustomPagination(PageNumberPagination):

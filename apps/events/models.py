@@ -44,6 +44,7 @@ class BaseEvent(models.Model):
     organizer = models.ForeignKey('profiles.Organizer', on_delete=models.CASCADE, null=True, blank=True,
                                   verbose_name='Организатор мероприятия', related_name='baseevent_org')
     address = models.ForeignKey('locations.Address', on_delete=models.CASCADE, verbose_name='Адрес')
+    is_active = models.BooleanField(verbose_name="Мероприятие активно", default=True)
     objects = models.Manager()
 
     @property
