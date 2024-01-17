@@ -43,7 +43,7 @@ services:
     container_name: docker_nginx
     ports:
       - "80:80"
-      - "443:`443"
+      - "443:443"
     volumes:
       - ./nginx/default_location:/etc/nginx/vhost.d/default_location
       - static_volume:/usr/src/app/static
