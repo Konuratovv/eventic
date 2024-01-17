@@ -112,8 +112,8 @@ class OrganizerListAPIView(ListAPIView):
                 data.append({"organizer_data": serializer_data, 'followers_count': followers})
 
             sorted_data = sorted(data, key=lambda x: x['followers_count'], reverse=True)
-            return self.get_paginated_response(sorted_data)
-        return Response(data)
+            result_data = [organizer['organizer_data'] for organizer in sorted_data]
+            return self.get_paginated_response(result_data)
 
 
 class DetailOrganizer(RetrieveAPIView):
