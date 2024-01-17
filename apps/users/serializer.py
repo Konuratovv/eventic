@@ -46,7 +46,7 @@ class RegisterSerializer(ModelSerializer):
 class CodeSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ['code']
+        fields = ['code', 'email']
 
 
 class SendCodeSerializer(serializers.Serializer):

@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-+!gfq7wg)y_*innav%(2+6gq*s0+&on!yx4vw@8y$rvvsqjb%7
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 if DEBUG:
-    from .development import *
+    from .production import *
 else:
     from .production import *
 
@@ -59,9 +59,11 @@ INSTALLED_APPS = [
     'drf_spectacular',
     'django_filters',
     'django_extensions',
+    'debug_toolbar',
 ]
 
 MIDDLEWARE = [
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
@@ -174,7 +176,10 @@ EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 
+# CSRF_USE_SESSIONS = True
+# CSRF_TRUSTED_ORIGINS = ['https://eventic.pp.ua']
 
-
-CSRF_USE_SESSIONS = True
-CSRF_TRUSTED_ORIGINS = ['https://eventic.pp.ua']
+INTERNAL_IPS = [
+    '127.0.0.1',
+    '34.83.117.144',
+]

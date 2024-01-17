@@ -68,11 +68,10 @@ class EventListAPIView(generics.ListAPIView):
     filter_backends = (DjangoFilterBackend,)
     filterset_class = EventFilter
 
-    def gs(self):
-        queryset = super().get_queryset()
-        user = User.objects.get(id=self.request.user.id)
-        queryset = queryset.filter(BaseEvent__event_city=user.city)
-        return queryset
+    # def get_queryset(self, request, *args, **kwargs):
+    #     user = User.objects.get(id=self.request.user.id)
+    #     queryset = BaseEvent.objects.filter(BaseEvent__event_city=user.city)
+    #     return queryset
 
 
 class EventTypeFilterAPIView(generics.ListAPIView):
@@ -93,10 +92,17 @@ class CustomPagination(PageNumberPagination):
     page_size_query_param = 'page_size'
     max_page_size = 15
 
+        # user = user.city
+        # event = BaseEvent.objects.filter(address__city=user)
+        # serializer = self.get_serializer(event, many=True).data
+        # return Response(serializer)
+
 
 class EventTypeListAPIView(ListAPIView):
     permission_classes = [IsAuthenticated]
-    pagination_class = CustomPagination
+
+    def get_queryset(self):
+        return None
 
     def get(self, request, *args, **kwargs):
         data = {
@@ -233,4 +239,4 @@ class EventTypeListAPIView(ListAPIView):
             {'type': 'last_viewed_events', 'events': data['last_viewed_events']},
         ]
 
-        return Response(sorted_data)
+        return self.get_paginated_response(sorted_data)

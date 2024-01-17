@@ -32,6 +32,7 @@ class EventWeekSerializer(serializers.ModelSerializer):
 
 
 class EventBannerSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = EventBanner
         fields = '__all__'
