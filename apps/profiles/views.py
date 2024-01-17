@@ -10,7 +10,8 @@ from rest_framework.pagination import PageNumberPagination, LimitOffsetPaginatio
 from apps.events.models import BaseEvent
 from apps.profiles.models import User, Organizer, FollowOrganizer, ViewedEvent
 from apps.profiles.serializer import ProfileSerializer, FollowOrganizerSerializer, \
-    FollowEventSerializer, LastViewedEventSerializer, MainOrganizerSerializer, OrganizerDetailSerializer
+    FollowEventSerializer, LastViewedEventSerializer, MainOrganizerSerializer, OrganizerDetailSerializer, \
+    MainBaseEventSerializer, DetailBaseEventSerializer
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.core.exceptions import ObjectDoesNotExist
@@ -117,8 +118,8 @@ class OrganizerListAPIView(ListAPIView):
 
 class DetailOrganizer(RetrieveAPIView):
     serializer_class = OrganizerDetailSerializer
-    queryset = Organizer.objects.all()
     permission_classes = [IsAuthenticated]
+    queryset = Organizer.objects.all()
 
     def get(self, request, *args, **kwargs):
         user = User.objects.get(id=self.request.user.id)
@@ -127,6 +128,21 @@ class DetailOrganizer(RetrieveAPIView):
         organizer.is_followed = any(event_id['following__pk'] == organizer.pk for event_id in followed_id)
         serialized_data = self.get_serializer(organizer).data
         return Response(serialized_data)
+
+
+class OrganizerEvent(ListAPIView):
+    serializer_class = DetailBaseEventSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        # user = User.objects.get(id=self.request.user.id)
+        organizer = Organizer.objects.get(id=self.kwargs.get('pk'))
+        events = BaseEvent.objects.filter(organizer=organizer)
+        return self.paginate_queryset(events)
+
+    def get(self, request, *args, **kwargs):
+        serialized_data = self.get_serializer(self.get_queryset(), many=True).data
+        return self.get_paginated_response(serialized_data)
 
 
 class SubscribersUserAPIView(ListAPIView):

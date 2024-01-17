@@ -60,9 +60,11 @@ INSTALLED_APPS = [
     'django_filters',
     'django_extensions',
     'drf_yasg',
+    'debug_toolbar',
 ]
 
 MIDDLEWARE = [
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
@@ -177,3 +179,7 @@ EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 
 CSRF_USE_SESSIONS = True
 CSRF_TRUSTED_ORIGINS = ['https://eventic.pp.ua']
+
+INTERNAL_IPS = [
+    '127.0.0.1',
+]
