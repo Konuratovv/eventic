@@ -5,19 +5,18 @@ from django.contrib.sites.shortcuts import get_current_site
 from rest_framework import generics, status
 from rest_framework.generics import ListAPIView
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from django_filters.rest_framework import DjangoFilterBackend
+from .event_filters import EventFilter, EventTypeFilter
 
 from .models import BaseEvent, PermanentEvent, TemporaryEvent, Category, Interests
 from .serializers import BaseEventSerializer, DetailEventSerializer, CategorySerializer, InterestSerializer
-from .models import BaseEvent, PermanentEvent, TemporaryEvent
 from apps.profiles.serializer import PermanentEventSerializer, TemporaryEventSerializer, \
-    MainBaseEventSerializer
-from .event_filters import EventFilter, EventTypeFilter
-from ..profiles.models import User, FollowOrganizer
-from ..profiles.serializer import LastViewedEventReadSerializer, PermanentEventSerializer, TemporaryEventSerializer
+    MainBaseEventSerializer, LastViewedEventReadSerializer
+
+from ..profiles.models import User
 
 
 class EventCategoryListAPIView(generics.ListAPIView):
@@ -33,7 +32,10 @@ class EventInterestListAPIView(generics.ListAPIView):
 
 
 class EventRetrieveAPIView(generics.RetrieveAPIView):
-    """ Вывод Eventa по id 'Все поля' """
+    """
+    Вывод Eventa по id 'Все поля' Это поле служебное для проверки!!!
+    Использовать это поле не надо!!!
+    """
     serializer_class = BaseEventSerializer
 
     def get(self, request, pk):
@@ -44,7 +46,8 @@ class EventRetrieveAPIView(generics.RetrieveAPIView):
 
 class EventDetailAPIView(generics.RetrieveAPIView):
     """
-    Вывод Eventa по id
+    Вывод Eventa по id (Detail)
+    пример: http://127.0.0.1:8000/events/id/
     """
     permission_classes = [IsAuthenticated]
     serializer_class = DetailEventSerializer
@@ -77,8 +80,8 @@ class EventListAPIView(generics.ListAPIView):
 class EventTypeFilterAPIView(generics.ListAPIView):
     """
     Здесь происходит фильтрация по типу мероприятия,
-    Вывод всех постоянных: http://127.0.0.1:8000/events/type_filter/?event_type=permanent
-    Вывод всех временных: http://127.0.0.1:8000/events/type_filter/?event_type=temporary
+    Вывод всех постоянных: http://127.0.0.1:8000/events/filter_event_type/?event_type=permanent
+    Вывод всех временных: http://127.0.0.1:8000/events/filter_event_type/?event_type=temporary
     """
     permission_classes = [IsAuthenticated]
     queryset = BaseEvent.objects.all()
