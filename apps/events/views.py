@@ -46,7 +46,7 @@ class EventRetrieveAPIView(generics.RetrieveAPIView):
 
 class EventDetailAPIView(generics.RetrieveAPIView):
     """
-    Вывод Eventa по id (Detail)
+    Вывод Eventa по id (Detail),
     пример: http://127.0.0.1:8000/events/id/
     """
     permission_classes = [IsAuthenticated]
@@ -88,6 +88,16 @@ class EventTypeFilterAPIView(generics.ListAPIView):
     serializer_class = DetailEventSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_class = EventTypeFilter
+
+
+class FreeEventListAPIView(generics.ListAPIView):
+    """
+    Получение списка бесплатных Events,
+    пример: http://127.0.0.1:8000/events/free_events_list/
+    """
+    permission_classes = [IsAuthenticated]
+    serializer_class = DetailEventSerializer
+    queryset = BaseEvent.objects.filter(price=0.0)
 
 
 class CustomPagination(PageNumberPagination):

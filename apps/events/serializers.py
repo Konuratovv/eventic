@@ -196,3 +196,4 @@ class DetailEventSerializer(serializers.ModelSerializer):
             return "temporary"
         elif hasattr(obj, 'permanentevent'):
             return "permanent"
+
