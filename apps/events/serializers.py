@@ -2,9 +2,8 @@ from rest_framework import serializers
 from .models import Category, EventDate, BaseEvent, EventWeek, Interests, EventBanner
 
 from ..locations.models import Address, City
-from ..profiles.models import Organizer, FollowOrganizer
+from ..profiles.models import Organizer, FollowOrganizer, User
 
-# import datetime
 from datetime import datetime, timedelta
 
 
@@ -33,6 +32,7 @@ class EventWeekSerializer(serializers.ModelSerializer):
 
 
 class EventBannerSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = EventBanner
         fields = '__all__'
@@ -131,6 +131,7 @@ class DetailEventSerializer(serializers.ModelSerializer):
     related_events_by_interest = serializers.SerializerMethodField()
     event_type = serializers.SerializerMethodField(read_only=True)
     average_time = serializers.SerializerMethodField()
+    is_notified = serializers.BooleanField(default=False)
 
     class Meta:
         model = BaseEvent
@@ -149,8 +150,16 @@ class DetailEventSerializer(serializers.ModelSerializer):
             'address',
             'next_events_org',
             'related_events_by_interest',
-
+            'is_notified',
         )
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        request = self.context.get('request')
+        user = User.objects.get(id=request.user.id)
+        is_subscribed = user.events.filter(pk=instance.id).exists()
+        data['is_notified'] = is_subscribed
+        return data
 
     def get_next_events_org(self, obj):
         """
