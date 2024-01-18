@@ -2,7 +2,7 @@ from rest_framework import serializers
 from .models import Category, EventDate, BaseEvent, EventWeek, Interests, EventBanner, TemporaryEvent, PermanentEvent
 
 from ..locations.models import Address, City
-from ..profiles.models import Organizer, FollowOrganizer
+from ..profiles.models import Organizer, FollowOrganizer, User
 
 import datetime
 
@@ -120,6 +120,7 @@ class DetailEventSerializer(serializers.ModelSerializer):
     event_weeks = EventWeekSerializer(many=True, source='permanentevent.weeks')
     next_events_org = serializers.SerializerMethodField()
     event_type = serializers.SerializerMethodField()
+    is_notified = serializers.BooleanField(default=False)
 
     class Meta:
         model = BaseEvent
@@ -136,8 +137,16 @@ class DetailEventSerializer(serializers.ModelSerializer):
             'organizer',
             'address',
             'next_events_org',
-
+            'is_notified',
         )
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        request = self.context.get('request')
+        user = User.objects.get(id=request.user.id)
+        is_subscribed = user.events.filter(pk=instance.id).exists()
+        data['is_notified'] = is_subscribed
+        return data
 
     def get_next_events_org(self, obj):
         """
