@@ -145,6 +145,7 @@ class DetailEventSerializer(serializers.ModelSerializer):
             'event_dates',
             'event_weeks',
             'price',
+            'is_free',
             'average_time',
             'interests',
             'organizer',
