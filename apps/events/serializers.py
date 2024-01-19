@@ -183,6 +183,10 @@ class DetailEventSerializer(serializers.ModelSerializer):
         return []
 
     def get_related_events_by_interest(self, obj):
+        """
+        Возвращает список событий связанных с тегами (интересами),
+        В детейле относится к 'Возможно вас также заинтересуют'
+        """
         now = datetime.now()
         interests = obj.interests.all()
 
@@ -206,12 +210,14 @@ class DetailEventSerializer(serializers.ModelSerializer):
         return []
 
     def get_event_type(self, obj):
+        """ Отображение типа evtenta в ответе """
         if hasattr(obj, 'temporaryevent'):
             return "temporary"
         elif hasattr(obj, 'permanentevent'):
             return "permanent"
 
     def get_average_time(self, obj):
+        """ Отображение продолжительности мероприятия """
         if hasattr(obj, 'temporaryevent'):
             durations = [e.end_date - e.start_date for e in obj.temporaryevent.dates.all()]
             avg_duration = sum(durations, timedelta()) / len(durations) if durations else timedelta(0)
