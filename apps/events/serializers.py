@@ -91,35 +91,6 @@ class OrganizerSerializer(serializers.ModelSerializer):
             return False
 
 
-class BaseEventSerializer(serializers.ModelSerializer):
-    category = CategorySerializer(many=True)
-    interests = InterestSerializer(many=True)
-    banners = EventBannerSerializer(many=True)
-    organizer = OrganizerSerializer(read_only=True)
-    city = CityAddressSerializer(read_only=True)
-    address = AddressSerializer(read_only=True)
-    event_dates = EventDateSerializer(many=True, source='temporaryevent.dates')
-    event_weeks = EventWeekSerializer(many=True, source='permanentevent.weeks')
-
-    class Meta:
-        model = BaseEvent
-        fields = (
-            'id',
-            'title',
-            'description',
-            'language',
-            'banners',
-            'event_dates',
-            'event_weeks',
-            'price',
-            'category',
-            'interests',
-            'organizer',
-            'address',
-            'city',
-        )
-
-
 class DetailEventSerializer(serializers.ModelSerializer):
     interests = InterestSerializer(many=True)
     banners = EventBannerSerializer(many=True)
