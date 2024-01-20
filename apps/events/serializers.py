@@ -132,6 +132,7 @@ class DetailEventSerializer(serializers.ModelSerializer):
     event_type = serializers.SerializerMethodField(read_only=True)
     average_time = serializers.SerializerMethodField()
     is_notified = serializers.BooleanField(default=False)
+    is_free = serializers.SerializerMethodField()
 
     class Meta:
         model = BaseEvent
@@ -144,6 +145,7 @@ class DetailEventSerializer(serializers.ModelSerializer):
             'event_dates',
             'event_weeks',
             'price',
+            'is_free',
             'average_time',
             'interests',
             'organizer',
@@ -231,3 +233,6 @@ class DetailEventSerializer(serializers.ModelSerializer):
         hours = total_seconds // 3600
         minutes = (total_seconds % 3600) // 60
         return f"{hours} ч {minutes} мин"
+
+    def get_is_free(self, obj):
+        return obj.price == 0.0
