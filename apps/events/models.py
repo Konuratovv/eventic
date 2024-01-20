@@ -123,7 +123,7 @@ class EventDate(models.Model):
         verbose_name_plural = 'Даты и время мероприятий'
 
     def __str__(self):
-        return f"{self.start_date}, {self.end_date}"
+        return f"{self.start_time}, {self.end_time}"
 
     # я добавил чтобы не давало предурпждение
     objects = models.Manager()
