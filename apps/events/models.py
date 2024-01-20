@@ -41,7 +41,7 @@ class BaseEvent(models.Model):
     price = models.DecimalField(max_digits=7, decimal_places=2, verbose_name="Цена")
     category = models.ManyToManyField(Category, verbose_name="Категория", related_name="category")
     interests = models.ManyToManyField(Interests, verbose_name="Интересы", related_name="interests")
-    organizer = models.ForeignKey('profiles.Organizer', on_delete=models.CASCADE, null=True, blank=True,
+    organizer = models.ForeignKey('profiles.Organizer', on_delete=models.CASCADE,
                                   verbose_name='Организатор мероприятия', related_name='baseevent_org')
     address = models.ForeignKey('locations.Address', on_delete=models.CASCADE, verbose_name='Адрес')
     is_active = models.BooleanField(verbose_name="Мероприятие активно", default=True)

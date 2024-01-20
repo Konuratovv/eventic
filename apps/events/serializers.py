@@ -91,35 +91,6 @@ class OrganizerSerializer(serializers.ModelSerializer):
             return False
 
 
-class BaseEventSerializer(serializers.ModelSerializer):
-    category = CategorySerializer(many=True)
-    interests = InterestSerializer(many=True)
-    banners = EventBannerSerializer(many=True)
-    organizer = OrganizerSerializer(read_only=True)
-    city = CityAddressSerializer(read_only=True)
-    address = AddressSerializer(read_only=True)
-    event_dates = EventDateSerializer(many=True, source='temporaryevent.dates')
-    event_weeks = EventWeekSerializer(many=True, source='permanentevent.weeks')
-
-    class Meta:
-        model = BaseEvent
-        fields = (
-            'id',
-            'title',
-            'description',
-            'language',
-            'banners',
-            'event_dates',
-            'event_weeks',
-            'price',
-            'category',
-            'interests',
-            'organizer',
-            'address',
-            'city',
-        )
-
-
 class DetailEventSerializer(serializers.ModelSerializer):
     interests = InterestSerializer(many=True)
     banners = EventBannerSerializer(many=True)
@@ -132,6 +103,7 @@ class DetailEventSerializer(serializers.ModelSerializer):
     event_type = serializers.SerializerMethodField(read_only=True)
     average_time = serializers.SerializerMethodField()
     is_notified = serializers.BooleanField(default=False)
+    is_free = serializers.SerializerMethodField()
 
     class Meta:
         model = BaseEvent
@@ -144,6 +116,7 @@ class DetailEventSerializer(serializers.ModelSerializer):
             'event_dates',
             'event_weeks',
             'price',
+            'is_free',
             'average_time',
             'interests',
             'organizer',
@@ -181,6 +154,10 @@ class DetailEventSerializer(serializers.ModelSerializer):
         return []
 
     def get_related_events_by_interest(self, obj):
+        """
+        Возвращает список событий связанных с тегами (интересами),
+        В детейле относится к 'Возможно вас также заинтересуют'
+        """
         now = datetime.now()
         interests = obj.interests.all()
 
@@ -204,12 +181,14 @@ class DetailEventSerializer(serializers.ModelSerializer):
         return []
 
     def get_event_type(self, obj):
+        """ Отображение типа evtenta в ответе """
         if hasattr(obj, 'temporaryevent'):
             return "temporary"
         elif hasattr(obj, 'permanentevent'):
             return "permanent"
 
     def get_average_time(self, obj):
+        """ Отображение продолжительности мероприятия """
         if hasattr(obj, 'temporaryevent'):
             durations = [e.end_date - e.start_date for e in obj.temporaryevent.dates.all()]
             avg_duration = sum(durations, timedelta()) / len(durations) if durations else timedelta(0)
@@ -231,3 +210,11 @@ class DetailEventSerializer(serializers.ModelSerializer):
         hours = total_seconds // 3600
         minutes = (total_seconds % 3600) // 60
         return f"{hours} ч {minutes} мин"
+
+    def get_is_free(self, obj):
+        """
+        Проверка поля is_free, чтобы определить,
+        бесплатное мероприятие или нет, не анализируя саму цену.
+        Например, показывать метку "Бесплатно" для мероприятий, у которых is_free равно True.
+        """
+        return obj.price == 0.0

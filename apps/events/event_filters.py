@@ -27,6 +27,7 @@ class EventFilter(filters.FilterSet):
 
 
 class EventTypeFilter(filters.FilterSet):
+    """ Фильрация по типу eventa """
     event_type = filters.CharFilter(method='filter_event_type')
 
     class Meta:
