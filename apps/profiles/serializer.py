@@ -1,7 +1,9 @@
-from apps.events.models import BaseEvent, EventDate, EventWeek, TemporaryEvent, PermanentEvent, Interests
-from apps.events.serializers import EventBannerSerializer
+from apps.events.models import BaseEvent, EventDate, EventWeek, Interests
+from apps.events.serializers import EventBannerSerializer, AddressSerializer, InterestSerializer
 from apps.locations.models import Address
-from apps.profiles.models import Organizer, FollowOrganizer, ViewedEvent
+from apps.profiles.models import Organizer, FollowOrganizer, ViewedEvent, PhoneNumber, Email, SocialLink
+
+from django.db.models import BooleanField, Case, When, Value
 
 from apps.profiles.models import User
 from rest_framework.serializers import ModelSerializer
@@ -13,16 +15,33 @@ from apps.users.models import CustomUser
 class ProfileSerializer(ModelSerializer):
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'description', 'city', 'profile_picture', 'email', 'city', ]
+        fields = ['first_name', 'last_name', 'city', 'profile_picture', 'email', 'city', ]
 
 
-class OrganizerSerializer(ModelSerializer):
-    is_follow = serializers.BooleanField(default=False)
+class PhoneNumberSerializer(ModelSerializer):
+    class Meta:
+        model = PhoneNumber
+        fields = '__all__'
+
+
+class EmailSerializer(ModelSerializer):
+    class Meta:
+        model = Email
+        fields = '__all__'
+
+
+class SocialLinkSerializer(ModelSerializer):
+    class Meta:
+        model = SocialLink
+        fields = '__all__'
+
+
+class MainOrganizerSerializer(ModelSerializer):
+    is_followed = serializers.BooleanField(default=False)
 
     class Meta:
         model = Organizer
-        exclude = ['code', 'password', 'groups', 'user_permissions', 'last_login', 'is_superuser', 'is_staff',
-                   'is_verified']
+        fields = ['id', 'is_followed', 'profile_picture', 'title']
 
 
 class FollowOrganizerSerializer(ModelSerializer):
@@ -79,7 +98,6 @@ class MainBaseEventSerializer(serializers.ModelSerializer):
     banners = EventBannerSerializer(many=True)
     event_weeks = MainEventWeekSerializer(many=True, source='permanentevent.weeks')
     event_dates = MainEventDateSerializer(many=True, source='temporaryevent.dates')
-    is_follow = serializers.BooleanField(default=False)
 
     class Meta:
         model = BaseEvent
@@ -91,8 +109,54 @@ class MainBaseEventSerializer(serializers.ModelSerializer):
             'organizer',
             'event_weeks',
             'event_dates',
-            'is_follow'
         ]
+
+
+class DetailBaseEventSerializer(serializers.ModelSerializer):
+    banners = EventBannerSerializer(many=True)
+    event_weeks = MainEventWeekSerializer(many=True, source='permanentevent.weeks')
+    event_dates = MainEventDateSerializer(many=True, source='temporaryevent.dates')
+    is_favourite = serializers.SerializerMethodField()
+
+    class Meta:
+        model = BaseEvent
+        fields = [
+            'id',
+            'banners',
+            'title',
+            'price',
+            'organizer',
+            'event_weeks',
+            'event_dates',
+            'is_favourite'
+        ]
+
+    def get_is_favourite(self, events):
+        user_obj = User.objects.get(id=self.context.get('request').user.id)
+        return user_obj.favourites.filter(pk=events.pk).exists()
+
+
+class OrganizerDetailSerializer(ModelSerializer):
+    is_followed = serializers.BooleanField(default=False)
+    address = AddressSerializer(many=True)
+    phone_numbers = PhoneNumberSerializer(many=True)
+    emails = EmailSerializer(many=True)
+    social_links = SocialLinkSerializer(many=True)
+    interests = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Organizer
+        exclude = ['code', 'password', 'groups', 'user_permissions', 'last_login', 'is_superuser', 'is_staff',
+                   'is_verified', 'email']
+
+    def get_interests(self, organizer):
+        events = BaseEvent.objects.filter(organizer=organizer)
+        interests = []
+
+        for event in events:
+            interests.extend(event.interests.all())
+        serializer = InterestSerializer(interests, many=True)
+        return serializer.data
 
 
 class LastViewedEventSerializer(serializers.ModelSerializer):
@@ -110,12 +174,8 @@ class LastViewedEventReadSerializer(serializers.ModelSerializer):
 
 
 class TemporaryEventSerializer(MainBaseEventSerializer):
-    class Meta:
-        model = TemporaryEvent
-        fields = '__all__'
+    pass
 
 
 class PermanentEventSerializer(MainBaseEventSerializer):
-    class Meta:
-        model = PermanentEvent
-        fields = '__all__'
+    pass

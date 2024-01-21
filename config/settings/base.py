@@ -28,7 +28,7 @@ DEBUG = True
 if DEBUG:
     from .development import *
 else:
-    from .production import *
+    from .development import *
 
 ALLOWED_HOSTS = ['*']
 
@@ -49,7 +49,8 @@ INSTALLED_APPS = [
     'apps.events',
     'apps.locations',
     'apps.notifications',
-    'apps.favorite',
+    'apps.favorites',
+    'apps.invitations',
 
     # my_libraries
     'rest_framework',
@@ -58,9 +59,11 @@ INSTALLED_APPS = [
     'drf_spectacular',
     'django_filters',
     'django_extensions',
+    'debug_toolbar',
 ]
 
 MIDDLEWARE = [
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
@@ -99,18 +102,18 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    # {
+    #     'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    # },
+    # {
+    #     'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+    # },
+    # {
+    #     'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    # },
+    # {
+    #     'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    # },
 ]
 
 # Internationalization
@@ -173,7 +176,10 @@ EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 
+# CSRF_USE_SESSIONS = True
+# CSRF_TRUSTED_ORIGINS = ['https://eventic.pp.ua']
 
-
-CSRF_USE_SESSIONS = True
-CSRF_TRUSTED_ORIGINS = ['https://eventic.pp.ua']
+INTERNAL_IPS = [
+    '127.0.0.1',
+    '34.83.117.144',
+]

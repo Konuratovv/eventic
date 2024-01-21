@@ -1,7 +1,8 @@
 from django.urls import path
 
-from .views import EventRetrieveAPIView, EventListAPIView, EventTypeListAPIView, EventDetailAPIView, \
-    EventCategoryListAPIView, EventInterestListAPIView
+from .views import EventRetrieveAPIView, EventListAPIView, EventDetailAPIView, \
+    EventCategoryListAPIView, EventInterestListAPIView, EventTypeListAPIView, EventTypeFilterAPIView, \
+    FreeEventListAPIView
 
 urlpatterns = [
     path("", EventListAPIView.as_view()),
@@ -9,9 +10,7 @@ urlpatterns = [
     path("<int:pk>/", EventDetailAPIView.as_view()),
     path("category_list/", EventCategoryListAPIView.as_view()),
     path("interest_list/", EventInterestListAPIView.as_view()),
+    path("free_events_list/", FreeEventListAPIView.as_view()),
+    path("filter_event_type/", EventTypeFilterAPIView.as_view()),
     path('types/', EventTypeListAPIView.as_view()),
-
-    # Подписка и отписка от организатора в детейле
-    # path('organizer/<int:organizer_id>/follow/', FollowOrganizerView.as_view(), name='follow-organizer'),
-    # path('organizer/<int:organizer_id>/unfollow/', FollowOrganizerView.as_view(), name='unfollow-organizer'),
 ]

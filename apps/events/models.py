@@ -44,6 +44,7 @@ class BaseEvent(models.Model):
     organizer = models.ForeignKey('profiles.Organizer', on_delete=models.CASCADE, null=True, blank=True,
                                   verbose_name='Организатор мероприятия', related_name='baseevent_org')
     address = models.ForeignKey('locations.Address', on_delete=models.CASCADE, verbose_name='Адрес')
+    is_active = models.BooleanField(verbose_name="Мероприятие активно", default=True)
     objects = models.Manager()
 
     @property
@@ -114,15 +115,15 @@ class EventDate(models.Model):
     """ Дата и время, временного мероприятия связана с TemporaryEvent """
     temp = models.ForeignKey(TemporaryEvent, on_delete=models.CASCADE, related_name='dates',
                              verbose_name='Выберите временное событие')
-    start_date = models.DateTimeField(verbose_name='Дата начала мероприятия')
-    end_date = models.DateTimeField(verbose_name='Дата окончания мероприятия')
+    start_time = models.DateTimeField(verbose_name='Дата начала мероприятия')
+    end_time = models.TimeField(verbose_name='Дата окончания мероприятия')
 
     class Meta:
         verbose_name = 'Дата и время мероприятия'
         verbose_name_plural = 'Даты и время мероприятий'
 
     def __str__(self):
-        return f"{self.start_date}, {self.end_date}"
+        return f"{self.start_time}, {self.end_time}"
 
     # я добавил чтобы не давало предурпждение
     objects = models.Manager()

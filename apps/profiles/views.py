@@ -2,16 +2,20 @@ from django.db.models import BooleanField, Case, When, Value
 from django.utils import timezone
 
 from rest_framework import status
-from rest_framework.generics import RetrieveAPIView, ListAPIView, CreateAPIView, DestroyAPIView, UpdateAPIView, \
-    ListCreateAPIView
+from rest_framework.generics import RetrieveAPIView, ListAPIView, CreateAPIView, DestroyAPIView, \
+    ListCreateAPIView, GenericAPIView
+from rest_framework.mixins import UpdateModelMixin
+from rest_framework.pagination import PageNumberPagination, LimitOffsetPagination
 
 from apps.events.models import BaseEvent
 from apps.profiles.models import User, Organizer, FollowOrganizer, ViewedEvent
-from apps.profiles.serializer import ProfileSerializer, OrganizerSerializer, FollowOrganizerSerializer, \
-    FollowEventSerializer, LastViewedEventSerializer
+from apps.profiles.serializer import ProfileSerializer, FollowOrganizerSerializer, \
+    FollowEventSerializer, LastViewedEventSerializer, MainOrganizerSerializer, OrganizerDetailSerializer, \
+    MainBaseEventSerializer, DetailBaseEventSerializer
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.core.exceptions import ObjectDoesNotExist
+
 
 class ProfileViewSet(RetrieveAPIView):
     serializer_class = ProfileSerializer
@@ -52,11 +56,11 @@ class FollowOrganizerAPIView(CreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class UnFollowOrganizerAPIView(UpdateAPIView):
+class UnFollowOrganizerAPIView(UpdateModelMixin, GenericAPIView):
     serializer_class = FollowOrganizerSerializer
     permission_classes = [IsAuthenticated]
 
-    def patch(self, request, *args, **kwargs):
+    def patch(self, request):
         serializer = self.get_serializer(data=request.data)
         user = User.objects.get(id=self.request.user.id)
 
@@ -77,8 +81,9 @@ class UnFollowOrganizerAPIView(UpdateAPIView):
 
 
 class OrganizerListAPIView(ListAPIView):
-    serializer_class = OrganizerSerializer
+    serializer_class = MainOrganizerSerializer
     permission_classes = [IsAuthenticated]
+    queryset = Organizer.objects.all()
 
     def get(self, request, *args, **kwargs):
         try:
@@ -88,46 +93,76 @@ class OrganizerListAPIView(ListAPIView):
 
         is_follow_sub = FollowOrganizer.objects.filter(follower=user, is_followed=True).values('following__pk')
 
-        organizers = Organizer.objects.annotate(
-            is_follow=Case(
+        organizers = self.queryset.annotate(
+            is_followed=Case(
                 When(id__in=is_follow_sub, then=Value(True)),
                 default=Value(False),
                 output_field=BooleanField()
             )
         )
 
+        page = self.paginate_queryset(organizers)
+
         data = []
-        for organizer in organizers:
-            followers = organizer.followers.count()
-            serializer_data = self.get_serializer(organizer).data
+        if page is not None:
+            for organizer in page:
+                followers = organizer.followers.filter(is_followed=True).count()
+                serializer_data = self.get_serializer(organizer).data
 
-            data.append({"organizer_data": serializer_data, 'followers_count': followers})
+                data.append({"organizer_data": serializer_data, 'followers_count': followers})
 
-        sorted_data = sorted(data, key=lambda x: x['followers_count'], reverse=True)
-        return Response(sorted_data)
+            sorted_data = sorted(data, key=lambda x: x['followers_count'], reverse=True)
+            result_data = [organizer['organizer_data'] for organizer in sorted_data]
+            return self.get_paginated_response(result_data)
 
 
 class DetailOrganizer(RetrieveAPIView):
-    serializer_class = OrganizerSerializer
+    serializer_class = OrganizerDetailSerializer
+    permission_classes = [IsAuthenticated]
     queryset = Organizer.objects.all()
 
     def get(self, request, *args, **kwargs):
+        user = User.objects.get(id=self.request.user.id)
         organizer = self.get_object()
-        serializer = self.get_serializer(organizer)
-        return Response(serializer.data)
+        followed_id = FollowOrganizer.objects.filter(follower=user, is_followed=True).values('following__pk')
+        organizer.is_followed = any(event_id['following__pk'] == organizer.pk for event_id in followed_id)
+        serialized_data = self.get_serializer(organizer).data
+        return Response(serialized_data)
+
+
+class OrganizerEvent(ListAPIView):
+    serializer_class = DetailBaseEventSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        # user = User.objects.get(id=self.request.user.id)
+        organizer = Organizer.objects.get(id=self.kwargs.get('pk'))
+        events = BaseEvent.objects.filter(organizer=organizer)
+        return self.paginate_queryset(events)
+
+    def get(self, request, *args, **kwargs):
+        serialized_data = self.get_serializer(self.get_queryset(), many=True).data
+        return self.get_paginated_response(serialized_data)
 
 
 class SubscribersUserAPIView(ListAPIView):
-    serializer_class = OrganizerSerializer
+    serializer_class = MainOrganizerSerializer
     queryset = FollowOrganizer.objects.all()
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
         user = User.objects.get(id=self.request.user.id)
+        followed_id = FollowOrganizer.objects.filter(follower=user, is_followed=True).values('following__pk')
         subscribers_obj = user.following.filter(is_followed=True)
+
         organizers = [subscriber.following for subscriber in subscribers_obj]
-        serializer = self.get_serializer(organizers, many=True)
-        return Response(serializer.data)
+
+        page = self.paginate_queryset(organizers)
+
+        for organizer in page:
+            organizer.is_followed = any(event_id['following__pk'] == organizer.pk for event_id in followed_id)
+        serializer_data = self.get_serializer(page, many=True).data
+        return self.get_paginated_response(serializer_data)
 
 class FollowEventAPIView(CreateAPIView):
     serializer_class = FollowEventSerializer
