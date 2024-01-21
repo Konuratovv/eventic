@@ -129,7 +129,6 @@ class SubscribersUserAPIView(ListAPIView):
         serializer = self.get_serializer(organizers, many=True)
         return Response(serializer.data)
 
-
 class FollowEventAPIView(CreateAPIView):
     serializer_class = FollowEventSerializer
     permission_classes = [IsAuthenticated]

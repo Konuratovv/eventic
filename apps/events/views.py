@@ -70,7 +70,7 @@ class EventListAPIView(generics.ListAPIView):
     def gs(self):
         queryset = super().get_queryset()
         user = User.objects.get(id=self.request.user.id)
-        queryset = queryset.filter(BaseEvent__event_city=user.city)
+        queryset = queryset.filter(BaseEvent__address__city=user.city)
         return queryset
 
 
