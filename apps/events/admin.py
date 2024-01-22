@@ -47,7 +47,7 @@ class TemporaryEventAdmin(admin.ModelAdmin):
 
     def get_dates(self, obj):
         return ", ".join(
-            [f"{date.start_date} - {date.end_date}" for date in obj.dates.all()]) if obj.dates.exists() else ""
+            [f"{date.start_time} - {date.end_time}" for date in obj.dates.all()]) if obj.dates.exists() else ""
 
     get_dates.short_description = 'Дата'
 
