@@ -24,6 +24,7 @@ class TemporaryEventAdmin(admin.ModelAdmin):
 
     list_display = [
         "title",
+        "id",
         "description",
         "language",
         "price",
@@ -31,14 +32,13 @@ class TemporaryEventAdmin(admin.ModelAdmin):
         "get_interests",
         "organizer",
         "get_dates",
-        "id",
     ]
     list_filter = ('dates', 'interests', 'category', 'language')
 
     def get_categories(self, obj):
-        return ", ".join([category.name for category in obj.category.all()])
+        return obj.category.name if obj.category else ""
 
-    get_categories.short_description = 'Категории'
+    get_categories.short_description = 'Категория'
 
     def get_interests(self, obj):
         return ", ".join([interest.name for interest in obj.interests.all()])
@@ -47,17 +47,18 @@ class TemporaryEventAdmin(admin.ModelAdmin):
 
     def get_dates(self, obj):
         return ", ".join(
-            [f"{date.start_date} - {date.end_date}" for date in obj.dates.all()]) if obj.dates.exists() else ""
+            [f"Дата: {date.date}. Время: {date.start_time} - {date.end_time}" for date in obj.dates.all()]
+        ) if obj.dates.exists() else ""
 
-    get_dates.short_description = 'Дата'
+    get_dates.short_description = 'Дата и время события'
 
 
 @admin.register(PermanentEvent)
 class PermanentEventAdmin(admin.ModelAdmin):
     inlines = [EventBannerInline, EventWeekInline]
     list_display = [
-        "id",
         "title",
+        "id",
         "description",
         "language",
         "price",
@@ -67,10 +68,11 @@ class PermanentEventAdmin(admin.ModelAdmin):
         "get_weeks",
     ]
     list_filter = ('interests', 'category', 'language')
-    def get_categories(self, obj):
-        return ", ".join([category.name for category in obj.category.all()])
 
-    get_categories.short_description = 'Категории'
+    def get_categories(self, obj):
+        return obj.category.name if obj.category else ""
+
+    get_categories.short_description = 'Категория'
 
     def get_interests(self, obj):
         return ", ".join([interest.name for interest in obj.interests.all()])

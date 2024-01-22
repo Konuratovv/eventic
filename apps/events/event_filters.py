@@ -10,9 +10,9 @@ class CharFilterInFilter(filters.BaseInFilter, filters.CharFilter):
 
 class EventFilter(filters.FilterSet):
     """ Здесь происходит сама логика фильтрации по категориям, интересам, и диапазону дат """
-    category = CharFilterInFilter(field_name='category__slug', lookup_expr='in')
+    category = filters.CharFilter(field_name='category__slug', lookup_expr='iexact')
     interests = CharFilterInFilter(field_name='interests__slug', lookup_expr='in')
-    start_date = filters.DateFilter(field_name='temporaryevent__dates__start_date', lookup_expr='gte')
+    start_date = filters.DateFilter(field_name='temporaryevent__dates__date', lookup_expr='gte')
     end_date = filters.DateFilter(method='filter_end_date')
 
     class Meta:
@@ -22,7 +22,7 @@ class EventFilter(filters.FilterSet):
     def filter_end_date(self, queryset, name, value):
         if value:
             adjusted_value = value + datetime.timedelta(days=1)
-            return queryset.filter(**{'temporaryevent__dates__end_date__lt': adjusted_value})
+            return queryset.filter(temporaryevent__dates__date__lt=adjusted_value)
         return queryset
 
 

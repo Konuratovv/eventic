@@ -92,6 +92,7 @@ class OrganizerSerializer(serializers.ModelSerializer):
 
 
 class DetailEventSerializer(serializers.ModelSerializer):
+    category = CategorySerializer(read_only=True)
     interests = InterestSerializer(many=True)
     banners = EventBannerSerializer(many=True)
     address = AddressSerializer(read_only=True)
@@ -101,9 +102,9 @@ class DetailEventSerializer(serializers.ModelSerializer):
     next_events_org = serializers.SerializerMethodField()
     related_events_by_interest = serializers.SerializerMethodField()
     event_type = serializers.SerializerMethodField(read_only=True)
-    average_time = serializers.SerializerMethodField()
     is_notified = serializers.BooleanField(default=False)
-    is_free = serializers.SerializerMethodField()
+    is_free = serializers.SerializerMethodField(read_only=True)
+    average_time = serializers.SerializerMethodField()
 
     class Meta:
         model = BaseEvent
@@ -115,9 +116,10 @@ class DetailEventSerializer(serializers.ModelSerializer):
             'event_type',
             'event_dates',
             'event_weeks',
+            'average_time',
             'price',
             'is_free',
-            'average_time',
+            'category',
             'interests',
             'organizer',
             'address',
@@ -136,21 +138,31 @@ class DetailEventSerializer(serializers.ModelSerializer):
 
     def get_next_events_org(self, obj):
         """
-        Метод в сериализаторе DetailEventSerializer извлекает и возвращает список событий,
-        организованных тем же организатором, что и текущее событие (obj),
-        за исключением самого этого события, используя сериализатор OrganizerEventSerializer.
-        Обеспечивает добавление информации о связанных мероприятиях в API-ответ.
+        Возвращает список событий связанных с этим организатором,
+        В детейле относится к 'Другие мероприятия огранизатора'
         """
         organizer = obj.organizer
         if organizer:
             now = datetime.now()
-            events = BaseEvent.objects.filter(
-                organizer=organizer,
-                temporaryevent__dates__start_date__gt=now
-            ).exclude(id=obj.id)[:5]
 
-            if events.exists():  # Проверяем, существуют ли события
-                return OrganizerEventSerializer(events, many=True).data
+            # Получаем все временные события этого организатора, которые ещё не начались
+            related_temporary_events = BaseEvent.objects.filter(
+                organizer=organizer,
+                temporaryevent__dates__date__gt=now
+            ).exclude(id=obj.id)
+
+            # Получаем все постоянные события этого организатора
+            related_permanent_events = BaseEvent.objects.filter(
+                organizer=organizer,
+                permanentevent__isnull=False
+            ).exclude(id=obj.id)
+
+            # Объединяем временные и постоянные события
+            related_events = related_temporary_events | related_permanent_events
+            related_events = related_events.distinct()[:5]  # Убираем дубликаты и ограничиваем количество до 5
+
+            if related_events.exists():
+                return OrganizerEventSerializer(related_events, many=True).data
         return []
 
     def get_related_events_by_interest(self, obj):
@@ -164,7 +176,7 @@ class DetailEventSerializer(serializers.ModelSerializer):
         # Ищем события с теми же интересами (как временные, так и постоянные)
         related_temporary_events = BaseEvent.objects.filter(
             interests__in=interests,
-            temporaryevent__dates__start_date__gt=now
+            temporaryevent__dates__date__gt=now
         ).exclude(id=obj.id)  # временные
 
         related_permanent_events = BaseEvent.objects.filter(
@@ -187,30 +199,6 @@ class DetailEventSerializer(serializers.ModelSerializer):
         elif hasattr(obj, 'permanentevent'):
             return "permanent"
 
-    def get_average_time(self, obj):
-        """ Отображение продолжительности мероприятия """
-        if hasattr(obj, 'temporaryevent'):
-            durations = [e.end_date - e.start_date for e in obj.temporaryevent.dates.all()]
-            avg_duration = sum(durations, timedelta()) / len(durations) if durations else timedelta(0)
-        elif hasattr(obj, 'permanentevent'):
-            total_duration = timedelta()
-            count = 0
-            for week in obj.permanentevent.weeks.all():
-                start_time = datetime.combine(datetime.min, week.start_time)
-                end_time = datetime.combine(datetime.min, week.end_time)
-                if end_time < start_time:
-                    end_time += timedelta(days=1)  # Добавляем average_duration24 часа к времени окончания
-                total_duration += end_time - start_time
-                count += 1
-            avg_duration = total_duration / count if count > 0 else timedelta(0)
-        else:
-            return None
-
-        total_seconds = int(avg_duration.total_seconds())
-        hours = total_seconds // 3600
-        minutes = (total_seconds % 3600) // 60
-        return f"{hours} ч {minutes} мин"
-
     def get_is_free(self, obj):
         """
         Проверка поля is_free, чтобы определить,
@@ -218,3 +206,44 @@ class DetailEventSerializer(serializers.ModelSerializer):
         Например, показывать метку "Бесплатно" для мероприятий, у которых is_free равно True.
         """
         return obj.price == 0.0
+
+    def get_average_time(self, obj):
+        if hasattr(obj, 'temporaryevent'):
+            durations = []
+            for event_date in obj.temporaryevent.dates.all():
+                start_datetime = datetime.combine(event_date.date, event_date.start_time)
+                end_datetime = datetime.combine(event_date.date, event_date.end_time)
+                if end_datetime < start_datetime:
+                    end_datetime += timedelta(days=1)  # Добавляем 24 часа, если время окончания меньше времени начала
+                duration = end_datetime - start_datetime
+                durations.append(duration)
+
+            if durations:
+                avg_duration = sum(durations, timedelta()) / len(durations)
+                total_seconds = int(avg_duration.total_seconds())
+                hours = total_seconds // 3600
+                minutes = (total_seconds % 3600) // 60
+                return f"{hours} ч {minutes} мин"
+            return "Нет данных"
+
+        elif hasattr(obj, 'permanentevent'):
+            total_duration = timedelta()
+            count = 0
+            for week in obj.permanentevent.weeks.all():
+                start_time = datetime.combine(datetime.today(), week.start_time)
+                end_time = datetime.combine(datetime.today(), week.end_time)
+                if end_time < start_time:
+                    end_time += timedelta(days=1)  # Добавляем 24 часа, если время окончания меньше времени начала
+                duration = end_time - start_time
+                total_duration += duration
+                count += 1
+
+            if count > 0:
+                avg_duration = total_duration / count
+                total_seconds = int(avg_duration.total_seconds())
+                hours = total_seconds // 3600
+                minutes = (total_seconds % 3600) // 60
+                return f"{hours} ч {minutes} мин"
+            return "Нет данных"
+
+        return None
