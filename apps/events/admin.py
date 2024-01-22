@@ -21,6 +21,7 @@ class EventWeekInline(admin.StackedInline):
 @admin.register(TemporaryEvent)
 class TemporaryEventAdmin(admin.ModelAdmin):
     inlines = [EventBannerInline, EventDateInline]
+    exclude = ['followers']
 
     list_display = [
         "title",
@@ -55,6 +56,7 @@ class TemporaryEventAdmin(admin.ModelAdmin):
 @admin.register(PermanentEvent)
 class PermanentEventAdmin(admin.ModelAdmin):
     inlines = [EventBannerInline, EventWeekInline]
+    exclude = ['followers']
     list_display = [
         "id",
         "title",

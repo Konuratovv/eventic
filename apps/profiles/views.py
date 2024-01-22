@@ -5,13 +5,12 @@ from rest_framework import status
 from rest_framework.generics import RetrieveAPIView, ListAPIView, CreateAPIView, DestroyAPIView, \
     ListCreateAPIView, GenericAPIView
 from rest_framework.mixins import UpdateModelMixin
-from rest_framework.pagination import PageNumberPagination, LimitOffsetPagination
 
 from apps.events.models import BaseEvent
 from apps.profiles.models import User, Organizer, FollowOrganizer, ViewedEvent
 from apps.profiles.serializer import ProfileSerializer, FollowOrganizerSerializer, \
     FollowEventSerializer, LastViewedEventSerializer, MainOrganizerSerializer, OrganizerDetailSerializer, \
-    MainBaseEventSerializer, DetailBaseEventSerializer
+    DetailBaseEventSerializer, UserFavouritesSerializer
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.core.exceptions import ObjectDoesNotExist
@@ -130,7 +129,7 @@ class DetailOrganizer(RetrieveAPIView):
         return Response(serialized_data)
 
 
-class OrganizerEvent(ListAPIView):
+class OrganizerEvents(ListAPIView):
     serializer_class = DetailBaseEventSerializer
     permission_classes = [IsAuthenticated]
 
@@ -176,6 +175,8 @@ class FollowEventAPIView(CreateAPIView):
             user = User.objects.get(id=self.request.user.id)
             event = BaseEvent.objects.get(id=event_id)
             if not user.events.filter(id=event.id).exists():
+                event.followers += 1
+                event.save()
                 user.events.add(event)
                 user.save()
                 return Response({'message': 'Followed to Event', 'is_followed': True}, status=status.HTTP_200_OK)
@@ -196,6 +197,8 @@ class UnFollowEventAPIView(DestroyAPIView):
             try:
                 user.events.get(id=event.id)
                 user.events.remove(event)
+                event.followers -= 1
+                event.save()
                 return Response({'message': 'Unfollowed from Event', 'is_followed': False}, status=status.HTTP_200_OK)
             except ObjectDoesNotExist:
                 return Response({'status': 'Not following this event'}, status=status.HTTP_400_BAD_REQUEST)
@@ -229,3 +232,21 @@ class LastViewedEvents(ListCreateAPIView):
             return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
         except ObjectDoesNotExist:
             return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserFavourites(ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = UserFavouritesSerializer
+
+    def get_queryset(self):
+        user = self.request.user.baseprofile.user
+        user_favourites = user.favourites.all()
+        return user_favourites
+
+    def get(self, request, *args, **kwargs):
+        serialized_data = self.get_serializer(self.get_queryset(), many=True).data
+        return Response(serialized_data)
+
+
+
+
