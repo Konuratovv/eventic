@@ -10,11 +10,12 @@ from rest_framework.response import Response
 
 from django_filters.rest_framework import DjangoFilterBackend
 from .event_filters import EventFilter, EventTypeFilter
+from rest_framework.pagination import LimitOffsetPagination
 
 from .models import BaseEvent, PermanentEvent, TemporaryEvent, Category, Interests
 from .serializers import DetailEventSerializer, CategorySerializer, InterestSerializer
 from apps.profiles.serializer import PermanentEventSerializer, TemporaryEventSerializer, \
-    MainBaseEventSerializer, LastViewedEventReadSerializer
+    MainBaseEventSerializer, LastViewedEventReadSerializer, AllMainBaseEventSerializer
 
 from ..profiles.models import User
 
@@ -240,3 +241,41 @@ class EventTypeListAPIView(ListAPIView):
         ]
 
         return self.get_paginated_response(sorted_data)
+    
+#Вывод всех мероприятий по типам
+class AllEventsListAPIView(ListAPIView):
+    serializer_class = AllMainBaseEventSerializer
+    queryset = BaseEvent.objects.all()
+    permission_classes = [IsAuthenticated]
+    pagination_class = LimitOffsetPagination
+
+
+class AllFreeEventsListAPIView(ListAPIView):
+    queryset = BaseEvent.objects.filter(price=0)
+    serializer_class = AllMainBaseEventSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = LimitOffsetPagination
+
+    
+class AllPaidEventsListAPIView(ListAPIView):
+    queryset = BaseEvent.objects.filter(price__gt=0)
+    serializer_class = AllMainBaseEventSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = LimitOffsetPagination
+    
+    
+class AllTempEventsListAPIView(ListAPIView):
+    permission_classes = [IsAuthenticated]
+    queryset = TemporaryEvent.objects.all()
+    serializer_class = AllMainBaseEventSerializer
+    pagination_class = LimitOffsetPagination
+
+class AllPermEventsListAPIView(ListAPIView):
+    serializer_class = AllMainBaseEventSerializer
+    queryset = PermanentEvent.objects.all()
+    permission_classes = [IsAuthenticated]
+    pagination_class = LimitOffsetPagination 
+
+
+    
+    

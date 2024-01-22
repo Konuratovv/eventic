@@ -179,3 +179,30 @@ class TemporaryEventSerializer(MainBaseEventSerializer):
 
 class PermanentEventSerializer(MainBaseEventSerializer):
     pass
+
+class AllMainBaseEventSerializer(serializers.ModelSerializer):
+    banners = EventBannerSerializer(many=True)
+    event_weeks = MainEventWeekSerializer(many=True, source='permanentevent.weeks')
+    event_dates = MainEventDateSerializer(many=True, source='temporaryevent.dates')
+    is_favourite = serializers.BooleanField(default=False)
+
+    class Meta:
+        model = BaseEvent
+        fields = [
+            'id',
+            'banners',
+            'title',
+            'price',
+            'organizer',
+            'event_weeks',
+            'event_dates',
+            'is_favourite',
+        ]
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        request = self.context.get('request')
+        user = User.objects.get(id=request.user.id)
+        is_subscribed = user.events.filter(pk=instance.id).exists()
+        data['is_favourite'] = is_subscribed
+        return data
