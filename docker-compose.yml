@@ -4,10 +4,10 @@ services:
   api:
     build: .
     command: >
-      sh -c "gunicorn config.wsgi:application --bind 0.0.0.0:8004"
+      sh -c "gunicorn config.wsgi:application --bind 0.0.0.0:8001"
     container_name: eventic
     ports:
-      - '8004:8004'
+      - '8001:8001'
     restart: always
     depends_on:
       - postgres
@@ -16,8 +16,8 @@ services:
       - .:/app
       - static_volume:/usr/src/app/static
       - media_volume:/usr/src/app/media
-    environment:
-      - DJANGO_SETTINGS_MODULE=config.settings.base
+#    environment:
+#      - DJANGO_SETTINGS_MODULE=config.settings.base
 #    environment:
 #      - VIRTUAL_HOST=eventic.pp.ua
 #      - LETSENCRYPT_HOST=eventic.pp.ua
@@ -43,7 +43,7 @@ services:
   nginx:
     image: nginx:latest
     ports:
-      - "84:84"
+      - "81:81"
 #      - "443:443"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
