@@ -211,8 +211,8 @@ class LastViewedEventReadSerializer(serializers.ModelSerializer):
 
     def get_event(self, ViewedEvent):
         event_data = MainBaseEventSerializer(ViewedEvent.event, read_only=True, context=self.context).data
-        # user = self.context['request'].user.baseprofile.user
-        # event_data['is_favourite'] = user.last_viewed_events.filter(id=user.id).exists()
+        user = self.context['request'].user.baseprofile.user
+        event_data['is_favourite'] = user.last_viewed_events.filter(id=user.id).exists()
         return event_data
 
 
