@@ -158,7 +158,7 @@ class EventTypeListAPIView(ListAPIView):
 
         user = self.request.user.baseprofile.user
         user_viewed_events = user.last_viewed_events.order_by('-timestamp')[:15]
-        serializer_data = LastViewedEventR  eadSerializer(
+        serializer_data = LastViewedEventReadSerializer(
             user_viewed_events, many=True,
             context={'request': request}
         ).data
