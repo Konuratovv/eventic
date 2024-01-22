@@ -7,7 +7,7 @@ services:
       sh -c "gunicorn config.wsgi:application --bind 0.0.0.0:8004"
     container_name: eventic
     ports:
-      - '8000:8000'
+      - '8004:8004'
     restart: always
     depends_on:
       - postgres
