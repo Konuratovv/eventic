@@ -42,7 +42,6 @@ services:
 
   nginx:
     image: nginx:latest
-    container_name: docker_nginx
     ports:
       - "84:84"
 #      - "443:443"
