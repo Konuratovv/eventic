@@ -2,7 +2,7 @@ FROM python
 
 WORKDIR /usr/src/app
 
-EXPOSE 8000
+EXPOSE 8004
 
 COPY requirements.txt ./
 
