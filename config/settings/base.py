@@ -60,7 +60,6 @@ INSTALLED_APPS = [
     'django_filters',
     'django_extensions',
     'debug_toolbar',
-    'django_seed',
     'cachalot',
 ]
 
