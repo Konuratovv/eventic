@@ -5,6 +5,7 @@ from .models import Category, TemporaryEvent, PermanentEvent, EventWeek, EventDa
 class EventBannerInline(admin.TabularInline):
     model = EventBanner
     extra = 1
+    fields = ['image', 'is_img_main']
 
 
 class EventDateInline(admin.TabularInline):
@@ -26,7 +27,7 @@ class TemporaryEventAdmin(admin.ModelAdmin):
         "title",
         "id",
         "description",
-        "language",
+        "get_languages",
         "price",
         "get_categories",
         "get_interests",
@@ -52,6 +53,11 @@ class TemporaryEventAdmin(admin.ModelAdmin):
 
     get_dates.short_description = 'Дата и время события'
 
+    def get_languages(self, obj):
+        return ", ".join([language.name for language in obj.language.all()])
+
+    get_languages.short_description = 'Языки'
+
 
 @admin.register(PermanentEvent)
 class PermanentEventAdmin(admin.ModelAdmin):
@@ -60,7 +66,7 @@ class PermanentEventAdmin(admin.ModelAdmin):
         "title",
         "id",
         "description",
-        "language",
+        "get_languages",
         "price",
         "get_categories",
         "get_interests",
@@ -84,6 +90,10 @@ class PermanentEventAdmin(admin.ModelAdmin):
 
     get_weeks.short_description = 'Недели'
 
+    def get_languages(self, obj):
+        return ", ".join([language.name for language in obj.language.all()])
+
+    get_languages.short_description = 'Языки'
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
