@@ -31,7 +31,7 @@ class Interests(models.Model):
 
 class BaseEvent(models.Model):
     """ Базовая модель мероприятии """
-    title = models.CharField(max_length=150, verbose_name="Заголовок")
+    title = models.CharField(max_length=50, verbose_name="Заголовок")
     description = models.TextField(verbose_name="Описание")
     language = models.CharField(max_length=100, verbose_name="Язык", choices=[("kg", "Кыргызский"),
                                                                               ("ru", "Русский"),
@@ -66,6 +66,7 @@ class EventBanner(models.Model):
     event = models.ForeignKey(BaseEvent, verbose_name="Баннеры", on_delete=models.CASCADE,
                               related_name="banners", null=True, blank=True)
     image = models.ImageField(verbose_name="Баннер", upload_to='banner')
+    main = models.BooleanField(default=False)
 
     class Meta:
         verbose_name = 'Баннер'
@@ -126,4 +127,3 @@ class EventDate(models.Model):
 
     def __str__(self):
         return f"{self.start_time}, {self.end_time}"
-
