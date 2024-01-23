@@ -3,6 +3,7 @@ from django.db.models import BooleanField, Case, When, Value
 
 from django.contrib.sites.shortcuts import get_current_site
 from rest_framework import generics, status
+from rest_framework.filters import SearchFilter
 from rest_framework.generics import ListAPIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
@@ -56,8 +57,9 @@ class EventListAPIView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     queryset = BaseEvent.objects.all()
     serializer_class = DetailEventSerializer
-    filter_backends = (DjangoFilterBackend,)
+    filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_class = EventFilter
+    search_fields = ['title']
 
     # def get_queryset(self, request, *args, **kwargs):
     #     user = User.objects.get(id=self.request.user.id)
