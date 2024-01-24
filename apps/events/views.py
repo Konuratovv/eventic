@@ -83,9 +83,16 @@ class EventTypeListAPIView(ListAPIView):
     def get_queryset(self):
         return None
 
+    def get_events_data(self, queryset, custom_user, serializer_class, context):
+        serializer_class_data = serializer_class(
+            queryset,
+            many=True,
+            context=context
+        ).data
+        return serializer_class_data
+
     def get(self, request, *args, **kwargs):
         custom_user = User.objects.prefetch_related('favourites', 'viewedevent_set').get(id=self.request.user.id)
-        # print(self.request.user)
         data = {
             'events': [],
             'perEvents': [],
@@ -108,31 +115,20 @@ class EventTypeListAPIView(ListAPIView):
             'organizer',
             'followers'
         ).order_by('-followers')
-        serializer_data = MainBaseEventSerializer(events[:15], many=True,
-                                                  context={'custom_user': custom_user}).data
-        data['events'].append(serializer_data)
+        context = {'custom_user': custom_user, 'request': request}
+        data['events'].extend(self.get_events_data(events[:15], custom_user, MainBaseEventSerializer, context))
 
-        perEvents = events.filter(permanentevent__isnull=False)[:15]
-        serializer_data = MainBaseEventSerializer(
-            perEvents, many=True,
-            context={'custom_user': custom_user}).data
-        data['perEvents'].append(serializer_data)
+        perEvents = events.filter(permanentevent__isnull=False)
+        data['perEvents'].extend(self.get_events_data(perEvents, custom_user, MainBaseEventSerializer, context))
 
         temEvents = events.filter(temporaryevent__isnull=False)[:15]
-        serializer_data = MainBaseEventSerializer(
-            temEvents, many=True,
-            context={'custom_user': custom_user}).data
-        data['temEvents'].append(serializer_data)
+        data['temEvents'].extend(self.get_events_data(temEvents, custom_user, MainBaseEventSerializer, context))
 
         freeEvents = events.filter(price=0)[:15]
-        serializer_data = MainBaseEventSerializer(freeEvents, many=True,
-                                                  context={'custom_user': custom_user}).data
-        data['freeEvents'].append(serializer_data)
+        data['freeEvents'].extend(self.get_events_data(freeEvents, custom_user, MainBaseEventSerializer, context))
 
         paidEvents = events.filter(price__gt=0).order_by('-followers')[:15]
-        serializer_data = MainBaseEventSerializer(paidEvents, many=True,
-                                                  context={'custom_user': custom_user}).data
-        data['paidEvents'].append(serializer_data)
+        data['paidEvents'].extend(self.get_events_data(paidEvents, custom_user, MainBaseEventSerializer, context))
 
         user_viewed_events = custom_user.viewedevent_set.select_related(
             'event__temporaryevent',
@@ -143,11 +139,12 @@ class EventTypeListAPIView(ListAPIView):
             'event__temporaryevent__dates'
         ).order_by('-timestamp')[:15]
         serializer_data = LastViewedEventReadSerializer(
-            user_viewed_events, many=True,
-            context={'custom_user': custom_user}
+            user_viewed_events,
+            many=True,
+            context={'custom_user': custom_user, 'request': request}
         ).data
         event_data_from_viewed = [event['event'] for event in serializer_data]
-        data['last_viewed_events'].append(event_data_from_viewed)
+        data['last_viewed_events'].extend(event_data_from_viewed)
 
         sorted_data = [
             {'type': 'events', 'events': data['events']},

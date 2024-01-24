@@ -10,7 +10,7 @@ from apps.events.models import BaseEvent
 from apps.profiles.models import User, Organizer, FollowOrganizer, ViewedEvent
 from apps.profiles.serializer import ProfileSerializer, FollowOrganizerSerializer, \
     FollowEventSerializer, LastViewedEventSerializer, MainOrganizerSerializer, OrganizerDetailSerializer, \
-    DetailBaseEventSerializer, UserFavouritesSerializer
+    DetailBaseEventSerializer, UserFavouritesSerializer, ChangeUserPictureSerializer
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.core.exceptions import ObjectDoesNotExist
@@ -246,3 +246,15 @@ class UserFavourites(ListAPIView):
     def get(self, request, *args, **kwargs):
         serialized_data = self.get_serializer(self.get_queryset(), many=True).data
         return Response(serialized_data)
+
+
+class ChangeUserPictureAPIView(UpdateModelMixin, GenericAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = ChangeUserPictureSerializer
+
+    def patch(self, request, *args, **kwargs):
+        user = self.request.user.baseprofile.user
+        user_photo = self.request.data.get('profile_picture')
+        user.profile_picture = user_photo
+        user.save()
+        return Response({'status': 'success'})

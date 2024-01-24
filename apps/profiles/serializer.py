@@ -207,3 +207,9 @@ class LastViewedEventReadSerializer(serializers.ModelSerializer):
     class Meta:
         model = ViewedEvent
         fields = ['event']
+
+
+class ChangeUserPictureSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['profile_picture']
