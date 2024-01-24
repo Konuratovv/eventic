@@ -31,7 +31,7 @@ class Interests(models.Model):
 
 class BaseEvent(models.Model):
     """ Базовая модель мероприятии """
-    title = models.CharField(max_length=150, verbose_name="Заголовок")
+    title = models.CharField(max_length=50, verbose_name="Заголовок")
     description = models.TextField(verbose_name="Описание")
     language = models.CharField(max_length=100, verbose_name="Язык", choices=[("kg", "Кыргызский"),
                                                                               ("ru", "Русский"),
@@ -39,9 +39,10 @@ class BaseEvent(models.Model):
                                                                               ("kg-ru", "Кыргызский-Русский"),
                                                                               ], default='kg')
     price = models.DecimalField(max_digits=7, decimal_places=2, verbose_name="Цена")
-    category = models.ManyToManyField(Category, verbose_name="Категория", related_name="category")
+    category = models.ForeignKey(Category, verbose_name="Категория", on_delete=models.SET_NULL,
+                                 null=True, blank=True, related_name="category")
     interests = models.ManyToManyField(Interests, verbose_name="Интересы", related_name="interests")
-    organizer = models.ForeignKey('profiles.Organizer', on_delete=models.CASCADE, null=True, blank=True,
+    organizer = models.ForeignKey('profiles.Organizer', on_delete=models.CASCADE,
                                   verbose_name='Организатор мероприятия', related_name='baseevent_org')
     address = models.ForeignKey('locations.Address', on_delete=models.CASCADE, verbose_name='Адрес')
     is_active = models.BooleanField(verbose_name="Мероприятие активно", default=True)
@@ -65,6 +66,7 @@ class EventBanner(models.Model):
     event = models.ForeignKey(BaseEvent, verbose_name="Баннеры", on_delete=models.CASCADE,
                               related_name="banners", null=True, blank=True)
     image = models.ImageField(verbose_name="Баннер", upload_to='banner')
+    main = models.BooleanField(default=False)
 
     class Meta:
         verbose_name = 'Баннер'
@@ -96,8 +98,9 @@ class EventWeek(models.Model):
                              verbose_name='Выберите постоянное событие')
     week = models.CharField(max_length=150, verbose_name="Недели")
     slug = models.SlugField(max_length=80, verbose_name='Слаг', help_text='Заполняется автоматически')
-    start_time = models.TimeField(verbose_name="Время начала мероприятия")
-    end_time = models.TimeField(verbose_name="Время окончания мероприятия")
+    start_time = models.TimeField(verbose_name="Время начала события")
+    end_time = models.TimeField(verbose_name="Время окончания события")
+    objects = models.Manager()
 
     class Meta:
         verbose_name = 'Неделя'
@@ -107,16 +110,16 @@ class EventWeek(models.Model):
     def __str__(self):
         return f"{self.week}"
 
-    # я добавил чтобы не давало предурпждение
-    objects = models.Manager()
-
 
 class EventDate(models.Model):
     """ Дата и время, временного мероприятия связана с TemporaryEvent """
     temp = models.ForeignKey(TemporaryEvent, on_delete=models.CASCADE, related_name='dates',
                              verbose_name='Выберите временное событие')
-    start_time = models.DateTimeField(verbose_name='Дата начала мероприятия')
-    end_time = models.TimeField(verbose_name='Дата окончания мероприятия')
+    date = models.DateField(verbose_name="Укажите дату начала события")
+    start_time = models.TimeField(verbose_name='Время начала события')
+    end_time = models.TimeField(verbose_name='Время окончания события')
+
+    objects = models.Manager()
 
     class Meta:
         verbose_name = 'Дата и время мероприятия'
@@ -124,6 +127,3 @@ class EventDate(models.Model):
 
     def __str__(self):
         return f"{self.start_time}, {self.end_time}"
-
-    # я добавил чтобы не давало предурпждение
-    objects = models.Manager()
