@@ -12,12 +12,12 @@ class BaseProfile(CustomUser):
 
 class User(BaseProfile):
     """ Если что я удалил все null=True у всех M2M полей. Улукбек """
-    favourites = models.ManyToManyField('events.BaseEvent', blank=True)
+    favourites = models.ManyToManyField('events.BaseEvent', blank=True,)
     # description = models.TextField(blank=True)
     first_name = models.CharField(max_length=155)
     last_name = models.CharField(max_length=255)
     events = models.ManyToManyField(BaseEvent, related_name='users', blank=True)
-    last_viewed_events = models.ManyToManyField('profiles.ViewedEvent', related_name='users', blank=True)
+    last_viewed_events = models.ManyToManyField('ViewedEvent', related_name='users', blank=True)
     city = models.ForeignKey(City, on_delete=models.SET_NULL, **nb)
 
     class Meta:
@@ -33,6 +33,7 @@ class Organizer(BaseProfile):
     back_img = models.ImageField(verbose_name="Баннер", upload_to='organizers_banners', blank=True, null=True)
     address = models.ManyToManyField(Address, related_name='organizer_address')
     description = models.TextField(blank=True)
+    # email = None
 
     class Meta:
         verbose_name = 'Организатор'
@@ -56,7 +57,7 @@ class PhoneNumber(models.Model):
 
 class Email(models.Model):
     organizer = models.ForeignKey(Organizer, on_delete=models.CASCADE, related_name='emails')
-    email = models.EmailField(max_length=50)
+    email = models.EmailField(max_length=50, blank=False)
 
     class Meta:
         verbose_name = 'Почта'

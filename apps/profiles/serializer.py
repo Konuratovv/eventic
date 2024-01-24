@@ -1,5 +1,7 @@
-from apps.events.models import BaseEvent, EventDate, EventWeek, Interests
-from apps.events.serializers import EventBannerSerializer, AddressSerializer, InterestSerializer
+from django.core.cache import cache
+
+from apps.events.models import BaseEvent, EventDate, EventWeek, Interests, Category
+from apps.events.serializers import EventBannerSerializer, AddressSerializer, InterestSerializer, CategorySerializer
 from apps.locations.models import Address
 from apps.profiles.models import Organizer, FollowOrganizer, ViewedEvent, PhoneNumber, Email, SocialLink
 
@@ -98,6 +100,7 @@ class MainBaseEventSerializer(serializers.ModelSerializer):
     banners = EventBannerSerializer(many=True)
     event_weeks = MainEventWeekSerializer(many=True, source='permanentevent.weeks')
     event_dates = MainEventDateSerializer(many=True, source='temporaryevent.dates')
+    is_favourite = serializers.SerializerMethodField()
 
     class Meta:
         model = BaseEvent
@@ -109,7 +112,40 @@ class MainBaseEventSerializer(serializers.ModelSerializer):
             'organizer',
             'event_weeks',
             'event_dates',
+            'is_favourite',
+            'followers',
         ]
+
+    def get_is_favourite(self, event):
+        return event in self.context.get('custom_user').favourites.all()
+
+
+class UserFavouritesSerializer(serializers.ModelSerializer):
+    banners = EventBannerSerializer(many=True)
+    event_weeks = MainEventWeekSerializer(many=True, source='permanentevent.weeks')
+    event_dates = MainEventDateSerializer(many=True, source='temporaryevent.dates')
+    category = CategorySerializer(many=True)
+
+    is_favourite = serializers.SerializerMethodField()
+
+    class Meta:
+        model = BaseEvent
+        fields = [
+            'id',
+            'banners',
+            'title',
+            'price',
+            'organizer',
+            'event_weeks',
+            'event_dates',
+            'is_favourite',
+            'followers',
+            'category'
+        ]
+
+    def get_is_favourite(self, event):
+        user_obj = self.context.get('request').user.baseprofile.user
+        return event.pk in user_obj.favourites.values_list('pk', flat=True)
 
 
 class DetailBaseEventSerializer(serializers.ModelSerializer):
@@ -132,7 +168,7 @@ class DetailBaseEventSerializer(serializers.ModelSerializer):
         ]
 
     def get_is_favourite(self, events):
-        user_obj = User.objects.get(id=self.context.get('request').user.id)
+        user_obj = self.context.get('request').user.baseprofile.user
         return user_obj.favourites.filter(pk=events.pk).exists()
 
 
@@ -166,19 +202,17 @@ class LastViewedEventSerializer(serializers.ModelSerializer):
 
 
 class LastViewedEventReadSerializer(serializers.ModelSerializer):
-    event = MainBaseEventSerializer(read_only=True)
+    event = MainBaseEventSerializer()
 
     class Meta:
         model = ViewedEvent
         fields = ['event']
 
 
-class TemporaryEventSerializer(MainBaseEventSerializer):
-    pass
-
-
-class PermanentEventSerializer(MainBaseEventSerializer):
-    pass
+class ChangeUserPictureSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['profile_picture']
 
 class AllMainBaseEventSerializer(serializers.ModelSerializer):
     banners = EventBannerSerializer(many=True)

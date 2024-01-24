@@ -54,19 +54,20 @@ INSTALLED_APPS = [
 
     # my_libraries
     'rest_framework',
-    "corsheaders",
+    'corsheaders',
     'rest_framework_simplejwt',
     'drf_spectacular',
     'django_filters',
     'django_extensions',
     'debug_toolbar',
+    # 'cachalot',
 ]
 
 MIDDLEWARE = [
     'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -177,9 +178,10 @@ EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 
 # CSRF_USE_SESSIONS = True
-# CSRF_TRUSTED_ORIGINS = ['https://eventic.pp.ua']
-
+CSRF_TRUSTED_ORIGINS = ['http://209.38.228.54:81']
+# CSRF_TRUSTED_ORIGINS = ['http://0.0.0.0:81']
+# http://0.0.0.0:81
 INTERNAL_IPS = [
     '127.0.0.1',
-    '34.83.117.144',
+    # '34.83.117.144',
 ]

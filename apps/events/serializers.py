@@ -141,29 +141,38 @@ class DetailEventSerializer(serializers.ModelSerializer):
     def get_next_events_org(self, obj):
         """
         Возвращает список событий связанных с этим организатором,
-        В детейле относится к 'Другие мероприятия огранизатора'
+        В детейле относится к 'Другие мероприятия организатора'
         """
         organizer = obj.organizer
         if organizer:
             now = datetime.now()
 
             # Получаем все временные события этого организатора, которые ещё не начались
-            related_temporary_events = BaseEvent.objects.filter(
+            upcoming_temporary_events = BaseEvent.objects.filter(
                 organizer=organizer,
                 temporaryevent__dates__date__gt=now
             ).exclude(id=obj.id)
 
             # Получаем все постоянные события этого организатора
-            related_permanent_events = BaseEvent.objects.filter(
+            permanent_events = BaseEvent.objects.filter(
                 organizer=organizer,
                 permanentevent__isnull=False
             ).exclude(id=obj.id)
 
-            # Объединяем временные и постоянные события
-            related_events = related_temporary_events | related_permanent_events
-            related_events = related_events.distinct()[:5]  # Убираем дубликаты и ограничиваем количество до 5
+            # Получаем прошедшие временные события
+            past_temporary_events = BaseEvent.objects.filter(
+                organizer=organizer,
+                temporaryevent__dates__date__lt=now
+            ).exclude(id=obj.id)
 
-            if related_events.exists():
+            # Объединяем списки событий, сначала будущие, затем постоянные, потом прошедшие
+            related_events = list(upcoming_temporary_events[:5])
+            if len(related_events) < 5:
+                related_events += list(permanent_events[:5 - len(related_events)])
+            if len(related_events) < 5:
+                related_events += list(past_temporary_events[:5 - len(related_events)])
+
+            if related_events:
                 return OrganizerEventSerializer(related_events, many=True).data
         return []
 

@@ -18,8 +18,8 @@ class Category(models.Model):
 
 class Interests(models.Model):
     """ Интересы мероприятии """
-    name = models.CharField(max_length=150, verbose_name="Интересы")
-    slug = models.SlugField(max_length=80, verbose_name='Слаг', help_text='Заполняется автоматически')
+    name = models.CharField(max_length=70, verbose_name="Интересы")
+    slug = models.SlugField(max_length=60, verbose_name='Слаг', help_text='Заполняется автоматически')
 
     class Meta:
         verbose_name = 'Интерес'
@@ -29,15 +29,26 @@ class Interests(models.Model):
         return f"{self.name}"
 
 
+class Language(models.Model):
+    """ Язык мероприятия """
+    name = models.CharField(max_length=70, verbose_name="Язык")
+    name_two = models.CharField(max_length=70, verbose_name="Language", null=True, blank=True, help_text="Название на родном языке 'Английский > English'")
+    short_name = models.CharField(max_length=20, verbose_name="Короткое название", help_text="РУС, ENG, КЫР")
+    slug = models.SlugField(max_length=60, verbose_name='Слаг', help_text='Заполняется автоматически')
+
+    class Meta:
+        verbose_name = 'Язык'
+        verbose_name_plural = 'Языки'
+
+    def __str__(self):
+        return f"{self.name}"
+
+
 class BaseEvent(models.Model):
     """ Базовая модель мероприятии """
     title = models.CharField(max_length=50, verbose_name="Заголовок")
     description = models.TextField(verbose_name="Описание")
-    language = models.CharField(max_length=100, verbose_name="Язык", choices=[("kg", "Кыргызский"),
-                                                                              ("ru", "Русский"),
-                                                                              ("eng", "Английский"),
-                                                                              ("kg-ru", "Кыргызский-Русский"),
-                                                                              ], default='kg')
+    language = models.ManyToManyField(Language, verbose_name="Язык", related_name="event_language")
     price = models.DecimalField(max_digits=7, decimal_places=2, verbose_name="Цена")
     category = models.ForeignKey(Category, verbose_name="Категория", on_delete=models.SET_NULL,
                                  null=True, blank=True, related_name="category")
@@ -46,6 +57,8 @@ class BaseEvent(models.Model):
                                   verbose_name='Организатор мероприятия', related_name='baseevent_org')
     address = models.ForeignKey('locations.Address', on_delete=models.CASCADE, verbose_name='Адрес')
     is_active = models.BooleanField(verbose_name="Мероприятие активно", default=True)
+    followers = models.PositiveBigIntegerField(blank=True, default=0)
+
     objects = models.Manager()
 
     @property
@@ -66,7 +79,7 @@ class EventBanner(models.Model):
     event = models.ForeignKey(BaseEvent, verbose_name="Баннеры", on_delete=models.CASCADE,
                               related_name="banners", null=True, blank=True)
     image = models.ImageField(verbose_name="Баннер", upload_to='banner')
-    main = models.BooleanField(default=False)
+    is_img_main = models.BooleanField(verbose_name="Главная картинка", default=False)
 
     class Meta:
         verbose_name = 'Баннер'
