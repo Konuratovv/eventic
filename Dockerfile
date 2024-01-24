@@ -8,6 +8,8 @@ COPY requirements.txt ./
 
 COPY . .
 
-RUN pip install -r requirements.txt && python manage.py collectstatic
+RUN pip install -r requirements.txt
+
+RUN python manage.py collectstatic
 
 RUN python manage.py makemigrations
