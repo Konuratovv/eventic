@@ -94,6 +94,8 @@ class CheckResetCodeAPIView(UpdateModelMixin, GenericAPIView):
     def patch(self, *args, **kwargs):
         code = self.request.data.get('code')
         email = self.request.data.get('email')
+        if code is None:
+            return Response({'status': 'error'})
         try:
             user = CustomUser.objects.get(email=email)
             if user.code == code:
