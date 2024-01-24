@@ -18,8 +18,8 @@ class Category(models.Model):
 
 class Interests(models.Model):
     """ Интересы мероприятии """
-    name = models.CharField(max_length=150, verbose_name="Интересы")
-    slug = models.SlugField(max_length=80, verbose_name='Слаг', help_text='Заполняется автоматически')
+    name = models.CharField(max_length=70, verbose_name="Интересы")
+    slug = models.SlugField(max_length=60, verbose_name='Слаг', help_text='Заполняется автоматически')
 
     class Meta:
         verbose_name = 'Интерес'
@@ -31,8 +31,10 @@ class Interests(models.Model):
 
 class Language(models.Model):
     """ Язык мероприятия """
-    name = models.CharField(max_length=150, verbose_name="Язык")
-    slug = models.SlugField(max_length=80, verbose_name='Слаг', help_text='Заполняется автоматически')
+    name = models.CharField(max_length=70, verbose_name="Язык")
+    name_two = models.CharField(max_length=70, verbose_name="Language", null=True, blank=True, help_text="Название на родном языке 'Английский > English'")
+    short_name = models.CharField(max_length=20, verbose_name="Короткое название", help_text="РУС, ENG, КЫР")
+    slug = models.SlugField(max_length=60, verbose_name='Слаг', help_text='Заполняется автоматически')
 
     class Meta:
         verbose_name = 'Язык'

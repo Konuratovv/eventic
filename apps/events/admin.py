@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Category, TemporaryEvent, PermanentEvent, EventWeek, EventDate, Interests, BaseEvent, EventBanner
+from .models import Category, TemporaryEvent, PermanentEvent, EventWeek, EventDate, Interests, BaseEvent, EventBanner, \
+    Language
 
 
 class EventBannerInline(admin.TabularInline):
@@ -38,24 +39,20 @@ class TemporaryEventAdmin(admin.ModelAdmin):
 
     def get_categories(self, obj):
         return obj.category.name if obj.category else ""
-
     get_categories.short_description = 'Категория'
 
     def get_interests(self, obj):
         return ", ".join([interest.name for interest in obj.interests.all()])
-
     get_interests.short_description = 'Интересы'
 
     def get_dates(self, obj):
         return ", ".join(
             [f"Дата: {date.date}. Время: {date.start_time} - {date.end_time}" for date in obj.dates.all()]
         ) if obj.dates.exists() else ""
-
     get_dates.short_description = 'Дата и время события'
 
     def get_languages(self, obj):
         return ", ".join([language.name for language in obj.language.all()])
-
     get_languages.short_description = 'Языки'
 
 
@@ -77,22 +74,18 @@ class PermanentEventAdmin(admin.ModelAdmin):
 
     def get_categories(self, obj):
         return obj.category.name if obj.category else ""
-
     get_categories.short_description = 'Категория'
 
     def get_interests(self, obj):
         return ", ".join([interest.name for interest in obj.interests.all()])
-
     get_interests.short_description = 'Интересы'
 
     def get_weeks(self, obj):
         return ", ".join([week.week for week in obj.weeks.all()]) if obj.weeks.exists() else ""
-
     get_weeks.short_description = 'Недели'
 
     def get_languages(self, obj):
         return ", ".join([language.name for language in obj.language.all()])
-
     get_languages.short_description = 'Языки'
 
 @admin.register(Category)
@@ -111,6 +104,17 @@ class InterestsAdmin(admin.ModelAdmin):
         "id",
         "name",
 
+    ]
+    prepopulated_fields = {'slug': ('name',)}
+
+
+@admin.register(Language)
+class InterestsAdmin(admin.ModelAdmin):
+    list_display = [
+        "id",
+        "name",
+        "name_two",
+        "short_name",
     ]
     prepopulated_fields = {'slug': ('name',)}
 
