@@ -1,4 +1,5 @@
 from rest_framework import generics
+from rest_framework.filters import SearchFilter
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -53,8 +54,9 @@ class EventListAPIView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     queryset = BaseEvent.objects.all()
     serializer_class = DetailEventSerializer
-    filter_backends = (DjangoFilterBackend,)
+    filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_class = EventFilter
+    search_fields = ['title']
 
 
 class EventTypeFilterAPIView(generics.ListAPIView):
