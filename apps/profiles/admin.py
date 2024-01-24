@@ -82,4 +82,13 @@ class OrganizerAdmin(admin.ModelAdmin):
         'is_staff',
         "last_login",
         'back_img',
+        'id',
+        # 'name',
+        'follower_count'
     ]
+
+    def follower_count(self, obj):
+        return obj.followers.count()
+
+
+    follower_count.short_description = 'Количество подписчиков'
