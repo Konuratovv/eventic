@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-+!gfq7wg)y_*innav%(2+6gq*s0+&on!yx4vw@8y$rvvsqjb%7
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 if DEBUG:
-    from .production import *
+    from .development import *
 else:
     from .production import *
 
@@ -60,7 +60,7 @@ INSTALLED_APPS = [
     'django_filters',
     'django_extensions',
     'debug_toolbar',
-    'cachalot',
+    # 'cachalot',
 ]
 
 MIDDLEWARE = [
@@ -178,8 +178,9 @@ EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 
 # CSRF_USE_SESSIONS = True
-CSRF_TRUSTED_ORIGINS = ['http://209.38.228.54:81']
-
+# CSRF_TRUSTED_ORIGINS = ['http://209.38.228.54:81']
+CSRF_TRUSTED_ORIGINS = ['http://0.0.0.0:81']
+# http://0.0.0.0:81
 INTERNAL_IPS = [
     '127.0.0.1',
     # '34.83.117.144',

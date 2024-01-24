@@ -43,7 +43,7 @@ class SendEmailCodeAPIView(UpdateModelMixin, GenericAPIView):
         user = CustomUser.objects.get(id=self.request.user.id)
         return user
 
-    def patch(self):
+    def patch(self, *args, **kwargs):
         email = self.get_object().email
         send_verification_mail(email)
         return Response({'status': 'success'})
@@ -57,7 +57,7 @@ class VerifyEmailAPIView(UpdateModelMixin, GenericAPIView):
         user = CustomUser.objects.get(id=self.request.user.id)
         return user
 
-    def patch(self, request):
+    def patch(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             user = self.get_object()
@@ -79,7 +79,7 @@ class SendResetAPiView(UpdateModelMixin, GenericAPIView):
         user = CustomUser.objects.get(email=self.request.data.get('email'))
         return user
 
-    def patch(self):
+    def patch(self, *args, **kwargs):
         try:
             email = self.get_object().email
         except ObjectDoesNotExist:
@@ -91,7 +91,7 @@ class SendResetAPiView(UpdateModelMixin, GenericAPIView):
 class CheckResetCodeAPIView(UpdateModelMixin, GenericAPIView):
     serializer_class = CodeSerializer
 
-    def patch(self):
+    def patch(self, *args, **kwargs):
         code = self.request.data.get('code')
         email = self.request.data.get('email')
         try:
@@ -115,7 +115,7 @@ class ChangePasswordAPIVIew(UpdateModelMixin, GenericAPIView):
         user = User.objects.get(id=self.request.user.id)
         return user
 
-    def patch(self):
+    def patch(self, *args, **kwargs):
         serializer = self.get_serializer(data=self.request.data)
         if serializer.is_valid():
             new_password = self.request.data.get('new_password')

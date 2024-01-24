@@ -117,8 +117,7 @@ class MainBaseEventSerializer(serializers.ModelSerializer):
         ]
 
     def get_is_favourite(self, event):
-        user_obj = self.context.get('request').user.baseprofile.user
-        return event.pk in user_obj.favourites.values_list('pk', flat=True)
+        return event in self.context.get('custom_user').favourites.all()
 
 
 class UserFavouritesSerializer(serializers.ModelSerializer):
@@ -203,22 +202,8 @@ class LastViewedEventSerializer(serializers.ModelSerializer):
 
 
 class LastViewedEventReadSerializer(serializers.ModelSerializer):
-    event = serializers.SerializerMethodField()
+    event = MainBaseEventSerializer()
 
     class Meta:
         model = ViewedEvent
         fields = ['event']
-
-    def get_event(self, ViewedEvent):
-        event_data = MainBaseEventSerializer(ViewedEvent.event, read_only=True, context=self.context).data
-        user = self.context['request'].user.baseprofile.user
-        event_data['is_favourite'] = user.last_viewed_events.filter(id=user.id).exists()
-        return event_data
-
-
-# class TemporaryEventSerializer(MainBaseEventSerializer):
-#     pass
-#
-#
-# class PermanentEventSerializer(MainBaseEventSerializer):
-#     pass

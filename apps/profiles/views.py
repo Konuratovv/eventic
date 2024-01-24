@@ -59,7 +59,7 @@ class UnFollowOrganizerAPIView(UpdateModelMixin, GenericAPIView):
     serializer_class = FollowOrganizerSerializer
     permission_classes = [IsAuthenticated]
 
-    def patch(self, request):
+    def patch(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         user = User.objects.get(id=self.request.user.id)
 
@@ -246,7 +246,3 @@ class UserFavourites(ListAPIView):
     def get(self, request, *args, **kwargs):
         serialized_data = self.get_serializer(self.get_queryset(), many=True).data
         return Response(serialized_data)
-
-
-
-

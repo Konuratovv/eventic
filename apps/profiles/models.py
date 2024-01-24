@@ -17,7 +17,7 @@ class User(BaseProfile):
     first_name = models.CharField(max_length=155)
     last_name = models.CharField(max_length=255)
     events = models.ManyToManyField(BaseEvent, related_name='users', blank=True)
-    last_viewed_events = models.ManyToManyField('profiles.ViewedEvent', related_name='users', blank=True)
+    last_viewed_events = models.ManyToManyField('ViewedEvent', related_name='users', blank=True)
     city = models.ForeignKey(City, on_delete=models.SET_NULL, **nb)
 
     class Meta:
