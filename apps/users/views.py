@@ -99,12 +99,12 @@ class CheckResetCodeAPIView(UpdateModelMixin, GenericAPIView):
             if user.code == code:
                 user.code = None
                 user.save()
+                access_token = AccessToken.for_user(user)
+                access_token.set_exp(lifetime=timedelta(minutes=5))
+                return Response({'status': 'success', 'access_token': str(access_token)})
+            return Response({'status': 'error'})
         except ObjectDoesNotExist:
             return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            access_token = AccessToken.for_user(user)
-            access_token.set_exp(lifetime=timedelta(minutes=5))
-            return Response({'status': 'success', 'access_token': str(access_token)})
 
 
 class ChangePasswordAPIVIew(UpdateModelMixin, GenericAPIView):
