@@ -160,7 +160,8 @@ class EventTypeListAPIView(ListAPIView):
 
         return Response(sorted_data)
 
-#Вывод всех мероприятий по типам
+
+# Вывод всех мероприятий по типам
 class AllEventsListAPIView(ListAPIView):
     serializer_class = AllMainBaseEventSerializer
     queryset = BaseEvent.objects.all()
@@ -188,12 +189,9 @@ class AllTempEventsListAPIView(ListAPIView):
     serializer_class = AllMainBaseEventSerializer
     pagination_class = LimitOffsetPagination
 
+
 class AllPermEventsListAPIView(ListAPIView):
     serializer_class = AllMainBaseEventSerializer
     queryset = PermanentEvent.objects.all()
     permission_classes = [IsAuthenticated]
     pagination_class = LimitOffsetPagination
-
-
-
-
