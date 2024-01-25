@@ -32,9 +32,15 @@ class TemporaryEventAdmin(admin.ModelAdmin):
         "get_interests",
         "organizer",
         "get_dates",
+        'get_subscribers_count',
     ]
     list_filter = ('dates', 'interests', 'category', 'language')
+    readonly_fields = ('subscribers', 'get_subscribers_count')
 
+    def get_subscribers_count(self, obj):
+        return obj.subscribers.count()
+
+    get_subscribers_count.short_description = 'Количество подписчиков'
     def get_categories(self, obj):
         return obj.category.name if obj.category else ""
 
@@ -66,8 +72,16 @@ class PermanentEventAdmin(admin.ModelAdmin):
         "get_interests",
         "organizer",
         "get_weeks",
+        'get_subscribers_count' ,
+
     ]
     list_filter = ('interests', 'category', 'language')
+    readonly_fields = ('subscribers', 'get_subscribers_count')
+
+    def get_subscribers_count(self, obj):
+        return obj.subscribers.count()
+
+    get_subscribers_count.short_description = 'Количество подписчиков'
 
     def get_categories(self, obj):
         return obj.category.name if obj.category else ""

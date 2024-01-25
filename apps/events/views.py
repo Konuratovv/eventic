@@ -12,7 +12,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from .event_filters import EventFilter, EventTypeFilter
 
 from .models import BaseEvent, PermanentEvent, TemporaryEvent, Category, Interests
-from .serializers import BaseEventSerializer, DetailEventSerializer, CategorySerializer, InterestSerializer
+from .serializers import  DetailEventSerializer, CategorySerializer, InterestSerializer
 from apps.profiles.serializer import PermanentEventSerializer, TemporaryEventSerializer, \
     MainBaseEventSerializer, LastViewedEventReadSerializer
 
@@ -31,17 +31,17 @@ class EventInterestListAPIView(generics.ListAPIView):
     serializer_class = InterestSerializer
 
 
-class EventRetrieveAPIView(generics.RetrieveAPIView):
-    """
-    Вывод Eventa по id 'Все поля' Это поле служебное для проверки!!!
-    Использовать это поле не надо!!!
-    """
-    serializer_class = BaseEventSerializer
-
-    def get(self, request, pk):
-        event = BaseEvent.objects.get(id=pk)
-        serializer = BaseEventSerializer(event)
-        return Response(serializer.data)
+# class EventRetrieveAPIView(generics.RetrieveAPIView):
+#     """
+#     Вывод Eventa по id 'Все поля' Это поле служебное для проверки!!!
+#     Использовать это поле не надо!!!
+#     """
+#     serializer_class = BaseEventSerializer
+#
+#     def get(self, request, pk):
+#         event = BaseEvent.objects.get(id=pk)
+#         serializer = BaseEventSerializer(event)
+#         return Response(serializer.data)
 
 
 class EventDetailAPIView(generics.RetrieveAPIView):

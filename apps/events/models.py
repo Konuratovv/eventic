@@ -3,6 +3,7 @@ from django.db import models
 from apps.base.models import nb
 
 
+
 class Category(models.Model):
     """ Категории мероприятии """
     name = models.CharField(max_length=150, verbose_name="Категория")
@@ -46,6 +47,7 @@ class BaseEvent(models.Model):
                                   verbose_name='Организатор мероприятия', related_name='baseevent_org')
     address = models.ForeignKey('locations.Address', on_delete=models.CASCADE, verbose_name='Адрес')
     is_active = models.BooleanField(verbose_name="Мероприятие активно", default=True)
+    subscribers = models.ManyToManyField('profiles.User')
     objects = models.Manager()
 
     @property
