@@ -5,17 +5,15 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from django_filters.rest_framework import DjangoFilterBackend
-from .event_filters import EventFilter, EventTypeFilter
 from rest_framework.pagination import LimitOffsetPagination
 
 from .models import Category, Interests
-from .serializers import BaseEventSerializer, DetailEventSerializer, CategorySerializer, InterestSerializer
+from .serializers import DetailEventSerializer, CategorySerializer, InterestSerializer
 from .models import BaseEvent, PermanentEvent, TemporaryEvent
 from apps.profiles.serializer import MainBaseEventSerializer, AllMainBaseEventSerializer
 from .event_filters import EventFilter, EventTypeFilter
 from ..profiles.models import User
 from ..profiles.serializer import LastViewedEventReadSerializer
-from ..users.models import CustomUser
 
 
 class EventCategoryListAPIView(generics.ListAPIView):
@@ -123,7 +121,7 @@ class EventTypeListAPIView(ListAPIView):
         context = {'custom_user': custom_user, 'request': request}
         data['events'].extend(self.get_events_data(events[:15], custom_user, MainBaseEventSerializer, context))
 
-        perEvents = events.filter(permanentevent__isnull=False)
+        perEvents = events.filter(permanentevent__isnull=False)[:15]
         data['perEvents'].extend(self.get_events_data(perEvents, custom_user, MainBaseEventSerializer, context))
 
         temEvents = events.filter(temporaryevent__isnull=False)[:15]
@@ -132,7 +130,7 @@ class EventTypeListAPIView(ListAPIView):
         freeEvents = events.filter(price=0)[:15]
         data['freeEvents'].extend(self.get_events_data(freeEvents, custom_user, MainBaseEventSerializer, context))
 
-        paidEvents = events.filter(price__gt=0).order_by('-followers')[:15]
+        paidEvents = events.filter(price__gt=0)[:15]
         data['paidEvents'].extend(self.get_events_data(paidEvents, custom_user, MainBaseEventSerializer, context))
 
         user_viewed_events = custom_user.viewedevent_set.select_related(
@@ -162,7 +160,8 @@ class EventTypeListAPIView(ListAPIView):
 
         return Response(sorted_data)
 
-#Вывод всех мероприятий по типам
+
+# Вывод всех мероприятий по типам
 class AllEventsListAPIView(ListAPIView):
     serializer_class = AllMainBaseEventSerializer
     queryset = BaseEvent.objects.all()
@@ -190,12 +189,9 @@ class AllTempEventsListAPIView(ListAPIView):
     serializer_class = AllMainBaseEventSerializer
     pagination_class = LimitOffsetPagination
 
+
 class AllPermEventsListAPIView(ListAPIView):
     serializer_class = AllMainBaseEventSerializer
     queryset = PermanentEvent.objects.all()
     permission_classes = [IsAuthenticated]
     pagination_class = LimitOffsetPagination
-
-
-
-

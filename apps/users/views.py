@@ -14,7 +14,7 @@ from rest_framework.generics import CreateAPIView, GenericAPIView
 from apps.profiles.models import User
 from apps.users.models import CustomUser
 from apps.profiles.serializer import SendResetCodeSerializer, ChangePasswordSerializer
-from apps.users.serializer import RegisterSerializer, CodeSerializer, SendCodeSerializer
+from apps.users.serializer import RegisterSerializer, CodeSerializer, SendCodeSerializer, CodeVerifyEmailSerializer
 from apps.users.utils import send_verification_mail
 
 
@@ -27,7 +27,7 @@ class RegisterAPIView(CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        data = {"Status": "Success"}
+        data = {"status": "success"}
         return Response(data, status=status.HTTP_200_OK)
 
 
@@ -50,7 +50,7 @@ class SendEmailCodeAPIView(UpdateModelMixin, GenericAPIView):
 
 
 class VerifyEmailAPIView(UpdateModelMixin, GenericAPIView):
-    serializer_class = CodeSerializer
+    serializer_class = CodeVerifyEmailSerializer
     permission_classes = [IsAuthenticated]
 
     def get_object(self):
@@ -69,7 +69,7 @@ class VerifyEmailAPIView(UpdateModelMixin, GenericAPIView):
                 return Response({'status': 'success'})
             return Response({'status': 'error'})
 
-        return Response({'message': 'Serializer is not valid'})
+        return Response({'message': serializer.errors})
 
 
 class SendResetAPiView(UpdateModelMixin, GenericAPIView):
@@ -94,17 +94,19 @@ class CheckResetCodeAPIView(UpdateModelMixin, GenericAPIView):
     def patch(self, *args, **kwargs):
         code = self.request.data.get('code')
         email = self.request.data.get('email')
+        if code is None:
+            return Response({'status': 'error'})
         try:
             user = CustomUser.objects.get(email=email)
             if user.code == code:
                 user.code = None
                 user.save()
+                access_token = AccessToken.for_user(user)
+                access_token.set_exp(lifetime=timedelta(minutes=5))
+                return Response({'status': 'success', 'access_token': str(access_token)})
+            return Response({'status': 'error'})
         except ObjectDoesNotExist:
             return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            access_token = AccessToken.for_user(user)
-            access_token.set_exp(lifetime=timedelta(minutes=5))
-            return Response({'status': 'success', 'access_token': str(access_token)})
 
 
 class ChangePasswordAPIVIew(UpdateModelMixin, GenericAPIView):

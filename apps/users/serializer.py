@@ -43,6 +43,12 @@ class RegisterSerializer(ModelSerializer):
         return user
 
 
+class CodeVerifyEmailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ['code']
+
+
 class CodeSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
