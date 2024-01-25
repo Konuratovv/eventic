@@ -9,7 +9,7 @@ from .event_filters import EventFilter, EventTypeFilter
 from rest_framework.pagination import LimitOffsetPagination
 
 from .models import Category, Interests
-from .serializers import BaseEventSerializer, DetailEventSerializer, CategorySerializer, InterestSerializer
+from .serializers import DetailEventSerializer, CategorySerializer, InterestSerializer
 from .models import BaseEvent, PermanentEvent, TemporaryEvent
 from apps.profiles.serializer import MainBaseEventSerializer, AllMainBaseEventSerializer
 from .event_filters import EventFilter, EventTypeFilter

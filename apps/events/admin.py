@@ -111,7 +111,7 @@ class InterestsAdmin(admin.ModelAdmin):
 
 
 @admin.register(Language)
-class InterestsAdmin(admin.ModelAdmin):
+class LanguageAdmin(admin.ModelAdmin):
     list_display = [
         "id",
         "name",
