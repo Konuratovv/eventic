@@ -119,19 +119,19 @@ class EventTypeListAPIView(ListAPIView):
             'followers'
         ).order_by('-followers')
         context = {'custom_user': custom_user, 'request': request}
-        data['events'].extend(self.get_events_data(events[:15], custom_user, MainBaseEventSerializer, context))
+        events_data = self.get_events_data(events[:15], custom_user, MainBaseEventSerializer, context)
 
         perEvents = events.filter(permanentevent__isnull=False)[:15]
-        data['perEvents'].extend(self.get_events_data(perEvents, custom_user, MainBaseEventSerializer, context))
+        events_data2 = self.get_events_data(perEvents, custom_user, MainBaseEventSerializer, context)
 
         temEvents = events.filter(temporaryevent__isnull=False)[:15]
-        data['temEvents'].extend(self.get_events_data(temEvents, custom_user, MainBaseEventSerializer, context))
+        events_data3 = self.get_events_data(temEvents, custom_user, MainBaseEventSerializer, context)
 
         freeEvents = events.filter(price=0)[:15]
-        data['freeEvents'].extend(self.get_events_data(freeEvents, custom_user, MainBaseEventSerializer, context))
+        events_data4 = self.get_events_data(freeEvents, custom_user, MainBaseEventSerializer, context)
 
         paidEvents = events.filter(price__gt=0)[:15]
-        data['paidEvents'].extend(self.get_events_data(paidEvents, custom_user, MainBaseEventSerializer, context))
+        events_data5 = self.get_events_data(paidEvents, custom_user, MainBaseEventSerializer, context)
 
         user_viewed_events = custom_user.viewedevent_set.select_related(
             'event__temporaryevent',
@@ -147,15 +147,15 @@ class EventTypeListAPIView(ListAPIView):
             context={'custom_user': custom_user, 'request': request}
         ).data
         event_data_from_viewed = [event['event'] for event in serializer_data]
-        data['last_viewed_events'].extend(event_data_from_viewed)
+        events_data6 = event_data_from_viewed
 
         sorted_data = [
-            {'type': 'events', 'events': data['events']},
-            {'type': 'perEvents', 'events': data['perEvents']},
-            {'type': 'temEvents', 'events': data['temEvents']},
-            {'type': 'freeEvents', 'events': data['freeEvents']},
-            {'type': 'paidEvents', 'events': data['paidEvents']},
-            {'type': 'last_viewed_events', 'events': data['last_viewed_events']},
+            {'type': 'events', 'events': events_data},
+            {'type': 'perEvents', 'events': events_data2},
+            {'type': 'temEvents', 'events': events_data3},
+            {'type': 'freeEvents', 'events': events_data4},
+            {'type': 'paidEvents', 'events': events_data5},
+            {'type': 'last_viewed_events', 'events': events_data6},
         ]
 
         return Response(sorted_data)
