@@ -5,17 +5,15 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from django_filters.rest_framework import DjangoFilterBackend
-from .event_filters import EventFilter, EventTypeFilter
 from rest_framework.pagination import LimitOffsetPagination
 
 from .models import Category, Interests
-from .serializers import BaseEventSerializer, DetailEventSerializer, CategorySerializer, InterestSerializer
+from .serializers import DetailEventSerializer, CategorySerializer, InterestSerializer
 from .models import BaseEvent, PermanentEvent, TemporaryEvent
 from apps.profiles.serializer import MainBaseEventSerializer, AllMainBaseEventSerializer
 from .event_filters import EventFilter, EventTypeFilter
 from ..profiles.models import User
 from ..profiles.serializer import LastViewedEventReadSerializer
-from ..users.models import CustomUser
 
 
 class EventCategoryListAPIView(generics.ListAPIView):
