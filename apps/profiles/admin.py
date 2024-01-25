@@ -48,7 +48,6 @@ class UserAdmin(UserAdmin):
                     'email',
                     'first_name',
                     'last_name',
-                    'description',
                     'city',
                     'password',
                     'is_verified',
