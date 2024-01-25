@@ -121,7 +121,7 @@ class EventTypeListAPIView(ListAPIView):
         context = {'custom_user': custom_user, 'request': request}
         data['events'].extend(self.get_events_data(events[:15], custom_user, MainBaseEventSerializer, context))
 
-        perEvents = events.filter(permanentevent__isnull=False)
+        perEvents = events.filter(permanentevent__isnull=False)[:15]
         data['perEvents'].extend(self.get_events_data(perEvents, custom_user, MainBaseEventSerializer, context))
 
         temEvents = events.filter(temporaryevent__isnull=False)[:15]
@@ -130,7 +130,7 @@ class EventTypeListAPIView(ListAPIView):
         freeEvents = events.filter(price=0)[:15]
         data['freeEvents'].extend(self.get_events_data(freeEvents, custom_user, MainBaseEventSerializer, context))
 
-        paidEvents = events.filter(price__gt=0).order_by('-followers')[:15]
+        paidEvents = events.filter(price__gt=0)[:15]
         data['paidEvents'].extend(self.get_events_data(paidEvents, custom_user, MainBaseEventSerializer, context))
 
         user_viewed_events = custom_user.viewedevent_set.select_related(
