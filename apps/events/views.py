@@ -7,12 +7,13 @@ from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.pagination import LimitOffsetPagination
 
-from .models import Category, Interests
+from .models import Category, Interests, EventBanner, EventWeek, EventDate
 from .serializers import DetailEventSerializer, CategorySerializer, InterestSerializer
 from .models import BaseEvent, PermanentEvent, TemporaryEvent
 from apps.profiles.serializer import MainBaseEventSerializer, AllMainBaseEventSerializer
 from .event_filters import EventFilter, EventTypeFilter
-from ..profiles.models import User
+from ..locations.models import Address
+from ..profiles.models import User, Organizer
 from ..profiles.serializer import LastViewedEventReadSerializer
 
 
@@ -82,6 +83,37 @@ class FreeEventListAPIView(generics.ListAPIView):
 
 class EventTypeListAPIView(ListAPIView):
     permission_classes = [IsAuthenticated]
+
+    # from faker import Faker
+    # fake = Faker()
+    #
+    # for num in range(500):
+    #     organizer = Organizer.objects.order_by('?').first()
+    #     category_instance = Category.objects.order_by('?').first()
+    #     interests_instance = Interests.objects.order_by('?').first()
+    #     address_instance = Address.objects.order_by('?').first()
+    #     generate = PermanentEvent.objects.create(title=fake.catch_phrase(), description=fake.text(),
+    #                                              price=fake.random_int(min=0, max=100, step=1),
+    #                                              organizer=organizer, address=address_instance)
+    #     generate2 = TemporaryEvent.objects.create(title=fake.catch_phrase(), description=fake.text(),
+    #                                               price=fake.random_int(min=0, max=100, step=1),
+    #                                               organizer=organizer, address=address_instance)
+    #     generate.category.set([category_instance])
+    #     generate.interests.set([interests_instance])
+    #     generate2.category.set([category_instance])
+    #     generate2.interests.set([interests_instance])
+    #
+    #     for _ in range(10):
+    #         EventBanner.objects.create(event=generate, image='image.png')
+    #         EventBanner.objects.create(event=generate2, image='image.png')
+    #
+    #     for _ in range(10):
+    #         EventWeek.objects.create(perm=generate, week=fake.name(), start_time='21:18:1',
+    #                                  end_time='20:18:12', slug='sreda')
+    #
+    #     for _ in range(10):
+    #         EventDate.objects.create(temp=generate2, start_date='2024-01-20 21:03:22',
+    #                                  end_date='2024-01-20 22:03:22')
 
     def get_queryset(self):
         return None

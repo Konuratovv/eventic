@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-+!gfq7wg)y_*innav%(2+6gq*s0+&on!yx4vw@8y$rvvsqjb%7
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 if DEBUG:
-    from .development import *
+    from .production import *
 else:
     from .production import *
 
@@ -134,7 +134,9 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
-MEDIA_URL = 'media/'
+MEDIA_URL = '/media/'
+
+
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
@@ -178,8 +180,8 @@ EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 
 # CSRF_USE_SESSIONS = True
-CSRF_TRUSTED_ORIGINS = ['http://209.38.228.54:81']
-# CSRF_TRUSTED_ORIGINS = ['http://127.0.0.1:8000']
+# CSRF_TRUSTED_ORIGINS = ['http://209.38.228.54:81']
+CSRF_TRUSTED_ORIGINS = ['http://127.0.0.1:8000']
 # http://0.0.0.0:81
 INTERNAL_IPS = [
     '127.0.0.1',
