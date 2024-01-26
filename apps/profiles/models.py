@@ -33,7 +33,7 @@ class Organizer(BaseProfile):
     back_img = models.ImageField(verbose_name="Баннер", upload_to='organizers_banners', blank=True, null=True)
     address = models.ManyToManyField(Address, related_name='organizer_address')
     description = models.TextField(blank=True)
-    # email = None
+
 
     class Meta:
         verbose_name = 'Организатор'
@@ -60,8 +60,8 @@ class Email(models.Model):
     email = models.EmailField(max_length=50, blank=False)
 
     class Meta:
-        verbose_name = 'Почта'
-        verbose_name_plural = 'Почты'
+        verbose_name = 'Дополнительная почта'
+        verbose_name_plural = 'Допольнительные почты'
 
     def __str__(self):
         return f"{self.email}"
