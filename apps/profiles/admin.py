@@ -48,7 +48,6 @@ class UserAdmin(UserAdmin):
                     'email',
                     'first_name',
                     'last_name',
-                    'description',
                     'city',
                     'password',
                     'is_verified',
@@ -64,7 +63,6 @@ class UserAdmin(UserAdmin):
                     'email',
                     'first_name',
                     'last_name',
-                    'description',
                     'city',
                     'password1',
                     'password2',
@@ -88,11 +86,12 @@ class UserAdmin(UserAdmin):
 
 @admin.register(Organizer)
 class OrganizerAdmin(admin.ModelAdmin):
-    exclude = ['code', 'groups', 'is_superuser', 'email']
+    exclude = ['code', 'groups', 'is_superuser']
     inlines = [EmailInline, PhoneNumberInline, SocialLinkInline]
     list_display = [
         "id",
         'title',
+        'email',
         'is_staff',
         "last_login",
         'back_img',
