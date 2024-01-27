@@ -7,11 +7,8 @@ from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.pagination import LimitOffsetPagination
 
-<<<<<<< HEAD
-from .models import Category, Interests
-=======
+
 from .models import Category, Interests, EventBanner, EventWeek, EventDate
->>>>>>> main
 from .serializers import DetailEventSerializer, CategorySerializer, InterestSerializer
 from .models import BaseEvent, PermanentEvent, TemporaryEvent
 from apps.profiles.serializer import MainBaseEventSerializer, AllMainBaseEventSerializer
