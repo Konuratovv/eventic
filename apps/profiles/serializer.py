@@ -1,4 +1,5 @@
 from django.core.cache import cache
+from rest_framework.validators import UniqueValidator
 
 from apps.events.models import BaseEvent, EventDate, EventWeek, Interests, Category
 from apps.events.serializers import EventBannerSerializer, AddressSerializer, InterestSerializer, CategorySerializer
@@ -24,6 +25,24 @@ class ChangeProfileNamesSerializer(ModelSerializer):
     class Meta:
         model = User
         fields = ['first_name', 'last_name']
+
+
+class ChangeUserEmailSerializer(ModelSerializer):
+    email = serializers.EmailField(validators=[UniqueValidator(queryset=User.objects.all())])
+
+    class Meta:
+        model = User
+        fields = ['email']
+
+
+class ChangeUserPasswordSerializer(ModelSerializer):
+    old_password = serializers.CharField(write_only=True)
+    new_password = serializers.CharField(write_only=True)
+    confirming_new_password = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = User
+        fields = ['old_password', 'new_password', 'confirming_new_password']
 
 
 class PhoneNumberSerializer(ModelSerializer):
@@ -219,6 +238,7 @@ class ChangeUserPictureSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['profile_picture']
+
 
 class AllMainBaseEventSerializer(serializers.ModelSerializer):
     banners = EventBannerSerializer(many=True)

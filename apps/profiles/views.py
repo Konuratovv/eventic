@@ -1,5 +1,7 @@
+from django.contrib.auth.hashers import make_password
 from django.db.models import BooleanField, Case, When, Value
 from django.utils import timezone
+from django.utils.crypto import constant_time_compare
 
 from rest_framework import status
 from rest_framework.generics import RetrieveAPIView, ListAPIView, CreateAPIView, DestroyAPIView, \
@@ -10,7 +12,8 @@ from apps.events.models import BaseEvent
 from apps.profiles.models import User, Organizer, FollowOrganizer, ViewedEvent
 from apps.profiles.serializer import ProfileSerializer, FollowOrganizerSerializer, \
     FollowEventSerializer, LastViewedEventSerializer, MainOrganizerSerializer, OrganizerDetailSerializer, \
-    DetailBaseEventSerializer, UserFavouritesSerializer, ChangeUserPictureSerializer, ChangeProfileNamesSerializer
+    DetailBaseEventSerializer, UserFavouritesSerializer, ChangeUserPictureSerializer, ChangeProfileNamesSerializer, \
+    ChangeUserEmailSerializer, ChangeUserPasswordSerializer
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.core.exceptions import ObjectDoesNotExist
@@ -234,7 +237,7 @@ class LastViewedEvents(ListCreateAPIView):
             return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class UserFavourites(ListAPIView):
+class UserFavouritesAPIView(ListAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = UserFavouritesSerializer
 
@@ -260,7 +263,7 @@ class ChangeUserPictureAPIView(UpdateModelMixin, DestroyModelMixin, GenericAPIVi
         return Response({'status': 'success'})
 
 
-class ChangeUserName(UpdateModelMixin, GenericAPIView):
+class ChangeUserNameAPIView(UpdateModelMixin, GenericAPIView):
     serializer_class = ChangeProfileNamesSerializer
     permission_classes = [IsAuthenticated]
 
@@ -272,5 +275,39 @@ class ChangeUserName(UpdateModelMixin, GenericAPIView):
         user.last_name = lastname
         user.save()
         return Response({'status': 'success'})
+
+
+class ChangeUserEmailAPIView(UpdateModelMixin, GenericAPIView):
+    serializer_class = ChangeUserEmailSerializer
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, *args, **kwargs):
+        user = self.request.user.baseprofile.user
+        email = self.request.data.get('email')
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            user.email = email
+            user.save()
+            return Response({'status': 'success'})
+        return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST )
+
+
+class ChangeUserPasswordAPIView(UpdateModelMixin, GenericAPIView):
+    serializer_class = ChangeUserPasswordSerializer
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, *args, **kwargs):
+        user = self.request.user.baseprofile.user
+        old_password = self.request.data.get('old_password')
+        new_password = self.request.data.get('new_password')
+        confirming_new_password = self.request.data.get('confirming_new_password')
+        if user.check_password(old_password):
+            if constant_time_compare(new_password, confirming_new_password):
+                user.password = make_password(confirming_new_password)
+                user.save()
+                return Response({'status': 'success'})
+            return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
+
 
 

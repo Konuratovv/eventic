@@ -17,19 +17,19 @@ class RequiredInlineFormSet(BaseInlineFormSet):
 
 class EmailInline(admin.TabularInline):
     model = Email
-    extra = 1
+    extra = 0
     formset = RequiredInlineFormSet
 
 
 class PhoneNumberInline(admin.TabularInline):
     model = PhoneNumber
-    extra = 1
+    extra = 0
     formset = RequiredInlineFormSet
 
 
 class SocialLinkInline(admin.TabularInline):
     model = SocialLink
-    extra = 1
+    extra = 0
     formset = RequiredInlineFormSet
 
 
