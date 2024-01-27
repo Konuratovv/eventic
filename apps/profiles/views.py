@@ -4,13 +4,13 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.generics import RetrieveAPIView, ListAPIView, CreateAPIView, DestroyAPIView, \
     ListCreateAPIView, GenericAPIView
-from rest_framework.mixins import UpdateModelMixin
+from rest_framework.mixins import UpdateModelMixin, DestroyModelMixin
 
 from apps.events.models import BaseEvent
 from apps.profiles.models import User, Organizer, FollowOrganizer, ViewedEvent
 from apps.profiles.serializer import ProfileSerializer, FollowOrganizerSerializer, \
     FollowEventSerializer, LastViewedEventSerializer, MainOrganizerSerializer, OrganizerDetailSerializer, \
-    DetailBaseEventSerializer, UserFavouritesSerializer, ChangeUserPictureSerializer
+    DetailBaseEventSerializer, UserFavouritesSerializer, ChangeUserPictureSerializer, ChangeProfileNamesSerializer
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.core.exceptions import ObjectDoesNotExist
@@ -248,7 +248,7 @@ class UserFavourites(ListAPIView):
         return Response(serialized_data)
 
 
-class ChangeUserPictureAPIView(UpdateModelMixin, GenericAPIView):
+class ChangeUserPictureAPIView(UpdateModelMixin, DestroyModelMixin, GenericAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = ChangeUserPictureSerializer
 
@@ -258,3 +258,19 @@ class ChangeUserPictureAPIView(UpdateModelMixin, GenericAPIView):
         user.profile_picture = user_photo
         user.save()
         return Response({'status': 'success'})
+
+
+class ChangeUserName(UpdateModelMixin, GenericAPIView):
+    serializer_class = ChangeProfileNamesSerializer
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, *args, **kwargs):
+        user = self.request.user.baseprofile.user
+        firstname = self.request.data.get('first_name')
+        lastname = self.request.data.get('last_name')
+        user.first_name = firstname
+        user.last_name = lastname
+        user.save()
+        return Response({'status': 'success'})
+
+

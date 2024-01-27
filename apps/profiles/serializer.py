@@ -20,6 +20,12 @@ class ProfileSerializer(ModelSerializer):
         fields = ['first_name', 'last_name', 'city', 'profile_picture', 'email', 'city', ]
 
 
+class ChangeProfileNamesSerializer(ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name']
+
+
 class PhoneNumberSerializer(ModelSerializer):
     class Meta:
         model = PhoneNumber

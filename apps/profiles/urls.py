@@ -2,7 +2,7 @@ from django.urls import path
 
 from apps.profiles.views import ProfileViewSet, FollowOrganizerAPIView, OrganizerListAPIView, FollowEventAPIView, \
     UnFollowOrganizerAPIView, UnFollowEventAPIView, SubscribersUserAPIView, LastViewedEvents, \
-    DetailOrganizer, OrganizerEvents, UserFavourites, ChangeUserPictureAPIView
+    DetailOrganizer, OrganizerEvents, UserFavourites, ChangeUserPictureAPIView, ChangeUserName
 
 urlpatterns = [
     path('profile/', ProfileViewSet.as_view()),
@@ -16,5 +16,6 @@ urlpatterns = [
     path('last_viewed_events/', LastViewedEvents.as_view()),
     path('events/organizer/<int:pk>/', OrganizerEvents.as_view()),
     path('user_favourites/', UserFavourites.as_view()),
-    path('change_profile_picture/', ChangeUserPictureAPIView.as_view())
+    path('change_profile_picture/', ChangeUserPictureAPIView.as_view()),
+    path('change_profile_names/', ChangeUserName.as_view())
 ]
