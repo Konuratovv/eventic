@@ -1,15 +1,17 @@
 from rest_framework import generics
 from rest_framework.filters import SearchFilter
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import ListAPIView, UpdateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from django_filters.rest_framework import DjangoFilterBackend
+
+from apps.locations.models import Address
 from .event_filters import EventFilter, EventTypeFilter
 from rest_framework.pagination import LimitOffsetPagination
 
 from .models import Category, Interests
-from .serializers import BaseEventSerializer, DetailEventSerializer, CategorySerializer, InterestSerializer
+from .serializers import DetailEventSerializer, CategorySerializer, InterestSerializer, EventAddressUpdateSerializer
 from .models import BaseEvent, PermanentEvent, TemporaryEvent
 from apps.profiles.serializer import MainBaseEventSerializer, AllMainBaseEventSerializer
 from .event_filters import EventFilter, EventTypeFilter
@@ -165,37 +167,69 @@ class EventTypeListAPIView(ListAPIView):
 #Вывод всех мероприятий по типам
 class AllEventsListAPIView(ListAPIView):
     serializer_class = AllMainBaseEventSerializer
-    queryset = BaseEvent.objects.all()
     permission_classes = [IsAuthenticated]
     pagination_class = LimitOffsetPagination
 
+    def get_queryset(self):
+        user_city = self.request.user.baseprofile.user.city.city_name
+        queryset = BaseEvent.objects.filter(
+            is_active=True,
+            address__city__city_name=user_city,
+        ).order_by('-followers')
+        return queryset
 
 class AllFreeEventsListAPIView(ListAPIView):
-    queryset = BaseEvent.objects.filter(price=0)
     serializer_class = AllMainBaseEventSerializer
     permission_classes = [IsAuthenticated]
     pagination_class = LimitOffsetPagination
 
+    def get_queryset(self):
+        user_city = self.request.user.baseprofile.user.city.city_name
+        queryset = BaseEvent.objects.filter(
+            is_active=True,
+            address__city__city_name=user_city,
+            price=0,
+        ).order_by('-followers')
+        return queryset
 
 class AllPaidEventsListAPIView(ListAPIView):
-    queryset = BaseEvent.objects.filter(price__gt=0)
     serializer_class = AllMainBaseEventSerializer
     permission_classes = [IsAuthenticated]
     pagination_class = LimitOffsetPagination
+
+    def get_queryset(self):
+        user_city = self.request.user.baseprofile.user.city.city_name
+        queryset = BaseEvent.objects.filter(
+            is_active=True,
+            address__city__city_name=user_city,
+            price__gt=0,
+        ).order_by('-followers')
+        return queryset
 
 
 class AllTempEventsListAPIView(ListAPIView):
     permission_classes = [IsAuthenticated]
-    queryset = TemporaryEvent.objects.all()
     serializer_class = AllMainBaseEventSerializer
     pagination_class = LimitOffsetPagination
+
+    def get_queryset(self):
+        user_city = self.request.user.baseprofile.user.city.city_name
+        queryset = TemporaryEvent.objects.filter(
+            is_active=True,
+            address__city__city_name=user_city,
+        ).order_by('-followers')
+        return queryset
 
 class AllPermEventsListAPIView(ListAPIView):
     serializer_class = AllMainBaseEventSerializer
-    queryset = PermanentEvent.objects.all()
     permission_classes = [IsAuthenticated]
     pagination_class = LimitOffsetPagination
 
-
-
+    def get_queryset(self):
+        user_city = self.request.user.baseprofile.user.city.city_name
+        queryset = PermanentEvent.objects.filter(
+            is_active=True,
+            address__city__city_name=user_city,
+        ).order_by('-followers')
+        return queryset
 
