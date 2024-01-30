@@ -163,7 +163,6 @@ class SubscribersUserAPIView(ListAPIView):
         serializer_data = self.get_serializer(page, many=True).data
         return self.get_paginated_response(serializer_data)
 
-
 class FollowEventAPIView(CreateAPIView):
     serializer_class = FollowEventSerializer
     permission_classes = [IsAuthenticated]
