@@ -100,14 +100,6 @@ class EventTypeListAPIView(ListAPIView):
 
     def get(self, request, *args, **kwargs):
         custom_user = User.objects.prefetch_related('favourites', 'viewedevent_set').get(id=self.request.user.id)
-        data = {
-            'events': [],
-            'perEvents': [],
-            'temEvents': [],
-            'freeEvents': [],
-            'paidEvents': [],
-            'last_viewed_events': []
-        }
 
         events = BaseEvent.objects.prefetch_related(
             'permanentevent__weeks',
