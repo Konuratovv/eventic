@@ -6,11 +6,13 @@ from rest_framework.generics import RetrieveAPIView, ListAPIView, CreateAPIView,
     ListCreateAPIView, GenericAPIView, UpdateAPIView
 from rest_framework.mixins import UpdateModelMixin
 from rest_framework.pagination import LimitOffsetPagination
-
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter
 
 from apps.events.models import BaseEvent
 from apps.locations.models import City
 from apps.profiles.models import User, Organizer, FollowOrganizer, ViewedEvent
+from apps.profiles.organizer_filter import OrganizerFilter
 from apps.profiles.serializer import ListOrginizerSerializer, UpdateCitySerializer, ProfileSerializer, FollowOrganizerSerializer, \
     FollowEventSerializer, LastViewedEventSerializer, MainOrganizerSerializer, OrganizerDetailSerializer, \
     DetailBaseEventSerializer, UserFavouritesSerializer, ChangeUserPictureSerializer
@@ -286,3 +288,11 @@ class AllOrganizerListAPIView(ListAPIView):
         )
 
         return queryset
+
+class FilterOrganizerAPIView(ListAPIView):
+    serializer_class = MainOrganizerSerializer
+    permission_classes = [IsAuthenticated]
+    queryset = Organizer.objects.all()
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    filterset_class = OrganizerFilter
+    search_fields = ['title']
