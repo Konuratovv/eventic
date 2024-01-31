@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Category, EventDate, BaseEvent, EventWeek, Interests, EventBanner
+from .models import Category, EventDate, BaseEvent, EventWeek, Interests, EventBanner, PermanentEvent
 
 from ..locations.models import Address, City
 from ..profiles.models import Organizer, FollowOrganizer, User
@@ -50,9 +50,17 @@ class CityAddressSerializer(serializers.ModelSerializer):
         fields = ('city_name',)
 
 
+class PermanentEventWeeksSerializer(serializers.ModelSerializer):
+    weeks = EventWeekSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = PermanentEvent
+        fields = ['weeks']
+
+
 class OrganizerEventSerializer(serializers.ModelSerializer):
     event_dates = EventDateSerializer(many=True, source='temporaryevent.dates')
-    event_weeks = EventWeekSerializer(many=True, source='permanentevent.weeks')
+    event_weeks = PermanentEventWeeksSerializer(source='permanentevent', read_only=True)
     banners = EventBannerSerializer(many=True, read_only=True)
     event_type = serializers.SerializerMethodField()
 
