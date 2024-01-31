@@ -2,7 +2,8 @@ from django.conf import settings
 from django.core.mail import send_mail
 from django.utils.crypto import get_random_string
 
-from apps.events.models import Category, Interests, PermanentEvent, TemporaryEvent, EventBanner, EventWeek
+from apps.events.models import Category, Interests, PermanentEvent, TemporaryEvent, EventBanner, EventWeek, EventDate, \
+    Language
 from apps.locations.models import Address
 from apps.profiles.models import Organizer
 from apps.users.models import CustomUser
@@ -22,21 +23,25 @@ def send_verification_mail(email):
 #
 # fake = Faker()
 #
-# for num in range(500):
+# for num in range(40):
 #     organizer = Organizer.objects.order_by('?').first()
 #     category_instance = Category.objects.order_by('?').first()
 #     interests_instance = Interests.objects.order_by('?').first()
 #     address_instance = Address.objects.order_by('?').first()
+#     language_instance = Language.objects.order_by('?').first()
 #     generate = PermanentEvent.objects.create(title=fake.catch_phrase(), description=fake.text(),
 #                                              price=fake.random_int(min=0, max=100, step=1),
-#                                              organizer=organizer, address=address_instance)
+#                                              organizer=organizer, address=address_instance,
+#                                              category=category_instance)
 #     generate2 = TemporaryEvent.objects.create(title=fake.catch_phrase(), description=fake.text(),
 #                                               price=fake.random_int(min=0, max=100, step=1),
-#                                               organizer=organizer, address=address_instance)
-#     generate.category.set([category_instance])
+#                                               organizer=organizer, address=address_instance,
+#                                               category=category_instance)
+#     # generate.category.set([category_instance])
 #     generate.interests.set([interests_instance])
-#     generate2.category.set([category_instance])
 #     generate2.interests.set([interests_instance])
+#     generate.language.set([language_instance])
+#     generate2.language.set([language_instance])
 #
 #     # Добавляем 10 EventBanner для каждого события
 #     for _ in range(10):
@@ -50,5 +55,5 @@ def send_verification_mail(email):
 #
 #     # Добавляем 10 EventDate для каждого TemporaryEvent
 #     for _ in range(10):
-#         EventDate.objects.create(temp=generate2, start_date='2024-01-20 21:03:22',
-#                                  end_date='2024-01-20 22:03:22')
+#         EventDate.objects.create(temp=generate2, start_time='21:03:22',
+#                                  end_time='22:03:22', date='2024-01-20')

@@ -133,4 +133,3 @@ class EventWeekAdmin(admin.ModelAdmin):
 @admin.register(EventDate)
 class EventDateAdmin(admin.ModelAdmin):
     pass
-
