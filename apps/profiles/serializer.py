@@ -2,7 +2,8 @@ from django.core.cache import cache
 
 from apps.events.models import BaseEvent, EventDate, EventWeek, Interests, Category
 from apps.events.serializers import EventBannerSerializer, AddressSerializer, InterestSerializer, CategorySerializer
-from apps.locations.models import Address
+from apps.locations.models import Address, City
+from apps.locations.serializers import CitySerializer
 from apps.profiles.models import Organizer, FollowOrganizer, ViewedEvent, PhoneNumber, Email, SocialLink
 
 from django.db.models import BooleanField, Case, When, Value
@@ -13,8 +14,14 @@ from rest_framework import serializers
 
 from apps.users.models import CustomUser
 
+class UpdateCitySerializer(ModelSerializer):
+    class Meta:
+        model = User 
+        fields = ['city', ]
 
 class ProfileSerializer(ModelSerializer):
+    city = CitySerializer(read_only=True    )
+
     class Meta:
         model = User
         fields = ['first_name', 'last_name', 'city', 'profile_picture', 'email', 'city', ]
@@ -45,6 +52,20 @@ class MainOrganizerSerializer(ModelSerializer):
         model = Organizer
         fields = ['id', 'is_followed', 'profile_picture', 'title']
 
+class ListOrginizerSerializer(ModelSerializer):
+    is_followed = serializers.BooleanField(default=False)
+
+    class Meta:
+        model = Organizer
+        fields = ['id', 'is_followed', 'profile_picture', 'title']
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        request = self.context.get('request')
+        user = User.objects.get(id=request.user.id)
+        is_subscribed = FollowOrganizer.objects.filter(follower=user).exists()
+        data['is_followed'] = is_subscribed
+        return data
 
 class FollowOrganizerSerializer(ModelSerializer):
     class Meta:

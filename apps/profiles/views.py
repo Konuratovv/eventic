@@ -3,12 +3,17 @@ from django.utils import timezone
 
 from rest_framework import status
 from rest_framework.generics import RetrieveAPIView, ListAPIView, CreateAPIView, DestroyAPIView, \
-    ListCreateAPIView, GenericAPIView
+    ListCreateAPIView, GenericAPIView, UpdateAPIView
 from rest_framework.mixins import UpdateModelMixin
+from rest_framework.pagination import LimitOffsetPagination
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter
 
 from apps.events.models import BaseEvent
+from apps.locations.models import City
 from apps.profiles.models import User, Organizer, FollowOrganizer, ViewedEvent
-from apps.profiles.serializer import ProfileSerializer, FollowOrganizerSerializer, \
+from apps.profiles.organizer_filter import OrganizerFilter
+from apps.profiles.serializer import ListOrginizerSerializer, UpdateCitySerializer, ProfileSerializer, FollowOrganizerSerializer, \
     FollowEventSerializer, LastViewedEventSerializer, MainOrganizerSerializer, OrganizerDetailSerializer, \
     DetailBaseEventSerializer, UserFavouritesSerializer, ChangeUserPictureSerializer
 from rest_framework.response import Response
@@ -163,7 +168,6 @@ class SubscribersUserAPIView(ListAPIView):
         serializer_data = self.get_serializer(page, many=True).data
         return self.get_paginated_response(serializer_data)
 
-
 class FollowEventAPIView(CreateAPIView):
     serializer_class = FollowEventSerializer
     permission_classes = [IsAuthenticated]
@@ -258,3 +262,36 @@ class ChangeUserPictureAPIView(UpdateModelMixin, GenericAPIView):
         user.profile_picture = user_photo
         user.save()
         return Response({'status': 'success'})
+
+class UpdateCityAPIView(UpdateModelMixin, GenericAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, *args, **kwargs):
+        user = self.request.user.baseprofile.user
+        serializer = UpdateCitySerializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'status': 'success'}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+class AllOrganizerListAPIView(ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = ListOrginizerSerializer
+    pagination_class = LimitOffsetPagination
+
+    def get_queryset(self):
+        user_city = self.request.user.baseprofile.user.city.city_name
+        queryset = Organizer.objects.filter(
+            address__city__city_name=user_city
+        )
+
+        return queryset
+
+class FilterOrganizerAPIView(ListAPIView):
+    serializer_class = MainOrganizerSerializer
+    permission_classes = [IsAuthenticated]
+    queryset = Organizer.objects.all()
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    filterset_class = OrganizerFilter
+    search_fields = ['title']
