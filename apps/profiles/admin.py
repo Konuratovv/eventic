@@ -3,7 +3,7 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import Group
 from django.forms import BaseInlineFormSet
 
-from apps.profiles.models import User, Organizer, PhoneNumber, Email, SocialLink
+from apps.profiles.models import User, Organizer, PhoneNumber, SocialLink
 
 admin.site.unregister(Group)
 
@@ -13,12 +13,6 @@ class RequiredInlineFormSet(BaseInlineFormSet):
         form = super(RequiredInlineFormSet, self)._construct_form(i, **kwargs)
         form.empty_permitted = False
         return form
-
-
-class EmailInline(admin.TabularInline):
-    model = Email
-    extra = 1
-    formset = RequiredInlineFormSet
 
 
 class PhoneNumberInline(admin.TabularInline):
@@ -83,8 +77,8 @@ class UserAdmin(UserAdmin):
 
 @admin.register(Organizer)
 class OrganizerAdmin(admin.ModelAdmin):
-    exclude = ['code', 'groups', 'is_superuser']
-    inlines = [EmailInline, PhoneNumberInline, SocialLinkInline]
+    exclude = ['code', 'groups', 'is_superuser', 'followers']
+    inlines = [PhoneNumberInline, SocialLinkInline]
     list_display = [
         "id",
         'title',

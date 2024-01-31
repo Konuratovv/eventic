@@ -1,19 +1,21 @@
 from django.contrib.auth.hashers import make_password
-from django.db.models import BooleanField, Case, When, Value
 from django.utils import timezone
-from django.utils.crypto import constant_time_compare
+from django.utils.crypto import constant_time_compare, get_random_string
+from google.oauth2 import id_token
+from google.auth.transport import requests
 
 from rest_framework import status
 from rest_framework.generics import RetrieveAPIView, ListAPIView, CreateAPIView, DestroyAPIView, \
     ListCreateAPIView, GenericAPIView
 from rest_framework.mixins import UpdateModelMixin, DestroyModelMixin
+from rest_framework_simplejwt.tokens import AccessToken
 
 from apps.events.models import BaseEvent
-from apps.profiles.models import User, Organizer, FollowOrganizer, ViewedEvent
-from apps.profiles.serializer import ProfileSerializer, FollowOrganizerSerializer, \
+from apps.profiles.models import User, Organizer, ViewedEvent
+from apps.profiles.serializer import ProfileSerializer, \
     FollowEventSerializer, LastViewedEventSerializer, MainOrganizerSerializer, OrganizerDetailSerializer, \
     DetailBaseEventSerializer, UserFavouritesSerializer, ChangeUserPictureSerializer, ChangeProfileNamesSerializer, \
-    ChangeUserEmailSerializer, ChangeUserPasswordSerializer
+    ChangeUserEmailSerializer, ChangeUserPasswordSerializer, FollowOrganizerSerializer, GoogleOAuthSerializer
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.core.exceptions import ObjectDoesNotExist
@@ -23,10 +25,14 @@ class ProfileViewSet(RetrieveAPIView):
     serializer_class = ProfileSerializer
     permission_classes = [IsAuthenticated]
 
-    def retrieve(self, request, *args, **kwargs):
-        user = User.objects.get(id=self.request.user.id)
-        serializer = self.get_serializer(user)
-        return Response(serializer.data)
+    def get(self, request, *args, **kwargs):
+        user = self.request.user.baseprofile.user
+        followed_organizers = user.organizers.count()
+        favourites = user.favourites.count()
+        serialized_data = self.get_serializer(user).data
+        serialized_data['followed_organizers'] = followed_organizers
+        serialized_data['favourites'] = favourites
+        return Response(serialized_data)
 
 
 class FollowOrganizerAPIView(CreateAPIView):
@@ -34,52 +40,42 @@ class FollowOrganizerAPIView(CreateAPIView):
     serializer_class = FollowOrganizerSerializer
 
     def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        user = User.objects.get(id=self.request.user.id)
+        user = self.request.user.baseprofile.user
         try:
             organizer = Organizer.objects.get(id=self.request.data.get('following'))
         except ObjectDoesNotExist:
-            return Response({'error': 'Organizer not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'status': 'organizer is not found'})
 
-        if serializer.is_valid():
-            follow = FollowOrganizer.objects.filter(follower=user, following=organizer, is_followed=True)
-            if follow:
-                return Response({'status': 'you are already exists'})
-            try:
-                follow = FollowOrganizer.objects.get(follower=user, following=organizer, is_followed=False)
-                follow.is_followed = True
-                follow.save()
-                return Response({'message': 'followed', 'status': f'{follow.is_followed}'}, status=status.HTTP_200_OK)
-            except ObjectDoesNotExist:
-                follow = FollowOrganizer.objects.create(follower=user, following=organizer)
-                follow.is_followed = True
-                follow.save()
-                return Response({'message': 'Followed', 'status': f'{follow.is_followed}'})
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            user.organizers.get(title=organizer.title)
+            return Response({'status': 'already followed'})
+        except ObjectDoesNotExist:
+            user.organizers.add(organizer)
+            organizer.followers += 1
+            user.save()
+            organizer.save()
+            return Response({'status': 'success'})
 
 
-class UnFollowOrganizerAPIView(UpdateModelMixin, GenericAPIView):
+class UnFollowOrganizerAPIView(DestroyModelMixin, GenericAPIView):
     serializer_class = FollowOrganizerSerializer
     permission_classes = [IsAuthenticated]
 
-    def patch(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        user = User.objects.get(id=self.request.user.id)
-
+    def delete(self, request, *args, **kwargs):
+        user = self.request.user.baseprofile.user
         try:
             organizer = Organizer.objects.get(id=self.request.data.get('following'))
         except ObjectDoesNotExist:
-            return Response({'error': 'Organizer not found'}, status=status.HTTP_404_NOT_FOUND)
-
-        if serializer.is_valid():
-            try:
-                existing_follow = FollowOrganizer.objects.get(follower=user, following=organizer, is_followed=True)
-            except ObjectDoesNotExist:
-                return Response({'status': "follow is not exist"})
-            existing_follow.is_followed = False
-            existing_follow.save()
-            return Response({'message': 'Unfollowed', 'status': False}, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'status': 'Organizer is not found'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            user.organizers.get(title=organizer.title)
+            user.organizers.remove(organizer)
+            organizer.followers -= 1
+            user.save()
+            organizer.save()
+            return Response({'status': 'success'})
+        except ObjectDoesNotExist:
+            return Response({'status': 'user is not followed'})
 
 
 class OrganizerListAPIView(ListAPIView):
@@ -89,33 +85,18 @@ class OrganizerListAPIView(ListAPIView):
 
     def get(self, request, *args, **kwargs):
         try:
-            user = User.objects.get(id=self.request.user.id)
+            user = self.request.user.baseprofile.user
         except ObjectDoesNotExist:
             return Response({'status': 'user is not found'})
+        organizers = Organizer.objects.order_by('-followers').filter(address__city__city_name=user.city)[:15]
+        followed_organizers = user.organizers.all()
+        serialized_data = self.get_serializer(
+            organizers,
+            many=True,
+            context={'followed_organizer': followed_organizers, 'request': request}
+        ).data
 
-        is_follow_sub = FollowOrganizer.objects.filter(follower=user, is_followed=True).values('following__pk')
-
-        organizers = self.queryset.annotate(
-            is_followed=Case(
-                When(id__in=is_follow_sub, then=Value(True)),
-                default=Value(False),
-                output_field=BooleanField()
-            )
-        )
-
-        page = self.paginate_queryset(organizers)
-
-        data = []
-        if page is not None:
-            for organizer in page:
-                followers = organizer.followers.filter(is_followed=True).count()
-                serializer_data = self.get_serializer(organizer).data
-
-                data.append({"organizer_data": serializer_data, 'followers_count': followers})
-
-            sorted_data = sorted(data, key=lambda x: x['followers_count'], reverse=True)
-            result_data = [organizer['organizer_data'] for organizer in sorted_data]
-            return self.get_paginated_response(result_data)
+        return Response(serialized_data)
 
 
 class DetailOrganizer(RetrieveAPIView):
@@ -124,11 +105,9 @@ class DetailOrganizer(RetrieveAPIView):
     queryset = Organizer.objects.all()
 
     def get(self, request, *args, **kwargs):
-        user = User.objects.get(id=self.request.user.id)
+        user = self.request.user.baseprofile.user
         organizer = self.get_object()
-        followed_id = FollowOrganizer.objects.filter(follower=user, is_followed=True).values('following__pk')
-        organizer.is_followed = any(event_id['following__pk'] == organizer.pk for event_id in followed_id)
-        serialized_data = self.get_serializer(organizer).data
+        serialized_data = self.get_serializer(organizer, context={'user': user, 'request': request}).data
         return Response(serialized_data)
 
 
@@ -137,7 +116,6 @@ class OrganizerEvents(ListAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        # user = User.objects.get(id=self.request.user.id)
         organizer = Organizer.objects.get(id=self.kwargs.get('pk'))
         events = BaseEvent.objects.filter(organizer=organizer)
         return self.paginate_queryset(events)
@@ -149,21 +127,19 @@ class OrganizerEvents(ListAPIView):
 
 class SubscribersUserAPIView(ListAPIView):
     serializer_class = MainOrganizerSerializer
-    queryset = FollowOrganizer.objects.all()
     permission_classes = [IsAuthenticated]
 
-    def get(self, request, *args, **kwargs):
+    def get_queryset(self):
         user = User.objects.get(id=self.request.user.id)
-        followed_id = FollowOrganizer.objects.filter(follower=user, is_followed=True).values('following__pk')
-        subscribers_obj = user.following.filter(is_followed=True)
+        subscribers_obj = user.organizers.all()
+        return subscribers_obj
 
-        organizers = [subscriber.following for subscriber in subscribers_obj]
-
-        page = self.paginate_queryset(organizers)
-
-        for organizer in page:
-            organizer.is_followed = any(event_id['following__pk'] == organizer.pk for event_id in followed_id)
-        serializer_data = self.get_serializer(page, many=True).data
+    def get(self, request, *args, **kwargs):
+        page = self.paginate_queryset(self.get_queryset())
+        serializer_data = self.get_serializer(
+            page,
+            context={'followed_organizer': self.get_queryset(), 'request': request},
+            many=True).data
         return self.get_paginated_response(serializer_data)
 
 
@@ -244,11 +220,11 @@ class UserFavouritesAPIView(ListAPIView):
     def get_queryset(self):
         user = self.request.user.baseprofile.user
         user_favourites = user.favourites.all()
-        return user_favourites
+        return self.paginate_queryset(user_favourites)
 
     def get(self, request, *args, **kwargs):
         serialized_data = self.get_serializer(self.get_queryset(), many=True).data
-        return Response(serialized_data)
+        return self.get_paginated_response(serialized_data)
 
 
 class ChangeUserPictureAPIView(UpdateModelMixin, DestroyModelMixin, GenericAPIView):
@@ -289,7 +265,7 @@ class ChangeUserEmailAPIView(UpdateModelMixin, GenericAPIView):
             user.email = email
             user.save()
             return Response({'status': 'success'})
-        return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST )
+        return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ChangeUserPasswordAPIView(UpdateModelMixin, GenericAPIView):
@@ -309,5 +285,26 @@ class ChangeUserPasswordAPIView(UpdateModelMixin, GenericAPIView):
             return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
 
+
+class GoogleOAuthAPIView(CreateAPIView):
+    serializer_class = GoogleOAuthSerializer
+
+    def post(self, request, *args, **kwargs):
+        google_token = self.request.data.get('google_token')
+        user_info = id_token.verify_oauth2_token(google_token, requests.Request())
+        try:
+            user = User.objects.get(email=user_info['email'])
+            access_token = AccessToken.for_user(user)
+            return Response({'access_token': str(access_token)})
+        except ObjectDoesNotExist:
+            random_password = get_random_string(length=12)
+            user = User.objects.create_user(
+                email=user_info['email'],
+                first_name=user_info['given_name'],
+                last_name=user_info['family_name'],
+                password=random_password
+            )
+            access_token = AccessToken.for_user(user)
+            return Response({'access_token': str(access_token)})
 
 

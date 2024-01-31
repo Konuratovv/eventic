@@ -12,8 +12,8 @@ class BaseProfile(CustomUser):
 
 class User(BaseProfile):
     """ Если что я удалил все null=True у всех M2M полей. Улукбек """
-    favourites = models.ManyToManyField('events.BaseEvent', blank=True, )
-    # description = models.TextField(blank=True)
+    favourites = models.ManyToManyField('events.BaseEvent', blank=True)
+    organizers = models.ManyToManyField('profiles.Organizer', blank=True)
     first_name = models.CharField(max_length=155)
     last_name = models.CharField(max_length=255)
     events = models.ManyToManyField(BaseEvent, related_name='users', blank=True)
@@ -33,6 +33,7 @@ class Organizer(BaseProfile):
     back_img = models.ImageField(verbose_name="Баннер", upload_to='organizers_banners', blank=True, null=True)
     address = models.ManyToManyField(Address, related_name='organizer_address')
     description = models.TextField(blank=True)
+    followers = models.PositiveBigIntegerField(blank=True, default=0)
 
     class Meta:
         verbose_name = 'Организатор'
@@ -54,18 +55,6 @@ class PhoneNumber(models.Model):
         return f"{self.phone_number}"
 
 
-class Email(models.Model):
-    organizer = models.ForeignKey(Organizer, on_delete=models.CASCADE, related_name='emails')
-    email = models.EmailField(max_length=50, blank=False)
-
-    class Meta:
-        verbose_name = 'Дополнительная почта'
-        verbose_name_plural = 'Допольнительные почты'
-
-    def __str__(self):
-        return f"{self.email}"
-
-
 class SocialLink(models.Model):
     organizer = models.ForeignKey(Organizer, on_delete=models.CASCADE, related_name='social_links')
     social_link_choices = [
@@ -82,14 +71,6 @@ class SocialLink(models.Model):
 
     def __str__(self):
         return f"{self.social_link_type}"
-
-
-class FollowOrganizer(models.Model):
-    follower = models.ForeignKey(User, related_name='following', on_delete=models.CASCADE)
-    following = models.ForeignKey(Organizer, related_name='followers', on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True)
-    is_followed = models.BooleanField(default=False)
-    objects = models.Manager()
 
 
 class ViewedEvent(models.Model):
