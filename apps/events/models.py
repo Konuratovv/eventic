@@ -123,8 +123,8 @@ class PermanentEvent(BaseEvent):
 
 
 class PermanentEventWeek(models.Model):
-    permanent_event = models.ForeignKey(PermanentEvent, on_delete=models.CASCADE, verbose_name='День недели')
-    event_week = models.ForeignKey(EventWeek, on_delete=models.CASCADE)
+    permanent_event = models.ForeignKey(PermanentEvent, on_delete=models.CASCADE)
+    event_week = models.ForeignKey(EventWeek, verbose_name="Недели мероприятий", on_delete=models.CASCADE)
 
     class Meta:
         verbose_name = 'День недели'

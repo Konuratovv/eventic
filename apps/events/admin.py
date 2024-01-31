@@ -60,7 +60,7 @@ class TemporaryEventAdmin(admin.ModelAdmin):
 
 class PermanentEventWeekInline(admin.TabularInline):
     model = PermanentEventWeek
-    extra = 2
+    extra = 1
 
 
 @admin.register(PermanentEvent)
