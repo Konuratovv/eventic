@@ -10,7 +10,8 @@ from apps.locations.models import Address
 from .event_filters import EventFilter, EventTypeFilter
 from rest_framework.pagination import LimitOffsetPagination
 
-from .models import Category, Interests, EventBanner, EventWeek, EventDate
+
+from .models import Category, Interests, EventBanner, EventWeek, EventDate, Language
 from .serializers import DetailEventSerializer, CategorySerializer, InterestSerializer
 from .models import BaseEvent, PermanentEvent, TemporaryEvent
 from apps.profiles.serializer import MainBaseEventSerializer, AllMainBaseEventSerializer
@@ -219,6 +220,7 @@ class AllPermEventsListAPIView(ListAPIView):
     permission_classes = [IsAuthenticated]
     pagination_class = LimitOffsetPagination
 
+
     def get_queryset(self):
         user_city = self.request.user.baseprofile.user.city.city_name
         queryset = PermanentEvent.objects.filter(
@@ -226,4 +228,3 @@ class AllPermEventsListAPIView(ListAPIView):
             address__city__city_name=user_city,
         ).order_by('-followers')
         return queryset
-
