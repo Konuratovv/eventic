@@ -10,7 +10,7 @@ from apps.locations.models import Address
 from .event_filters import EventFilter, EventTypeFilter
 from rest_framework.pagination import LimitOffsetPagination
 
-from .models import Category, Interests, EventBanner, EventWeek, EventDate
+from .models import Category, Interests, EventBanner, EventWeek, EventDate, Language
 from .serializers import DetailEventSerializer, CategorySerializer, InterestSerializer
 from .models import BaseEvent, PermanentEvent, TemporaryEvent
 from apps.profiles.serializer import MainBaseEventSerializer, AllMainBaseEventSerializer
@@ -113,7 +113,7 @@ class EventTypeListAPIView(ListAPIView):
             'price',
             'organizer',
             'followers'
-        ).order_by('-followers')
+        ).order_by('-followers').filter(address__city__city_name=custom_user.city)
         context = {'custom_user': custom_user, 'request': request}
         events_data = self.get_events_data(events[:15], custom_user, MainBaseEventSerializer, context)
 
