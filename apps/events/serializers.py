@@ -257,3 +257,11 @@ class DetailEventSerializer(serializers.ModelSerializer):
                 return f"{hours} ч {minutes} мин"
             return "Нет данных"
         return None
+
+    
+class EventAddressUpdateSerializer(serializers.ModelSerializer):
+    address = AddressSerializer()
+
+    class Meta:
+        model = BaseEvent
+        fields = ['id', 'address']

@@ -1,10 +1,13 @@
 from rest_framework import generics
 from rest_framework.filters import SearchFilter
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import ListAPIView, UpdateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from django_filters.rest_framework import DjangoFilterBackend
+
+from apps.locations.models import Address
+from .event_filters import EventFilter, EventTypeFilter
 from rest_framework.pagination import LimitOffsetPagination
 
 from .models import Category, Interests, EventBanner, EventWeek, EventDate
@@ -84,37 +87,6 @@ class FreeEventListAPIView(generics.ListAPIView):
 class EventTypeListAPIView(ListAPIView):
     permission_classes = [IsAuthenticated]
 
-    # from faker import Faker
-    # fake = Faker()
-    #
-    # for num in range(500):
-    #     organizer = Organizer.objects.order_by('?').first()
-    #     category_instance = Category.objects.order_by('?').first()
-    #     interests_instance = Interests.objects.order_by('?').first()
-    #     address_instance = Address.objects.order_by('?').first()
-    #     generate = PermanentEvent.objects.create(title=fake.catch_phrase(), description=fake.text(),
-    #                                              price=fake.random_int(min=0, max=100, step=1),
-    #                                              organizer=organizer, address=address_instance)
-    #     generate2 = TemporaryEvent.objects.create(title=fake.catch_phrase(), description=fake.text(),
-    #                                               price=fake.random_int(min=0, max=100, step=1),
-    #                                               organizer=organizer, address=address_instance)
-    #     generate.category.set([category_instance])
-    #     generate.interests.set([interests_instance])
-    #     generate2.category.set([category_instance])
-    #     generate2.interests.set([interests_instance])
-    #
-    #     for _ in range(10):
-    #         EventBanner.objects.create(event=generate, image='image.png')
-    #         EventBanner.objects.create(event=generate2, image='image.png')
-    #
-    #     for _ in range(10):
-    #         EventWeek.objects.create(perm=generate, week=fake.name(), start_time='21:18:1',
-    #                                  end_time='20:18:12', slug='sreda')
-    #
-    #     for _ in range(10):
-    #         EventDate.objects.create(temp=generate2, start_date='2024-01-20 21:03:22',
-    #                                  end_date='2024-01-20 22:03:22')
-
     def get_queryset(self):
         return None
 
@@ -128,14 +100,6 @@ class EventTypeListAPIView(ListAPIView):
 
     def get(self, request, *args, **kwargs):
         custom_user = User.objects.prefetch_related('favourites', 'viewedevent_set').get(id=self.request.user.id)
-        data = {
-            'events': [],
-            'perEvents': [],
-            'temEvents': [],
-            'freeEvents': [],
-            'paidEvents': [],
-            'last_viewed_events': []
-        }
 
         events = BaseEvent.objects.prefetch_related(
             'permanentevent__weeks',
@@ -196,34 +160,70 @@ class EventTypeListAPIView(ListAPIView):
 # Вывод всех мероприятий по типам
 class AllEventsListAPIView(ListAPIView):
     serializer_class = AllMainBaseEventSerializer
-    queryset = BaseEvent.objects.all()
     permission_classes = [IsAuthenticated]
     pagination_class = LimitOffsetPagination
 
+    def get_queryset(self):
+        user_city = self.request.user.baseprofile.user.city.city_name
+        queryset = BaseEvent.objects.filter(
+            is_active=True,
+            address__city__city_name=user_city,
+        ).order_by('-followers')
+        return queryset
 
 class AllFreeEventsListAPIView(ListAPIView):
-    queryset = BaseEvent.objects.filter(price=0)
     serializer_class = AllMainBaseEventSerializer
     permission_classes = [IsAuthenticated]
     pagination_class = LimitOffsetPagination
 
+    def get_queryset(self):
+        user_city = self.request.user.baseprofile.user.city.city_name
+        queryset = BaseEvent.objects.filter(
+            is_active=True,
+            address__city__city_name=user_city,
+            price=0,
+        ).order_by('-followers')
+        return queryset
 
 class AllPaidEventsListAPIView(ListAPIView):
-    queryset = BaseEvent.objects.filter(price__gt=0)
     serializer_class = AllMainBaseEventSerializer
     permission_classes = [IsAuthenticated]
     pagination_class = LimitOffsetPagination
+
+    def get_queryset(self):
+        user_city = self.request.user.baseprofile.user.city.city_name
+        queryset = BaseEvent.objects.filter(
+            is_active=True,
+            address__city__city_name=user_city,
+            price__gt=0,
+        ).order_by('-followers')
+        return queryset
 
 
 class AllTempEventsListAPIView(ListAPIView):
     permission_classes = [IsAuthenticated]
-    queryset = TemporaryEvent.objects.all()
     serializer_class = AllMainBaseEventSerializer
     pagination_class = LimitOffsetPagination
+
+    def get_queryset(self):
+        user_city = self.request.user.baseprofile.user.city.city_name
+        queryset = TemporaryEvent.objects.filter(
+            is_active=True,
+            address__city__city_name=user_city,
+        ).order_by('-followers')
+        return queryset
 
 
 class AllPermEventsListAPIView(ListAPIView):
     serializer_class = AllMainBaseEventSerializer
-    queryset = PermanentEvent.objects.all()
     permission_classes = [IsAuthenticated]
     pagination_class = LimitOffsetPagination
+
+    def get_queryset(self):
+        user_city = self.request.user.baseprofile.user.city.city_name
+        queryset = PermanentEvent.objects.filter(
+            is_active=True,
+            address__city__city_name=user_city,
+        ).order_by('-followers')
+        return queryset
+
