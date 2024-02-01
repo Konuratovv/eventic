@@ -1,6 +1,6 @@
 from django.contrib import admin
-from .models import Category, TemporaryEvent, PermanentEvent, EventWeek, EventDate, Interests, BaseEvent, EventBanner, \
-    Language
+from .models import Category, TemporaryEvent, PermanentEvent, EventWeek, EventDate, Interests, EventBanner, \
+    Language, PermanentEventWeek
 
 
 class EventBannerInline(admin.TabularInline):
@@ -22,6 +22,7 @@ class EventWeekInline(admin.StackedInline):
 
 @admin.register(TemporaryEvent)
 class TemporaryEventAdmin(admin.ModelAdmin):
+    """ Временные """
     inlines = [EventBannerInline, EventDateInline]
     exclude = ['followers']
 
@@ -63,9 +64,15 @@ class TemporaryEventAdmin(admin.ModelAdmin):
     get_languages.short_description = 'Языки'
 
 
+class PermanentEventWeekInline(admin.TabularInline):
+    model = PermanentEventWeek
+    extra = 1
+
+
 @admin.register(PermanentEvent)
 class PermanentEventAdmin(admin.ModelAdmin):
-    inlines = [EventBannerInline, EventWeekInline]
+    """ Постоянные """
+    inlines = [EventBannerInline, PermanentEventWeekInline]
     exclude = ['followers']
     list_display = [
         "title",
@@ -97,12 +104,13 @@ class PermanentEventAdmin(admin.ModelAdmin):
     get_interests.short_description = 'Интересы'
 
     def get_weeks(self, obj):
-        return ", ".join([week.week for week in obj.weeks.all()]) if obj.weeks.exists() else ""
+        return ", ".join([week.week for week in obj.weeks.all()]) if hasattr(obj, 'weeks') and obj.weeks.exists() else ""
     get_weeks.short_description = 'Недели'
 
     def get_languages(self, obj):
         return ", ".join([language.name for language in obj.language.all()])
     get_languages.short_description = 'Языки'
+
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
@@ -125,7 +133,7 @@ class InterestsAdmin(admin.ModelAdmin):
 
 
 @admin.register(Language)
-class InterestsAdmin(admin.ModelAdmin):
+class LanguageAdmin(admin.ModelAdmin):
     list_display = [
         "id",
         "name",
@@ -147,4 +155,3 @@ class EventWeekAdmin(admin.ModelAdmin):
 @admin.register(EventDate)
 class EventDateAdmin(admin.ModelAdmin):
     pass
-

@@ -219,6 +219,7 @@ class AllPermEventsListAPIView(ListAPIView):
     permission_classes = [IsAuthenticated]
     pagination_class = LimitOffsetPagination
 
+
     def get_queryset(self):
         user_city = self.request.user.baseprofile.user.city.city_name
         queryset = PermanentEvent.objects.filter(
@@ -226,4 +227,3 @@ class AllPermEventsListAPIView(ListAPIView):
             address__city__city_name=user_city,
         ).order_by('-followers')
         return queryset
-

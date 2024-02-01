@@ -4,7 +4,7 @@ from apps.events.models import BaseEvent, EventDate, EventWeek, Interests, Categ
 from apps.events.serializers import EventBannerSerializer, AddressSerializer, InterestSerializer, CategorySerializer
 from apps.locations.models import Address, City
 from apps.locations.serializers import CitySerializer
-from apps.profiles.models import Organizer, FollowOrganizer, ViewedEvent, PhoneNumber, Email, SocialLink
+from apps.profiles.models import Organizer, ViewedEvent, PhoneNumber, SocialLink
 
 from django.db.models import BooleanField, Case, When, Value
 
@@ -87,13 +87,13 @@ class ListOrginizerSerializer(ModelSerializer):
         model = Organizer
         fields = ['id', 'is_followed', 'profile_picture', 'title']
 
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        request = self.context.get('request')
-        user = User.objects.get(id=request.user.id)
-        is_subscribed = FollowOrganizer.objects.filter(follower=user).exists()
-        data['is_followed'] = is_subscribed
-        return data
+    # def to_representation(self, instance):
+    #     data = super().to_representation(instance)
+    #     request = self.context.get('request')
+    #     user = User.objects.get(id=request.user.id)
+    #     is_subscribed = FollowOrganizer.objects.filter(follower=user).exists()
+    #     data['is_followed'] = is_subscribed
+    #     return data
 
 
 class FollowEventSerializer(ModelSerializer):
