@@ -4,7 +4,7 @@ from apps.profiles.views import ProfileViewSet, FollowOrganizerAPIView, Organize
     UnFollowOrganizerAPIView, UnFollowEventAPIView, SubscribersUserAPIView, LastViewedEvents, \
     DetailOrganizer, OrganizerEvents, UserFavouritesAPIView, ChangeUserPictureAPIView, ChangeUserNameAPIView, \
     ChangeUserPasswordAPIView, ChangeUserEmailAPIView, GoogleOAuthAPIView, FilterOrganizerAPIView, UpdateCityAPIView, \
-    AllOrganizerListAPIView
+    AllOrganizerListAPIView, AppleOAuthAPIView
 
 urlpatterns = [
     path('profile/', ProfileViewSet.as_view()),
@@ -26,5 +26,6 @@ urlpatterns = [
     path('change_profile_names/', ChangeUserNameAPIView.as_view()),
     path('change_profile_password/', ChangeUserPasswordAPIView.as_view()),
     path('change_profile_email/', ChangeUserEmailAPIView.as_view()),
-    path('google_login/', GoogleOAuthAPIView.as_view())
+    path('google_login/', GoogleOAuthAPIView.as_view()),
+    path('apple_login/', AppleOAuthAPIView.as_view())
 ]

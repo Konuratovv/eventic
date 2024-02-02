@@ -4,9 +4,7 @@ from apps.events.models import BaseEvent, EventDate, EventWeek, Interests, Categ
 from apps.events.serializers import EventBannerSerializer, AddressSerializer, InterestSerializer, CategorySerializer
 from apps.locations.models import Address, City
 from apps.locations.serializers import CitySerializer
-from apps.profiles.models import Organizer, FollowOrganizer, ViewedEvent, PhoneNumber, Email, SocialLink
-
-from django.db.models import BooleanField, Case, When, Value
+from apps.profiles.models import Organizer, ViewedEvent, PhoneNumber, SocialLink
 
 from apps.profiles.models import User
 from rest_framework.serializers import ModelSerializer
@@ -14,13 +12,15 @@ from rest_framework import serializers
 
 from apps.users.models import CustomUser
 
+
 class UpdateCitySerializer(ModelSerializer):
     class Meta:
         model = User
         fields = ['city', ]
 
+
 class ProfileSerializer(ModelSerializer):
-    city = CitySerializer(read_only=True    )
+    city = CitySerializer(read_only=True)
 
     class Meta:
         model = User
@@ -87,13 +87,8 @@ class ListOrginizerSerializer(ModelSerializer):
         model = Organizer
         fields = ['id', 'is_followed', 'profile_picture', 'title']
 
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        request = self.context.get('request')
-        user = User.objects.get(id=request.user.id)
-        is_subscribed = FollowOrganizer.objects.filter(follower=user).exists()
-        data['is_followed'] = is_subscribed
-        return data
+    def get_is_followed(self, organizer):
+        return organizer in self.context.get('request').user.baseprofile.user.organizers
 
 
 class FollowEventSerializer(ModelSerializer):
@@ -299,3 +294,9 @@ class GoogleOAuthSerializer(serializers.Serializer):
 
     class Meta:
         fields = ['google_token']
+
+
+class AppleOAuthSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'email']

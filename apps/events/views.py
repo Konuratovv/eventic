@@ -1,22 +1,17 @@
 from rest_framework import generics
 from rest_framework.filters import SearchFilter
-from rest_framework.generics import ListAPIView, UpdateAPIView
+from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-
 from django_filters.rest_framework import DjangoFilterBackend
-
-from apps.locations.models import Address
-from .event_filters import EventFilter, EventTypeFilter
 from rest_framework.pagination import LimitOffsetPagination
 
-from .models import Category, Interests, EventBanner, EventWeek, EventDate, Language
+from .models import Category, Interests
 from .serializers import DetailEventSerializer, CategorySerializer, InterestSerializer
 from .models import BaseEvent, PermanentEvent, TemporaryEvent
 from apps.profiles.serializer import MainBaseEventSerializer, AllMainBaseEventSerializer
 from .event_filters import EventFilter, EventTypeFilter
-from ..locations.models import Address
-from ..profiles.models import User, Organizer
+from ..profiles.models import User
 from ..profiles.serializer import LastViewedEventReadSerializer
 
 
@@ -171,6 +166,7 @@ class AllEventsListAPIView(ListAPIView):
         ).order_by('-followers')
         return queryset
 
+
 class AllFreeEventsListAPIView(ListAPIView):
     serializer_class = AllMainBaseEventSerializer
     permission_classes = [IsAuthenticated]
@@ -184,6 +180,7 @@ class AllFreeEventsListAPIView(ListAPIView):
             price=0,
         ).order_by('-followers')
         return queryset
+
 
 class AllPaidEventsListAPIView(ListAPIView):
     serializer_class = AllMainBaseEventSerializer
@@ -226,4 +223,3 @@ class AllPermEventsListAPIView(ListAPIView):
             address__city__city_name=user_city,
         ).order_by('-followers')
         return queryset
-

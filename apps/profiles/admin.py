@@ -92,7 +92,6 @@ class OrganizerAdmin(admin.ModelAdmin):
     ]
 
     def follower_count(self, obj):
-        return obj.followers.count()
-
+        return obj.followers
 
     follower_count.short_description = 'Количество подписчиков'

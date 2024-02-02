@@ -41,7 +41,7 @@ class TemporaryEventAdmin(admin.ModelAdmin):
     readonly_fields = ('followers', 'get_followers_count')
 
     def get_followers_count(self, obj):
-        return obj.followers.count()
+        return obj.followers
 
     get_followers_count.short_description = 'Количество подписчиков'
     def get_categories(self, obj):
@@ -84,7 +84,7 @@ class PermanentEventAdmin(admin.ModelAdmin):
     readonly_fields = ('followers', 'get_followers_count')
 
     def get_followers_count(self, obj):
-        return obj.followers.count()
+        return obj.followers
 
     get_followers_count.short_description = 'Количество подписчиков'
 

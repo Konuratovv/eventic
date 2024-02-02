@@ -11,7 +11,7 @@ from rest_framework.mixins import UpdateModelMixin, DestroyModelMixin
 from rest_framework.pagination import LimitOffsetPagination
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter
-from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 
 from apps.events.models import BaseEvent
 from apps.locations.models import City
@@ -20,7 +20,8 @@ from apps.profiles.organizer_filter import OrganizerFilter
 from apps.profiles.serializer import ListOrginizerSerializer, UpdateCitySerializer, ProfileSerializer, \
     FollowEventSerializer, LastViewedEventSerializer, MainOrganizerSerializer, OrganizerDetailSerializer, \
     DetailBaseEventSerializer, UserFavouritesSerializer, ChangeUserPictureSerializer, ChangeProfileNamesSerializer, \
-    ChangeUserEmailSerializer, ChangeUserPasswordSerializer, FollowOrganizerSerializer, GoogleOAuthSerializer
+    ChangeUserEmailSerializer, ChangeUserPasswordSerializer, FollowOrganizerSerializer, GoogleOAuthSerializer, \
+    AppleOAuthSerializer
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.core.exceptions import ObjectDoesNotExist
@@ -147,6 +148,7 @@ class SubscribersUserAPIView(ListAPIView):
             many=True).data
         return self.get_paginated_response(serializer_data)
 
+
 class FollowEventAPIView(CreateAPIView):
     serializer_class = FollowEventSerializer
     permission_classes = [IsAuthenticated]
@@ -242,6 +244,7 @@ class ChangeUserPictureAPIView(UpdateModelMixin, DestroyModelMixin, GenericAPIVi
         user.save()
         return Response({'status': 'success'})
 
+
 class UpdateCityAPIView(UpdateModelMixin, GenericAPIView):
     permission_classes = [IsAuthenticated]
 
@@ -267,6 +270,7 @@ class AllOrganizerListAPIView(ListAPIView):
 
         return queryset
 
+
 class FilterOrganizerAPIView(ListAPIView):
     serializer_class = MainOrganizerSerializer
     permission_classes = [IsAuthenticated]
@@ -274,6 +278,7 @@ class FilterOrganizerAPIView(ListAPIView):
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_class = OrganizerFilter
     search_fields = ['title']
+
 
 class ChangeUserNameAPIView(UpdateModelMixin, GenericAPIView):
     serializer_class = ChangeProfileNamesSerializer
@@ -331,7 +336,8 @@ class GoogleOAuthAPIView(CreateAPIView):
         try:
             user = User.objects.get(email=user_info['email'])
             access_token = AccessToken.for_user(user)
-            return Response({'access_token': str(access_token)})
+            refresh_token = RefreshToken.for_user(user)
+            return Response({'access_token': str(access_token), 'refresh_token': str(refresh_token)})
         except ObjectDoesNotExist:
             random_password = get_random_string(length=12)
             user = User.objects.create_user(
@@ -341,6 +347,31 @@ class GoogleOAuthAPIView(CreateAPIView):
                 password=random_password
             )
             access_token = AccessToken.for_user(user)
-            return Response({'access_token': str(access_token)})
+            refresh_token = RefreshToken.for_user(user)
+            return Response({'access_token': str(access_token), 'refresh_token': str(refresh_token)})
 
 
+class AppleOAuthAPIView(CreateAPIView):
+    serializer_class = AppleOAuthSerializer
+
+    def post(self, request, *args, **kwargs):
+        first_name = self.request.data.get('first_name')
+        last_name = self.request.data.get('last_name')
+        user_apple_email = self.request.data.get('email')
+
+        try:
+            user = User.objects.get(email=user_apple_email)
+            access_token = AccessToken.for_user(user)
+            refresh_token = RefreshToken.for_user(user)
+            return Response({'access_token': str(access_token), 'refresh_token': str(refresh_token)})
+        except ObjectDoesNotExist:
+            random_password = get_random_string(length=12)
+            user = User.objects.create_user(
+                email=user_apple_email,
+                first_name=first_name,
+                last_name=last_name,
+                password=random_password
+            )
+            access_token = AccessToken.for_user(user)
+            refresh_token = RefreshToken.for_user(user)
+            return Response({'access_token': str(access_token), 'refresh_token': str(refresh_token)})
