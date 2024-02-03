@@ -33,14 +33,6 @@ class ChangeProfileNamesSerializer(ModelSerializer):
         fields = ['first_name', 'last_name']
 
 
-class ChangeUserEmailSerializer(ModelSerializer):
-    email = serializers.EmailField(validators=[UniqueValidator(queryset=User.objects.all())])
-
-    class Meta:
-        model = User
-        fields = ['email']
-
-
 class UserProfileStatistics(ModelSerializer):
     class Meta:
         model = User
@@ -53,8 +45,8 @@ class ChangeUserPasswordSerializer(ModelSerializer):
     confirming_new_password = serializers.CharField(write_only=True)
 
     class Meta:
-        model = User
-        fields = ['old_password', 'new_password', 'confirming_new_password']
+        model = CustomUser
+        fields = ['old_password', 'new_password', 'confirming_new_password', 'code']
 
 
 class PhoneNumberSerializer(ModelSerializer):
@@ -300,3 +292,14 @@ class AppleOAuthSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['first_name', 'last_name', 'email']
+
+
+class SendChangeEmailCodeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ['code']
+
+
+class SendChangePasswordCode(serializers.Serializer):
+    pass
+

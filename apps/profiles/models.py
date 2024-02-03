@@ -19,6 +19,7 @@ class User(BaseProfile):
     events = models.ManyToManyField(BaseEvent, related_name='users', blank=True)
     last_viewed_events = models.ManyToManyField('ViewedEvent', related_name='users', blank=True)
     city = models.ForeignKey(City, on_delete=models.SET_NULL, **nb)
+    device_token = models.CharField(max_length=255, unique=True)
 
     class Meta:
         verbose_name = 'Пользователь'
@@ -46,6 +47,11 @@ class Organizer(BaseProfile):
 class PhoneNumber(models.Model):
     organizer = models.ForeignKey(Organizer, on_delete=models.CASCADE, related_name='phone_numbers')
     phone_number = models.CharField(max_length=30)
+    phone_number_choices = [
+        ('whatsapp', 'WhatsApp'),
+        ('telegram', 'Telegram'),
+    ]
+    phone_number_type = models.CharField(max_length=50, choices=phone_number_choices, blank=True)
 
     class Meta:
         verbose_name = 'Номер телефона'

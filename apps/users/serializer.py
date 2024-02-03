@@ -22,6 +22,7 @@ class RegisterSerializer(ModelSerializer):
             'email',
             'password',
             'confirm_password',
+            'device_token'
         ]
 
     def validate_password(self, value):
@@ -37,10 +38,11 @@ class RegisterSerializer(ModelSerializer):
             raise AuthenticationFailed('Password did not match')
         return data
 
-    def create(self, validated_data):
-        validated_data.pop('confirm_password', None)
-        user = User.objects.create_user(**validated_data)
-        return user
+
+class LoginSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['email', 'password']
 
 
 class CodeVerifyEmailSerializer(serializers.ModelSerializer):
@@ -53,7 +55,3 @@ class CodeSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = ['code', 'email']
-
-
-class SendCodeSerializer(serializers.Serializer):
-    pass

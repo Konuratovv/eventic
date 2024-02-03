@@ -4,17 +4,17 @@ from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status
 from rest_framework.mixins import UpdateModelMixin
-from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 from django.utils.crypto import constant_time_compare
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework_simplejwt.views import TokenObtainPairView
 
 from rest_framework.generics import CreateAPIView, GenericAPIView
 from apps.profiles.models import User
 from apps.users.models import CustomUser
 from apps.profiles.serializer import SendResetCodeSerializer, ChangePasswordSerializer
-from apps.users.serializer import RegisterSerializer, CodeSerializer, SendCodeSerializer, CodeVerifyEmailSerializer
+from apps.users.serializer import RegisterSerializer, CodeSerializer, CodeVerifyEmailSerializer, \
+    LoginSerializer
 from apps.users.utils import send_verification_mail
 
 
@@ -25,51 +25,71 @@ class RegisterAPIView(CreateAPIView):
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        data = {"status": "success"}
-        return Response(data, status=status.HTTP_200_OK)
+        device_token = User.objects.filter(device_token=self.request.data.get('device_token')).exists()
+        if device_token:
+            user = User.objects.get(device_token=self.request.data.get('device_token'))
+
+            def is_email_unique(email, excluded_user_id):
+                queryset = User.objects.filter(email=email)
+                queryset2 = queryset.exclude(id=excluded_user_id)
+                return not queryset2.exists()
+
+            if is_email_unique(self.request.data['email'], user.id):
+
+                user.email = self.request.data.get('email')
+                user.first_name = self.request.data.get('first_name')
+                user.last_name = self.request.data.get('last_name')
+
+                if self.request.data.get('password') == self.request.data.get('confirm_password'):
+                    user.password = make_password(self.request.data.get('password'))
+                    user.save()
+                    send_verification_mail(user.email)
+                    return Response({'status': 'success'})
+
+                return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if serializer.is_valid(raise_exception=True):
+            user = User.objects.create_user(
+                email=serializer.validated_data['email'],
+                first_name=serializer.validated_data['first_name'],
+                last_name=serializer.validated_data['last_name'],
+                password=serializer.validated_data['password'],
+                device_token=serializer.validated_data['device_token'],
+            )
+            send_verification_mail(user.email)
+            return Response({"status": 'success'})
+
+        return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class LoginViewSet(TokenObtainPairView):
+class LoginAPIView(RegisterAPIView):
     permission_classes = [AllowAny]
+    serializer_class = LoginSerializer
 
-
-class SendEmailCodeAPIView(UpdateModelMixin, GenericAPIView):
-    serializer_class = SendCodeSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_object(self):
-        user = CustomUser.objects.get(id=self.request.user.id)
-        return user
-
-    def patch(self, *args, **kwargs):
-        email = self.get_object().email
-        send_verification_mail(email)
-        return Response({'status': 'success'})
+    def get(self, request, *args, **kwargs):
+        user = User.objects.filter(email=self.request.data.get('email'))
+        if user.exists() and user[0].check_password(self.request.data.get('password')):
+            if not user[0].is_verified:
+                return Response({'status': 'user is not valid'})
+            access_token = AccessToken.for_user(user[0])
+            refresh_token = RefreshToken.for_user(user[0])
+            return Response({'access_token': str(access_token), 'refresh_token': str(refresh_token)})
+        return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class VerifyEmailAPIView(UpdateModelMixin, GenericAPIView):
     serializer_class = CodeVerifyEmailSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_object(self):
-        user = CustomUser.objects.get(id=self.request.user.id)
-        return user
 
     def patch(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            user = self.get_object()
-            code = serializer.validated_data['code']
-            if user.code == code:
-                user.is_verified = True
-                user.code = None
-                user.save()
-                return Response({'status': 'success'})
-            return Response({'status': 'error'})
-
-        return Response({'message': serializer.errors})
+        user = User.objects.filter(device_token=self.request.data.get('device_token'))
+        verify_code = self.request.data.get('code')
+        if user[0].code == verify_code:
+            user[0].is_verified = True
+            user[0].code = None
+            user[0].save()
+            return Response({'status': 'success'})
+        return Response({'status': 'error'})
 
 
 class SendResetAPiView(UpdateModelMixin, GenericAPIView):
