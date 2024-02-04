@@ -299,7 +299,3 @@ class SendChangeEmailCodeSerializer(serializers.ModelSerializer):
         model = CustomUser
         fields = ['code']
 
-
-class SendChangePasswordCode(serializers.Serializer):
-    pass
-

@@ -20,7 +20,7 @@ from apps.profiles.serializer import ListOrginizerSerializer, UpdateCitySerializ
     FollowEventSerializer, LastViewedEventSerializer, MainOrganizerSerializer, OrganizerDetailSerializer, \
     DetailBaseEventSerializer, UserFavouritesSerializer, ChangeUserPictureSerializer, ChangeProfileNamesSerializer, \
     ChangeUserPasswordSerializer, FollowOrganizerSerializer, GoogleOAuthSerializer, \
-    AppleOAuthSerializer, SendChangeEmailCodeSerializer, SendChangePasswordCode
+    AppleOAuthSerializer
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.core.exceptions import ObjectDoesNotExist
@@ -301,30 +301,16 @@ class ChangeUserPasswordAPIView(UpdateModelMixin, GenericAPIView):
 
     def patch(self, request, *args, **kwargs):
         user = self.request.user
-        code = self.request.data.get('code')
-        if user.code == code:
-            user.code = None
-            old_password = self.request.data.get('old_password')
-            new_password = self.request.data.get('new_password')
-            confirming_new_password = self.request.data.get('confirming_new_password')
-            if user.check_password(old_password):
-                if constant_time_compare(new_password, confirming_new_password):
-                    user.password = make_password(confirming_new_password)
-                    user.save()
-                    return Response({'status': 'success'})
-                return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
+        old_password = self.request.data.get('old_password')
+        new_password = self.request.data.get('new_password')
+        confirming_new_password = self.request.data.get('confirming_new_password')
+        if user.check_password(old_password):
+            if constant_time_compare(new_password, confirming_new_password):
+                user.password = make_password(confirming_new_password)
+                user.save()
+                return Response({'status': 'success'})
             return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
-
-
-class SendChangePasswordCodeAPIView(UpdateModelMixin, GenericAPIView):
-    serializer_class = SendChangePasswordCode
-    permission_classes = [IsAuthenticated]
-
-    def patch(self, request, *args, **kwargs):
-        user_email = self.request.user.email
-        send_verification_mail(user_email)
-        return Response({'status': 'success'})
 
 
 class GoogleOAuthAPIView(CreateAPIView):

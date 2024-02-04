@@ -14,40 +14,16 @@ from apps.profiles.models import User
 from apps.users.models import CustomUser
 from apps.profiles.serializer import SendResetCodeSerializer, ChangePasswordSerializer
 from apps.users.serializer import RegisterSerializer, CodeSerializer, CodeVerifyEmailSerializer, \
-    LoginSerializer
+    LoginSerializer, SendEmailVerifyCodeSerializer
 from apps.users.utils import send_verification_mail
 
 
 class RegisterAPIView(CreateAPIView):
-    queryset = User.objects.all()
     serializer_class = RegisterSerializer
     permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        device_token = User.objects.filter(device_token=self.request.data.get('device_token')).exists()
-        if device_token:
-            user = User.objects.get(device_token=self.request.data.get('device_token'))
-
-            def is_email_unique(email, excluded_user_id):
-                queryset = User.objects.filter(email=email)
-                queryset2 = queryset.exclude(id=excluded_user_id)
-                return not queryset2.exists()
-
-            if is_email_unique(self.request.data['email'], user.id):
-
-                user.email = self.request.data.get('email')
-                user.first_name = self.request.data.get('first_name')
-                user.last_name = self.request.data.get('last_name')
-
-                if self.request.data.get('password') == self.request.data.get('confirm_password'):
-                    user.password = make_password(self.request.data.get('password'))
-                    user.save()
-                    send_verification_mail(user.email)
-                    return Response({'status': 'success'})
-
-                return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
-            return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
 
         if serializer.is_valid(raise_exception=True):
             user = User.objects.create_user(
@@ -55,11 +31,22 @@ class RegisterAPIView(CreateAPIView):
                 first_name=serializer.validated_data['first_name'],
                 last_name=serializer.validated_data['last_name'],
                 password=serializer.validated_data['password'],
-                device_token=serializer.validated_data['device_token'],
             )
             send_verification_mail(user.email)
             return Response({"status": 'success'})
 
+        return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class SendVerifyCodeAPIView(UpdateModelMixin, GenericAPIView):
+    serializer_class = SendEmailVerifyCodeSerializer
+    permission_classes = [AllowAny]
+
+    def patch(self, request, *args, **kwargs):
+        user = User.objects.filter(email=self.request.data.get('email'))
+        if user.exists():
+            send_verification_mail(user[0].email)
+            return Response({'status': 'success'})
         return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -71,6 +58,7 @@ class LoginAPIView(RegisterAPIView):
         user = User.objects.filter(email=self.request.data.get('email'))
         if user.exists() and user[0].check_password(self.request.data.get('password')):
             if not user[0].is_verified:
+                send_verification_mail(user[0].email)
                 return Response({'status': 'user is not valid'})
             access_token = AccessToken.for_user(user[0])
             refresh_token = RefreshToken.for_user(user[0])
@@ -82,14 +70,14 @@ class VerifyEmailAPIView(UpdateModelMixin, GenericAPIView):
     serializer_class = CodeVerifyEmailSerializer
 
     def patch(self, request, *args, **kwargs):
-        user = User.objects.filter(device_token=self.request.data.get('device_token'))
+        user = User.objects.filter(email=self.request.data.get('email')).first()
         verify_code = self.request.data.get('code')
-        if user[0].code == verify_code:
-            user[0].is_verified = True
-            user[0].code = None
-            user[0].save()
+        if user.code == verify_code:
+            user.is_verified = True
+            user.code = None
+            user.save()
             return Response({'status': 'success'})
-        return Response({'status': 'error'})
+        return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class SendResetAPiView(UpdateModelMixin, GenericAPIView):

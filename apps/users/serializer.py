@@ -22,7 +22,6 @@ class RegisterSerializer(ModelSerializer):
             'email',
             'password',
             'confirm_password',
-            'device_token'
         ]
 
     def validate_password(self, value):
@@ -48,10 +47,16 @@ class LoginSerializer(serializers.ModelSerializer):
 class CodeVerifyEmailSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ['code']
+        fields = ['code', 'email']
 
 
 class CodeSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = ['code', 'email']
+
+
+class SendEmailVerifyCodeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['email']

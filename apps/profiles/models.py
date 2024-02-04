@@ -19,7 +19,6 @@ class User(BaseProfile):
     events = models.ManyToManyField(BaseEvent, related_name='users', blank=True)
     last_viewed_events = models.ManyToManyField('ViewedEvent', related_name='users', blank=True)
     city = models.ForeignKey(City, on_delete=models.SET_NULL, **nb)
-    device_token = models.CharField(max_length=255, unique=True)
 
     class Meta:
         verbose_name = 'Пользователь'
