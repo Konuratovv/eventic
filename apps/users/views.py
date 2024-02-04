@@ -59,7 +59,7 @@ class LoginAPIView(RegisterAPIView):
         if user.exists() and user[0].check_password(self.request.data.get('password')):
             if not user[0].is_verified:
                 send_verification_mail(user[0].email)
-                return Response({'status': 'user is not valid'})
+                return Response({'status': 'user is not valid'}, status=status.HTTP_400_BAD_REQUEST)
             access_token = AccessToken.for_user(user[0])
             refresh_token = RefreshToken.for_user(user[0])
             return Response({'access_token': str(access_token), 'refresh_token': str(refresh_token)})
@@ -76,7 +76,9 @@ class VerifyEmailAPIView(UpdateModelMixin, GenericAPIView):
             user.is_verified = True
             user.code = None
             user.save()
-            return Response({'status': 'success'})
+            access_token = AccessToken.for_user(user)
+            refresh_token = RefreshToken.for_user(user)
+            return Response({'access_token': str(access_token), 'refresh_token': str(refresh_token)})
         return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
 
 
