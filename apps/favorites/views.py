@@ -15,8 +15,7 @@ class FavouriteEventAPIView(CreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
-        user_id = request.user.id
-        obj_user = User.objects.get(id=user_id)
+        obj_user = request.user.baseprofile.user
 
         event_id = request.data['favourites']
         try:

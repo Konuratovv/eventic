@@ -2,7 +2,7 @@ from rest_framework import serializers
 from .models import Category, EventDate, BaseEvent, EventWeek, Interests, EventBanner, PermanentEvent
 
 from ..locations.models import Address, City
-from ..profiles.models import Organizer, FollowOrganizer, User
+from ..profiles.models import Organizer, User
 
 from datetime import datetime, timedelta
 
@@ -32,7 +32,6 @@ class EventWeekSerializer(serializers.ModelSerializer):
 
 
 class EventBannerSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = EventBanner
         fields = '__all__'
@@ -92,11 +91,7 @@ class OrganizerSerializer(serializers.ModelSerializer):
         fields = ('title', 'back_img', 'is_followed',)
 
     def get_is_followed(self, obj):
-        user = self.context.get('request').user
-        try:
-            return FollowOrganizer.objects.get(follower=user, following=obj).is_followed
-        except FollowOrganizer.DoesNotExist:
-            return False
+        return obj in self.context.get('request').user.baseprofile.user.organizers.all()
 
 
 class DetailEventSerializer(serializers.ModelSerializer):
@@ -266,7 +261,7 @@ class DetailEventSerializer(serializers.ModelSerializer):
             return "Нет данных"
         return None
 
-    
+
 class EventAddressUpdateSerializer(serializers.ModelSerializer):
     address = AddressSerializer()
 
