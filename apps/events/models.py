@@ -97,12 +97,33 @@ class TemporaryEvent(BaseEvent):
         verbose_name_plural = 'Временое мероприятия'
 
 
+class EventTime(models.Model):
+    start_time = models.TimeField(verbose_name="Время начала события")
+    end_time = models.TimeField(verbose_name="Время окончания события")
+    objects = models.Manager()
+
+    class Meta:
+        verbose_name = 'Время постоянного события'
+        verbose_name_plural = 'Время постоянных событий'
+
+    def __str__(self):
+        return f"{self.start_time} - {self.end_time}"
+
+
+class PermanentEvent(BaseEvent):
+    """ Постоянное мероприятие наследуется от BaseEvent """
+
+    class Meta:
+        verbose_name = 'Постоянное мероприятие'
+        verbose_name_plural = 'Постоянные мероприятия'
+
+
 class EventWeek(models.Model):
     """ Модель недели и время события связан с PermanentEvent"""
     week = models.CharField(max_length=80, verbose_name="День недели")
     slug = models.SlugField(max_length=80, verbose_name='Слаг', help_text='Заполняется автоматически')
-    start_time = models.TimeField(verbose_name="Время начала события")
-    end_time = models.TimeField(verbose_name="Время окончания события")
+    time = models.ForeignKey(EventTime, verbose_name='Укажите время', related_name='week_times', on_delete=models.CASCADE)
+    permanent_event = models.ForeignKey(PermanentEvent, verbose_name='Выберите постоянное событие', related_name='weeks', on_delete=models.CASCADE) # без этой хрени не работает
     objects = models.Manager()
 
     class Meta:
@@ -111,25 +132,6 @@ class EventWeek(models.Model):
 
     def __str__(self):
         return f"{self.week}"
-
-
-class PermanentEvent(BaseEvent):
-    """ Постоянное мероприятие наследуется от BaseEvent """
-    weeks = models.ManyToManyField(EventWeek, through='PermanentEventWeek')
-
-    class Meta:
-        verbose_name = 'Постоянное мероприятие'
-        verbose_name_plural = 'Постоянные мероприятия'
-
-
-class PermanentEventWeek(models.Model):
-    permanent_event = models.ForeignKey(PermanentEvent, on_delete=models.CASCADE)
-    event_week = models.ForeignKey(EventWeek, verbose_name="Недели мероприятий", on_delete=models.CASCADE)
-
-    class Meta:
-        verbose_name = 'День недели'
-        verbose_name_plural = 'Недели и время мероприятий'
-        unique_together = ('permanent_event', 'event_week')
 
 
 class EventDate(models.Model):

@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import Category, TemporaryEvent, PermanentEvent, EventWeek, EventDate, Interests, EventBanner, \
-    Language, PermanentEventWeek
+    Language, EventTime
 
 
 class EventBannerInline(admin.TabularInline):
@@ -64,15 +64,10 @@ class TemporaryEventAdmin(admin.ModelAdmin):
     get_languages.short_description = 'Языки'
 
 
-class PermanentEventWeekInline(admin.TabularInline):
-    model = PermanentEventWeek
-    extra = 1
-
-
 @admin.register(PermanentEvent)
 class PermanentEventAdmin(admin.ModelAdmin):
     """ Постоянные """
-    inlines = [EventBannerInline, PermanentEventWeekInline]
+    inlines = [EventBannerInline, EventWeekInline]
     exclude = ['followers']
     list_display = [
         "title",
@@ -154,3 +149,8 @@ class EventWeekAdmin(admin.ModelAdmin):
 @admin.register(EventDate)
 class EventDateAdmin(admin.ModelAdmin):
     pass
+
+
+@admin.register(EventTime)
+class EventTimeAdmin(admin.ModelAdmin):
+    list_display = ['start_time', 'end_time']
