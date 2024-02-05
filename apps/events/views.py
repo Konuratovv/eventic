@@ -49,17 +49,20 @@ class EventDetailAPIView(generics.RetrieveAPIView):
 
 class EventListAPIView(generics.ListAPIView):
     """
-    Вывод списка эвентов.
+    Вывод списка активных эвентов.
     Фильтрация по категориям: http://127.0.0.1:8000/events/?category=yarmarka
     Фильтрация по интересам: http://127.0.0.1:8000/events/?interests=rasprodaja,nizkie_ceny
     Фильтрация по диапазону дат: http://127.0.0.1:8000/events/?start_date=2024-01-18&end_date=2024-01-19
     """
     permission_classes = [IsAuthenticated]
-    queryset = BaseEvent.objects.all()
     serializer_class = DetailEventSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_class = EventFilter
     search_fields = ['title']
+
+    def get_queryset(self):
+        """ Этот метод возвращает только активные мероприятия. """
+        return BaseEvent.objects.filter(is_active=True)
 
 
 class EventTypeFilterAPIView(generics.ListAPIView):
