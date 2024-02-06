@@ -56,8 +56,13 @@ class EventListAPIView(generics.ListAPIView):
     search_fields = ['title']
 
     def get_queryset(self):
-        """ Этот метод возвращает только активные мероприятия. """
-        return BaseEvent.objects.filter(is_active=True)
+        """ Этот метод возвращает только активные мероприятия по местоположению """
+        user = self.request.user
+        queryset = BaseEvent.objects.filter(is_active=True)
+
+        if hasattr(user, 'city') and user.city:
+            queryset = queryset.filter(city=user.city)
+        return queryset
 
 
 class EventTypeFilterAPIView(generics.ListAPIView):
