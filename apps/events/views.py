@@ -78,16 +78,6 @@ class EventTypeFilterAPIView(generics.ListAPIView):
     filterset_class = EventTypeFilter
 
 
-class FreeEventListAPIView(generics.ListAPIView):
-    """
-    Получение списка бесплатных Events,
-    пример: http://127.0.0.1:8000/events/free_events_list/
-    """
-    permission_classes = [IsAuthenticated]
-    serializer_class = DetailEventSerializer
-    queryset = BaseEvent.objects.filter(price=0.0)
-
-
 class NextEventsOrgAPIView(generics.ListAPIView):
     """ Для получения следующих событий того же организатора """
     permission_classes = [IsAuthenticated]
@@ -217,7 +207,6 @@ class EventTypeListAPIView(ListAPIView):
         return Response(sorted_data)
 
 
-# Вывод всех мероприятий по типам
 class AllEventsListAPIView(ListAPIView):
     serializer_class = AllMainBaseEventSerializer
     permission_classes = [IsAuthenticated]
