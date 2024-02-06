@@ -1,23 +1,56 @@
 from django.contrib import admin
+from django.forms import BaseInlineFormSet
+
 from .models import Category, TemporaryEvent, PermanentEvent, EventWeek, EventDate, Interests, EventBanner, \
     Language, EventTime
+
+
+class RequiredInlineFormSet(BaseInlineFormSet):
+
+    def _construct_form(self, i, **kwargs):
+        form = super(RequiredInlineFormSet, self)._construct_form(i, **kwargs)
+        form.empty_permitted = False
+        return form
+
+    def _should_delete_form(self, form):
+        if form.prefix == self.prefix + '-0':
+            return False
+        return super()._should_delete_form(form)
 
 
 class EventBannerInline(admin.TabularInline):
     model = EventBanner
     extra = 1
     fields = ['image', 'is_img_main']
+    formset = RequiredInlineFormSet
+
+    def get_extra(self, request, obj=None, **kwargs):
+        if obj:
+            return 0
+        return super().get_extra(request, obj, **kwargs)
 
 
 class EventDateInline(admin.TabularInline):
     model = EventDate
     extra = 1
+    formset = RequiredInlineFormSet
+
+    def get_extra(self, request, obj=None, **kwargs):
+        if obj:
+            return 0
+        return super().get_extra(request, obj, **kwargs)
 
 
 class EventWeekInline(admin.StackedInline):
     model = EventWeek
     prepopulated_fields = {'slug': ('week',)}
     extra = 1
+    formset = RequiredInlineFormSet
+
+    def get_extra(self, request, obj=None, **kwargs):
+        if obj:
+            return 0
+        return super().get_extra(request, obj, **kwargs)
 
 
 @admin.register(TemporaryEvent)
