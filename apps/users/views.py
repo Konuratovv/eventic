@@ -50,11 +50,11 @@ class SendVerifyCodeAPIView(UpdateModelMixin, GenericAPIView):
         return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class LoginAPIView(RegisterAPIView):
+class LoginAPIView(CreateAPIView):
     permission_classes = [AllowAny]
     serializer_class = LoginSerializer
 
-    def get(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         user = User.objects.filter(email=self.request.data.get('email'))
         if user.exists() and user[0].check_password(self.request.data.get('password')):
             if not user[0].is_verified:

@@ -1,9 +1,11 @@
-from rest_framework.serializers import ModelSerializer
+from rest_framework import serializers
 
 from apps.profiles.models import User
 
 
-class FavouriteEventSerializer(ModelSerializer):
+class FavouriteEventSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = User
         fields = ['favourites']
+

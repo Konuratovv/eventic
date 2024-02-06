@@ -42,14 +42,3 @@ class UnFavouriteEventAPIView(DestroyAPIView):
             return Response({"status": "error"})
         obj_user.favourites.remove(obj_event)
         return Response({"status": "success"})
-
-
-class ListFavouritesAPIView(ListAPIView):
-    permission_classes = [IsAuthenticated]
-    serializer_class = FavouriteEventSerializer
-
-    def get(self, request, *args, **kwargs):
-        user = User.objects.get(id=self.request.user.id)
-        favourites = user.favourites.all()
-        serialized_data = self.get_serializer(favourites).data
-        return Response(serialized_data)

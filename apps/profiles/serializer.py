@@ -73,7 +73,7 @@ class MainOrganizerSerializer(ModelSerializer):
 
 
 class ListOrginizerSerializer(ModelSerializer):
-    is_followed = serializers.BooleanField(default=False)
+    is_followed = serializers.SerializerMethodField()
 
     class Meta:
         model = Organizer
@@ -158,6 +158,7 @@ class UserFavouritesSerializer(serializers.ModelSerializer):
     category = CategorySerializer()
 
     is_favourite = serializers.SerializerMethodField()
+    is_free = serializers.SerializerMethodField()
 
     class Meta:
         model = BaseEvent
@@ -170,12 +171,16 @@ class UserFavouritesSerializer(serializers.ModelSerializer):
             'event_weeks',
             'event_dates',
             'is_favourite',
-            'category'
+            'category',
+            'is_free',
         ]
 
     def get_is_favourite(self, event):
         user_obj = self.context.get('request').user.baseprofile.user
         return event.pk in user_obj.favourites.values_list('pk', flat=True)
+
+    def get_is_free(self, event):
+        return True if event.price == 0 else False
 
 
 class DetailBaseEventSerializer(serializers.ModelSerializer):
@@ -298,4 +303,3 @@ class SendChangeEmailCodeSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = ['code']
-
