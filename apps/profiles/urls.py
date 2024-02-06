@@ -1,10 +1,11 @@
 from django.urls import path
 
+
 from apps.profiles.views import ProfileViewSet, FollowOrganizerAPIView, OrganizerListAPIView, FollowEventAPIView, \
     UnFollowOrganizerAPIView, UnFollowEventAPIView, SubscribersUserAPIView, LastViewedEvents, \
     DetailOrganizer, OrganizerEvents, UserFavouritesAPIView, ChangeUserPictureAPIView, ChangeUserNameAPIView, \
-    ChangeUserPasswordAPIView, ChangeUserEmailAPIView, GoogleOAuthAPIView, FilterOrganizerAPIView, UpdateCityAPIView, \
-    AllOrganizerListAPIView
+    ChangeUserPasswordAPIView, GoogleOAuthAPIView, FilterOrganizerAPIView, UpdateCityAPIView, \
+    AllOrganizerListAPIView, AppleOAuthAPIView, OrganizerEventsDetailOrganizer
 
 urlpatterns = [
     path('profile/', ProfileViewSet.as_view()),
@@ -17,7 +18,8 @@ urlpatterns = [
     path('follow/event/', FollowEventAPIView.as_view()),
     path('unfollow/event/', UnFollowEventAPIView.as_view()),
     path('last_viewed_events/', LastViewedEvents.as_view()),
-    path('events/organizer/<int:pk>/', OrganizerEvents.as_view()),
+    path('detail_organizer/events/<int:pk>/', OrganizerEventsDetailOrganizer.as_view()),
+    path('detail_events/events/<int:pk>/', OrganizerEvents.as_view()),
     path('change_profile_picture/', ChangeUserPictureAPIView.as_view()),
     path('update-city/', UpdateCityAPIView.as_view()),
     path('all-organizers/', AllOrganizerListAPIView.as_view()),
@@ -25,6 +27,6 @@ urlpatterns = [
     path('change_profile_picture/', ChangeUserPictureAPIView.as_view()),
     path('change_profile_names/', ChangeUserNameAPIView.as_view()),
     path('change_profile_password/', ChangeUserPasswordAPIView.as_view()),
-    path('change_profile_email/', ChangeUserEmailAPIView.as_view()),
-    path('google_login/', GoogleOAuthAPIView.as_view())
+    path('google_login/', GoogleOAuthAPIView.as_view()),
+    path('apple_login/', AppleOAuthAPIView.as_view())
 ]

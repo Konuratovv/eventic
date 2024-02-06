@@ -6,21 +6,21 @@ from apps.locations.models import Address, City
 from apps.locations.serializers import CitySerializer
 from apps.profiles.models import Organizer, ViewedEvent, PhoneNumber, SocialLink
 
-from django.db.models import BooleanField, Case, When, Value
-
 from apps.profiles.models import User
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 
 from apps.users.models import CustomUser
 
+
 class UpdateCitySerializer(ModelSerializer):
     class Meta:
         model = User
         fields = ['city', ]
 
+
 class ProfileSerializer(ModelSerializer):
-    city = CitySerializer(read_only=True    )
+    city = CitySerializer(read_only=True)
 
     class Meta:
         model = User
@@ -31,14 +31,6 @@ class ChangeProfileNamesSerializer(ModelSerializer):
     class Meta:
         model = User
         fields = ['first_name', 'last_name']
-
-
-class ChangeUserEmailSerializer(ModelSerializer):
-    email = serializers.EmailField(validators=[UniqueValidator(queryset=User.objects.all())])
-
-    class Meta:
-        model = User
-        fields = ['email']
 
 
 class UserProfileStatistics(ModelSerializer):
@@ -53,8 +45,8 @@ class ChangeUserPasswordSerializer(ModelSerializer):
     confirming_new_password = serializers.CharField(write_only=True)
 
     class Meta:
-        model = User
-        fields = ['old_password', 'new_password', 'confirming_new_password']
+        model = CustomUser
+        fields = ['old_password', 'new_password', 'confirming_new_password', 'code']
 
 
 class PhoneNumberSerializer(ModelSerializer):
@@ -81,19 +73,14 @@ class MainOrganizerSerializer(ModelSerializer):
 
 
 class ListOrginizerSerializer(ModelSerializer):
-    is_followed = serializers.BooleanField(default=False)
+    is_followed = serializers.SerializerMethodField()
 
     class Meta:
         model = Organizer
         fields = ['id', 'is_followed', 'profile_picture', 'title']
 
-    # def to_representation(self, instance):
-    #     data = super().to_representation(instance)
-    #     request = self.context.get('request')
-    #     user = User.objects.get(id=request.user.id)
-    #     is_subscribed = FollowOrganizer.objects.filter(follower=user).exists()
-    #     data['is_followed'] = is_subscribed
-    #     return data
+    def get_is_followed(self, organizer):
+        return organizer in self.context.get('request').user.baseprofile.user.organizers
 
 
 class FollowEventSerializer(ModelSerializer):
@@ -171,6 +158,7 @@ class UserFavouritesSerializer(serializers.ModelSerializer):
     category = CategorySerializer()
 
     is_favourite = serializers.SerializerMethodField()
+    is_free = serializers.SerializerMethodField()
 
     class Meta:
         model = BaseEvent
@@ -183,12 +171,17 @@ class UserFavouritesSerializer(serializers.ModelSerializer):
             'event_weeks',
             'event_dates',
             'is_favourite',
-            'category'
+            'category',
+            'is_free',
+            'is_active'
         ]
 
     def get_is_favourite(self, event):
         user_obj = self.context.get('request').user.baseprofile.user
         return event.pk in user_obj.favourites.values_list('pk', flat=True)
+
+    def get_is_free(self, event):
+        return True if event.price == 0 else False
 
 
 class DetailBaseEventSerializer(serializers.ModelSerializer):
@@ -299,3 +292,15 @@ class GoogleOAuthSerializer(serializers.Serializer):
 
     class Meta:
         fields = ['google_token']
+
+
+class AppleOAuthSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'email']
+
+
+class SendChangeEmailCodeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ['code']

@@ -106,6 +106,7 @@ class DetailEventSerializer(serializers.ModelSerializer):
     is_notified = serializers.BooleanField(default=False)
     is_free = serializers.SerializerMethodField(read_only=True)
     average_time = serializers.SerializerMethodField()
+    is_favourite = serializers.SerializerMethodField()
 
     class Meta:
         model = BaseEvent
@@ -127,7 +128,11 @@ class DetailEventSerializer(serializers.ModelSerializer):
             'organizer',
             'address',
             'is_notified',
+            'is_favourite'
         )
+
+    def get_is_favourite(self, event):
+        return event in self.context.get('request').user.baseprofile.user.favourites.all()
 
     def get_event_type(self, obj):
         """ Отображение типа evtenta в ответе """

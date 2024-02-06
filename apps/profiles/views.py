@@ -6,24 +6,26 @@ from google.auth.transport import requests
 
 from rest_framework import status
 from rest_framework.generics import RetrieveAPIView, ListAPIView, CreateAPIView, DestroyAPIView, \
-    ListCreateAPIView, GenericAPIView, UpdateAPIView
+    ListCreateAPIView, GenericAPIView
 from rest_framework.mixins import UpdateModelMixin, DestroyModelMixin
 from rest_framework.pagination import LimitOffsetPagination
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter
-from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 
 from apps.events.models import BaseEvent
-from apps.locations.models import City
 from apps.profiles.models import User, Organizer, ViewedEvent
 from apps.profiles.organizer_filter import OrganizerFilter
 from apps.profiles.serializer import ListOrginizerSerializer, UpdateCitySerializer, ProfileSerializer, \
     FollowEventSerializer, LastViewedEventSerializer, MainOrganizerSerializer, OrganizerDetailSerializer, \
     DetailBaseEventSerializer, UserFavouritesSerializer, ChangeUserPictureSerializer, ChangeProfileNamesSerializer, \
-    ChangeUserEmailSerializer, ChangeUserPasswordSerializer, FollowOrganizerSerializer, GoogleOAuthSerializer
+    ChangeUserPasswordSerializer, FollowOrganizerSerializer, GoogleOAuthSerializer, \
+    AppleOAuthSerializer
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.core.exceptions import ObjectDoesNotExist
+
+from apps.users.utils import send_verification_mail
 
 
 class ProfileViewSet(RetrieveAPIView):
@@ -121,8 +123,22 @@ class OrganizerEvents(ListAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
+        event = BaseEvent.objects.get(id=self.kwargs.get('pk'))
+        events = BaseEvent.objects.filter(organizer=event.organizer, is_active=True).order_by('-followers')
+        return self.paginate_queryset(events)
+
+    def get(self, request, *args, **kwargs):
+        serialized_data = self.get_serializer(self.get_queryset(), many=True).data
+        return self.get_paginated_response(serialized_data)
+
+
+class OrganizerEventsDetailOrganizer(ListAPIView):
+    serializer_class = DetailBaseEventSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
         organizer = Organizer.objects.get(id=self.kwargs.get('pk'))
-        events = BaseEvent.objects.filter(organizer=organizer)
+        events = BaseEvent.objects.filter(organizer=organizer, is_active=True).order_by('-followers')
         return self.paginate_queryset(events)
 
     def get(self, request, *args, **kwargs):
@@ -146,6 +162,7 @@ class SubscribersUserAPIView(ListAPIView):
             context={'followed_organizer': self.get_queryset(), 'request': request},
             many=True).data
         return self.get_paginated_response(serializer_data)
+
 
 class FollowEventAPIView(CreateAPIView):
     serializer_class = FollowEventSerializer
@@ -242,6 +259,7 @@ class ChangeUserPictureAPIView(UpdateModelMixin, DestroyModelMixin, GenericAPIVi
         user.save()
         return Response({'status': 'success'})
 
+
 class UpdateCityAPIView(UpdateModelMixin, GenericAPIView):
     permission_classes = [IsAuthenticated]
 
@@ -267,6 +285,7 @@ class AllOrganizerListAPIView(ListAPIView):
 
         return queryset
 
+
 class FilterOrganizerAPIView(ListAPIView):
     serializer_class = MainOrganizerSerializer
     permission_classes = [IsAuthenticated]
@@ -274,6 +293,7 @@ class FilterOrganizerAPIView(ListAPIView):
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_class = OrganizerFilter
     search_fields = ['title']
+
 
 class ChangeUserNameAPIView(UpdateModelMixin, GenericAPIView):
     serializer_class = ChangeProfileNamesSerializer
@@ -289,27 +309,12 @@ class ChangeUserNameAPIView(UpdateModelMixin, GenericAPIView):
         return Response({'status': 'success'})
 
 
-class ChangeUserEmailAPIView(UpdateModelMixin, GenericAPIView):
-    serializer_class = ChangeUserEmailSerializer
-    permission_classes = [IsAuthenticated]
-
-    def patch(self, request, *args, **kwargs):
-        user = self.request.user.baseprofile.user
-        email = self.request.data.get('email')
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            user.email = email
-            user.save()
-            return Response({'status': 'success'})
-        return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
-
-
 class ChangeUserPasswordAPIView(UpdateModelMixin, GenericAPIView):
     serializer_class = ChangeUserPasswordSerializer
     permission_classes = [IsAuthenticated]
 
     def patch(self, request, *args, **kwargs):
-        user = self.request.user.baseprofile.user
+        user = self.request.user
         old_password = self.request.data.get('old_password')
         new_password = self.request.data.get('new_password')
         confirming_new_password = self.request.data.get('confirming_new_password')
@@ -331,7 +336,8 @@ class GoogleOAuthAPIView(CreateAPIView):
         try:
             user = User.objects.get(email=user_info['email'])
             access_token = AccessToken.for_user(user)
-            return Response({'access_token': str(access_token)})
+            refresh_token = RefreshToken.for_user(user)
+            return Response({'access_token': str(access_token), 'refresh_token': str(refresh_token)})
         except ObjectDoesNotExist:
             random_password = get_random_string(length=12)
             user = User.objects.create_user(
@@ -341,6 +347,31 @@ class GoogleOAuthAPIView(CreateAPIView):
                 password=random_password
             )
             access_token = AccessToken.for_user(user)
-            return Response({'access_token': str(access_token)})
+            refresh_token = RefreshToken.for_user(user)
+            return Response({'access_token': str(access_token), 'refresh_token': str(refresh_token)})
 
 
+class AppleOAuthAPIView(CreateAPIView):
+    serializer_class = AppleOAuthSerializer
+
+    def post(self, request, *args, **kwargs):
+        first_name = self.request.data.get('first_name')
+        last_name = self.request.data.get('last_name')
+        user_apple_email = self.request.data.get('email')
+
+        try:
+            user = User.objects.get(email=user_apple_email)
+            access_token = AccessToken.for_user(user)
+            refresh_token = RefreshToken.for_user(user)
+            return Response({'access_token': str(access_token), 'refresh_token': str(refresh_token)})
+        except ObjectDoesNotExist:
+            random_password = get_random_string(length=12)
+            user = User.objects.create_user(
+                email=user_apple_email,
+                first_name=first_name,
+                last_name=last_name,
+                password=random_password
+            )
+            access_token = AccessToken.for_user(user)
+            refresh_token = RefreshToken.for_user(user)
+            return Response({'access_token': str(access_token), 'refresh_token': str(refresh_token)})

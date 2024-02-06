@@ -14,17 +14,32 @@ class RequiredInlineFormSet(BaseInlineFormSet):
         form.empty_permitted = False
         return form
 
+    def _should_delete_form(self, form):
+        if form.prefix == self.prefix + '-0':
+            return False
+        return super()._should_delete_form(form)
+
 
 class PhoneNumberInline(admin.TabularInline):
     model = PhoneNumber
     extra = 1
     formset = RequiredInlineFormSet
 
+    def get_extra(self, request, obj=None, **kwargs):
+        if obj:
+            return 0
+        return super().get_extra(request, obj, **kwargs)
+
 
 class SocialLinkInline(admin.TabularInline):
     model = SocialLink
     extra = 1
     formset = RequiredInlineFormSet
+
+    def get_extra(self, request, obj=None, **kwargs):
+        if obj:
+            return 0
+        return super().get_extra(request, obj, **kwargs)
 
 
 @admin.register(User)
@@ -92,7 +107,6 @@ class OrganizerAdmin(admin.ModelAdmin):
     ]
 
     def follower_count(self, obj):
-        return obj.followers.count()
-
+        return obj.followers
 
     follower_count.short_description = 'Количество подписчиков'
