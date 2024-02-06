@@ -123,8 +123,22 @@ class OrganizerEvents(ListAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
+        event = BaseEvent.objects.get(id=self.kwargs.get('pk'))
+        events = BaseEvent.objects.filter(organizer=event.organizer, is_active=True).order_by('-followers')
+        return self.paginate_queryset(events)
+
+    def get(self, request, *args, **kwargs):
+        serialized_data = self.get_serializer(self.get_queryset(), many=True).data
+        return self.get_paginated_response(serialized_data)
+
+
+class OrganizerEventsDetailOrganizer(ListAPIView):
+    serializer_class = DetailBaseEventSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
         organizer = Organizer.objects.get(id=self.kwargs.get('pk'))
-        events = BaseEvent.objects.filter(organizer=organizer)
+        events = BaseEvent.objects.filter(organizer=organizer, is_active=True).order_by('-followers')
         return self.paginate_queryset(events)
 
     def get(self, request, *args, **kwargs):
