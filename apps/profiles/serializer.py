@@ -173,6 +173,7 @@ class UserFavouritesSerializer(serializers.ModelSerializer):
             'is_favourite',
             'category',
             'is_free',
+            'is_active'
         ]
 
     def get_is_favourite(self, event):
