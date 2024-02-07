@@ -56,8 +56,13 @@ class EventListAPIView(generics.ListAPIView):
     search_fields = ['title']
 
     def get_queryset(self):
-        """ Этот метод возвращает только активные мероприятия. """
-        return BaseEvent.objects.filter(is_active=True)
+        """ Этот метод возвращает только активные мероприятия по местоположению """
+        user = self.request.user
+        queryset = BaseEvent.objects.filter(is_active=True)
+
+        if hasattr(user, 'city') and user.city:
+            queryset = queryset.filter(city=user.city)
+        return queryset
 
 
 class EventTypeFilterAPIView(generics.ListAPIView):
@@ -71,16 +76,6 @@ class EventTypeFilterAPIView(generics.ListAPIView):
     serializer_class = DetailEventSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_class = EventTypeFilter
-
-
-class FreeEventListAPIView(generics.ListAPIView):
-    """
-    Получение списка бесплатных Events,
-    пример: http://127.0.0.1:8000/events/free_events_list/
-    """
-    permission_classes = [IsAuthenticated]
-    serializer_class = DetailEventSerializer
-    queryset = BaseEvent.objects.filter(price=0.0)
 
 
 class NextEventsOrgAPIView(generics.ListAPIView):
@@ -208,7 +203,6 @@ class EventTypeListAPIView(ListAPIView):
         return Response(sorted_data)
 
 
-# Вывод всех мероприятий по типам
 class AllEventsListAPIView(ListAPIView):
     serializer_class = AllMainBaseEventSerializer
     permission_classes = [IsAuthenticated]
