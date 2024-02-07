@@ -6,6 +6,8 @@ from ..profiles.models import Organizer, User
 
 from datetime import datetime, date, timedelta
 
+from ..profiles.serializer import EventTimeSerializer
+
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -26,6 +28,8 @@ class EventDateSerializer(serializers.ModelSerializer):
 
 
 class EventWeekSerializer(serializers.ModelSerializer):
+    time = EventTimeSerializer()
+
     class Meta:
         model = EventWeek
         fields = '__all__'
