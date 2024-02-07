@@ -1,12 +1,11 @@
 from rest_framework import serializers
-from .models import Category, EventDate, BaseEvent, EventWeek, Interests, EventBanner, PermanentEvent
+from .models import Category, EventDate, BaseEvent, EventWeek, Interests, EventBanner, PermanentEvent, EventTime
 
 from ..locations.models import Address, City
 from ..profiles.models import Organizer, User
 
 from datetime import datetime, date, timedelta
 
-from ..profiles.serializer import EventTimeSerializer
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -25,6 +24,12 @@ class EventDateSerializer(serializers.ModelSerializer):
     class Meta:
         model = EventDate
         fields = "__all__"
+
+
+class EventTimeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EventTime
+        fields = '__all__'
 
 
 class EventWeekSerializer(serializers.ModelSerializer):
@@ -212,7 +217,6 @@ class EventAddressUpdateSerializer(serializers.ModelSerializer):
 
 
 class NextEventsOrgSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = BaseEvent
         fields = ('id', 'title', 'description', 'price',)

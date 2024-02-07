@@ -1,7 +1,8 @@
 from rest_framework.validators import UniqueValidator
 
 from apps.events.models import BaseEvent, EventDate, EventWeek, Interests, Category, EventTime
-from apps.events.serializers import EventBannerSerializer, AddressSerializer, InterestSerializer, CategorySerializer
+from apps.events.serializers import EventBannerSerializer, AddressSerializer, InterestSerializer, CategorySerializer, \
+    EventTimeSerializer
 from apps.locations.models import Address, City
 from apps.locations.serializers import CitySerializer
 from apps.profiles.models import Organizer, ViewedEvent, PhoneNumber, SocialLink
@@ -107,12 +108,6 @@ class MainEventDateSerializer(serializers.ModelSerializer):
     class Meta:
         model = EventDate
         fields = "__all__"
-
-
-class EventTimeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = EventTime
-        fields = '__all__'
 
 
 class MainEventWeekSerializer(serializers.ModelSerializer):
