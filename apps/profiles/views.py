@@ -14,6 +14,7 @@ from rest_framework.filters import SearchFilter
 from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 
 from apps.events.models import BaseEvent
+from apps.locations.models import City
 from apps.profiles.models import User, Organizer, ViewedEvent
 from apps.profiles.organizer_filter import OrganizerFilter
 from apps.profiles.serializer import ListOrginizerSerializer, UpdateCitySerializer, ProfileSerializer, \
@@ -265,12 +266,15 @@ class UpdateCityAPIView(UpdateModelMixin, GenericAPIView):
 
     def patch(self, request, *args, **kwargs):
         user = self.request.user.baseprofile.user
-        serializer = UpdateCitySerializer(user, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({'status': 'success'}, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+        city_id = self.request.data.get('city')
+        try:
+            city = City.objects.get(id=city_id)
+            user.city = city
+            user.save()
+            return Response({'status': 'success'})
+        except ObjectDoesNotExist:
+            return Response({'status': 'error'})
+    
 
 class AllOrganizerListAPIView(ListAPIView):
     permission_classes = [IsAuthenticated]

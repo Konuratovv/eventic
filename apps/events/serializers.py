@@ -6,6 +6,7 @@ from ..profiles.models import Organizer, User
 
 from datetime import datetime, date, timedelta
 
+from datetime import datetime, timedelta, timezone
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -110,7 +111,6 @@ class DetailEventSerializer(serializers.ModelSerializer):
     address = AddressSerializer(read_only=True)
     organizer = OrganizerSerializer(read_only=True)
     event_dates = serializers.SerializerMethodField()
-    # EventDateSerializer(many=True, source='temporaryevent.dates')
     event_weeks = EventWeekSerializer(many=True, source='permanentevent.weeks')
     event_type = serializers.SerializerMethodField(read_only=True)
     is_notified = serializers.BooleanField(default=False)
@@ -128,8 +128,6 @@ class DetailEventSerializer(serializers.ModelSerializer):
             'event_type',
             'event_dates',
             'event_weeks',
-            'price',
-            'is_free',
             'average_time',
             'price',
             'is_free',

@@ -28,7 +28,7 @@ DEBUG = True
 if DEBUG:
     from .development import *
 else:
-    from .production import *
+    from .development import *
 
 ALLOWED_HOSTS = ['*']
 
