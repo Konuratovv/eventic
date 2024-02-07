@@ -7,12 +7,13 @@ from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.pagination import LimitOffsetPagination
 
-from .models import Category, Interests
+from .models import Category, Interests, Language, EventBanner, EventWeek, EventDate
 from .serializers import DetailEventSerializer, CategorySerializer, InterestSerializer, OrganizerEventSerializer
 from .models import BaseEvent, PermanentEvent, TemporaryEvent
 from apps.profiles.serializer import MainBaseEventSerializer, AllMainBaseEventSerializer
 from .event_filters import EventFilter, EventTypeFilter
-from ..profiles.models import User
+from ..locations.models import Address, Country, Region, City
+from ..profiles.models import User, Organizer
 from ..profiles.serializer import LastViewedEventReadSerializer
 
 
@@ -136,6 +137,52 @@ class RelatedEventsByInterestAPIView(generics.ListAPIView):
 
 class EventTypeListAPIView(ListAPIView):
     permission_classes = [IsAuthenticated]
+
+    # from faker import Faker
+    #
+    # fake = Faker()
+    # country = Country.objects.create(country_name='Kyrgyzstan', slug='kyrgyz')
+    # region = Region.objects.create(country=country, region_name='Chui', slug='ghjkl')
+    # city = City.objects.create(region=region, city_name='Bishkek', slug='ghj')
+    # address_instance = Address.objects.create(city=city, address_name='Djal', slug='ghjk')
+    # organizers = Organizer.objects.create(title=fake.catch_phrase(),
+    #                                       password=fake.random_int(min=0, max=100, step=1),
+    #                                       email=str(fake.catch_phrase) + '@gmail.com',
+    #                                       profile_picture='99504.png'
+    #                                       )
+    # for num in range(40):
+    #     organizer = Organizer.objects.order_by('?').first()
+    #     category_instance = Category.objects.order_by('?').first()
+    #     interests_instance = Interests.objects.order_by('?').first()
+    #     address_instance = Address.objects.order_by('?').first()
+    #     language_instance = Language.objects.order_by('?').first()
+    #     generate = PermanentEvent.objects.create(title=fake.catch_phrase(), description=fake.text(),
+    #                                              price=fake.random_int(min=0, max=100, step=1),
+    #                                              organizer=organizer, address=address_instance,
+    #                                              category=category_instance)
+    #     generate2 = TemporaryEvent.objects.create(title=fake.catch_phrase(), description=fake.text(),
+    #                                               price=fake.random_int(min=0, max=100, step=1),
+    #                                               organizer=organizer, address=address_instance,
+    #                                               category=category_instance)
+    #     generate.interests.set([interests_instance])
+    #     generate2.interests.set([interests_instance])
+    #     generate.language.set([language_instance])
+    #     generate2.language.set([language_instance])
+    #
+    #     # Добавляем 10 EventBanner для каждого события
+    #     for _ in range(3):
+    #         EventBanner.objects.create(event=generate, image='image.png')
+    #         EventBanner.objects.create(event=generate2, image='image.png')
+    #
+    #     # Добавляем 10 EventWeek для каждого PermanentEvent
+    #     for _ in range(5):
+    #         EventWeek.objects.create(perm=generate, week=fake.name(), start_time='21:18:1',
+    #                                  end_time='20:18:12', slug='sreda', eventtime=)
+    #
+    #     # Добавляем 10 EventDate для каждого TemporaryEvent
+    #     for _ in range(5):
+    #         EventDate.objects.create(temp=generate2, start_time='21:03:22',
+    #                                  end_time='22:03:22', date='2024-01-20')
 
     def get_queryset(self):
         return None
