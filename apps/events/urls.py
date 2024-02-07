@@ -2,7 +2,7 @@ from django.urls import path
 
 from .views import  EventListAPIView, EventDetailAPIView, \
     EventCategoryListAPIView, EventInterestListAPIView, EventTypeListAPIView, EventTypeFilterAPIView, \
-    FreeEventListAPIView, AllEventsListAPIView, AllFreeEventsListAPIView, AllPaidEventsListAPIView, AllPermEventsListAPIView, AllTempEventsListAPIView
+    FreeEventListAPIView, AllEventsListAPIView, AllFreeEventsListAPIView, AllPaidEventsListAPIView, AllPermEventsListAPIView, AllTempEventsListAPIView, OrganizerEventsAPIView, EventsByInterestsAPIView
 
 urlpatterns = [
     path("", EventListAPIView.as_view()),
@@ -18,5 +18,6 @@ urlpatterns = [
     path('types/all-paid-events/', AllPaidEventsListAPIView.as_view()),
     path('types/all-permanent-events/', AllPermEventsListAPIView.as_view()),
     path('types/all-temporary-events/', AllTempEventsListAPIView.as_view()),
-    
+    path('all-organizer-events/', OrganizerEventsAPIView.as_view()),
+    path('all-interests-events/', EventsByInterestsAPIView.as_view()),
 ]

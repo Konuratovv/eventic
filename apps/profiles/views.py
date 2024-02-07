@@ -268,11 +268,14 @@ class UpdateCityAPIView(UpdateModelMixin, GenericAPIView):
 
     def patch(self, request, *args, **kwargs):
         user = self.request.user.baseprofile.user
-        serializer = UpdateCitySerializer(user, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({'status': 'success'}, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        city_id = self.request.data.get('city')
+        try:
+            city = City.objects.get(id=city_id)
+            user.city = city
+            user.save()
+            return Response({'status': 'success'})
+        except ObjectDoesNotExist:
+            return Response({'status': 'error'})
     
 
 class AllOrganizerListAPIView(ListAPIView):

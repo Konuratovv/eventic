@@ -18,6 +18,7 @@ from .event_filters import EventFilter, EventTypeFilter
 from ..locations.models import Address
 from ..profiles.models import User, Organizer
 from ..profiles.serializer import LastViewedEventReadSerializer
+from django.core.exceptions import ObjectDoesNotExist
 
 
 class EventCategoryListAPIView(generics.ListAPIView):
@@ -226,4 +227,43 @@ class AllPermEventsListAPIView(ListAPIView):
             address__city__city_name=user_city,
         ).order_by('-followers')
         return queryset
+        
+class OrganizerEventsAPIView(ListAPIView):
+    serializer_class = AllMainBaseEventSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = LimitOffsetPagination
 
+    def get_queryset(self):
+        user_city = self.request.user.baseprofile.user.city.city_name
+        organizer_id = self.request.data.get('organizer')
+
+        queryset = BaseEvent.objects.filter(
+            organizer__id=organizer_id,
+            address__city__city_name=user_city,
+            is_active=True
+        ).order_by('-followers')
+
+        return queryset
+    
+class EventsByInterestsAPIView(ListAPIView):
+    serializer_class = AllMainBaseEventSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = LimitOffsetPagination
+
+    def get_queryset(self):
+        user_city = self.request.user.baseprofile.user.city.city_name
+        event_id = self.request.data.get('event_id')
+        try:
+            event = BaseEvent.objects.get(id=event_id)
+
+            queryset = BaseEvent.objects.filter(
+                interests__in=event.interests.all(),
+                address__city__city_name=user_city,
+                is_active=True,
+            ).exclude(pk=event_id)
+
+            return queryset
+        except ObjectDoesNotExist:
+            return BaseEvent.objects.none()
+
+        

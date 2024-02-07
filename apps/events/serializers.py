@@ -4,7 +4,7 @@ from .models import Category, EventDate, BaseEvent, EventWeek, Interests, EventB
 from ..locations.models import Address, City
 from ..profiles.models import Organizer, FollowOrganizer, User
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -97,7 +97,7 @@ class DetailEventSerializer(serializers.ModelSerializer):
     banners = EventBannerSerializer(many=True)
     address = AddressSerializer(read_only=True)
     organizer = OrganizerSerializer(read_only=True)
-    event_dates = EventDateSerializer(many=True, source='temporaryevent.dates')
+    event_dates = serializers.SerializerMethodField()
     event_weeks = EventWeekSerializer(many=True, source='permanentevent.weeks')
     next_events_org = serializers.SerializerMethodField()
     related_events_by_interest = serializers.SerializerMethodField()
@@ -127,6 +127,15 @@ class DetailEventSerializer(serializers.ModelSerializer):
             'related_events_by_interest',
             'is_notified',
         )
+
+
+    def get_event_dates(self, event):
+        now = datetime.now()
+        current_and_future_dates = event.temporaryevent.dates.filter(
+            date__gte=now.date(),
+            end_time__gte=now.time()
+        )
+        return EventDateSerializer(instance=current_and_future_dates, many=True).data
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
