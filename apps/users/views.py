@@ -63,7 +63,7 @@ class LoginAPIView(CreateAPIView):
             access_token = AccessToken.for_user(user[0])
             refresh_token = RefreshToken.for_user(user[0])
             return Response({'access_token': str(access_token), 'refresh_token': str(refresh_token)})
-        return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'status': 'error'}, status=status.HTTP_401_UNAUTHORIZED)
 
 
 class VerifyEmailAPIView(UpdateModelMixin, GenericAPIView):
