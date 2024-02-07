@@ -14,15 +14,22 @@ class EventFilter(filters.FilterSet):
     interests = CharFilterInFilter(field_name='interests__slug', lookup_expr='in')
     start_date = filters.DateFilter(field_name='temporaryevent__dates__date', lookup_expr='gte')
     end_date = filters.DateFilter(method='filter_end_date')
+    price = filters.CharFilter(method='filter_by_price')
 
     class Meta:
         model = BaseEvent
-        fields = ['category', 'interests', 'start_date', 'end_date']
+        fields = ['category', 'interests', 'start_date', 'end_date', 'price']
 
     def filter_end_date(self, queryset, name, value):
         if value:
             adjusted_value = value + datetime.timedelta(days=1)
             return queryset.filter(temporaryevent__dates__date__lt=adjusted_value)
+        return queryset
+
+    def filter_by_price(self, queryset, name, value):
+        """ Возвращаем все события без фильтрации по price, если параметр не равен '0' """
+        if value == '0':
+            return queryset.filter(price=0)
         return queryset
 
 
