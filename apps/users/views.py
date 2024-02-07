@@ -48,7 +48,7 @@ class SendVerifyCodeAPIView(UpdateModelMixin, GenericAPIView):
             send_verification_mail(user[0].email)
             return Response({'status': 'success'})
         return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
-
+g
 
 class LoginAPIView(CreateAPIView):
     permission_classes = [AllowAny]
