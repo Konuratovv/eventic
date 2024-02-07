@@ -102,11 +102,12 @@ class OrganizerAdmin(admin.ModelAdmin):
         "last_login",
         'back_img',
         'id',
-        # 'name',
-        'follower_count'
+        'get_followers_count'
     ]
 
-    def follower_count(self, obj):
+    readonly_fields = ['get_followers_count']
+
+    def get_followers_count(self, obj):
         return obj.followers
 
-    follower_count.short_description = 'Количество подписчиков'
+    get_followers_count.short_description = 'Количество подписчиков'

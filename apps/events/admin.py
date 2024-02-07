@@ -39,7 +39,7 @@ class TemporaryEventAdmin(admin.ModelAdmin):
         'get_followers_count',
     ]
     list_filter = ('dates', 'interests', 'category', 'language')
-    readonly_fields = ('followers', 'get_followers_count')
+    readonly_fields = ['get_followers_count']
 
     def get_followers_count(self, obj):
         return obj.followers
@@ -83,7 +83,7 @@ class PermanentEventAdmin(admin.ModelAdmin):
 
     ]
     list_filter = ('interests', 'category', 'language')
-    readonly_fields = ('followers', 'get_followers_count')
+    readonly_fields = ['get_followers_count']
 
     def get_followers_count(self, obj):
         return obj.followers

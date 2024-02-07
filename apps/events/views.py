@@ -145,7 +145,7 @@ class EventTypeListAPIView(ListAPIView):
     def get_queryset(self):
         return None
 
-    def get_events_data(self, queryset, custom_user, serializer_class, context):
+    def get_events_data(self, queryset, serializer_class, context):
         serializer_class_data = serializer_class(
             queryset,
             many=True,
@@ -170,19 +170,16 @@ class EventTypeListAPIView(ListAPIView):
             'followers'
         ).order_by('-followers').filter(address__city__city_name=custom_user.city)
         context = {'custom_user': custom_user, 'request': request}
-        events_data = self.get_events_data(events[:15], custom_user, MainBaseEventSerializer, context)
+        events_data = self.get_events_data(events[:15], MainBaseEventSerializer, context)
 
         perEvents = events.filter(permanentevent__isnull=False)[:15]
-        events_data2 = self.get_events_data(perEvents, custom_user, MainBaseEventSerializer, context)
+        events_data2 = self.get_events_data(perEvents, MainBaseEventSerializer, context)
 
         temEvents = events.filter(temporaryevent__isnull=False)[:15]
-        events_data3 = self.get_events_data(temEvents, custom_user, MainBaseEventSerializer, context)
+        events_data3 = self.get_events_data(temEvents, MainBaseEventSerializer, context)
 
         freeEvents = events.filter(price=0)[:15]
-        events_data4 = self.get_events_data(freeEvents, custom_user, MainBaseEventSerializer, context)
-
-        paidEvents = events.filter(price__gt=0)[:15]
-        events_data5 = self.get_events_data(paidEvents, custom_user, MainBaseEventSerializer, context)
+        events_data4 = self.get_events_data(freeEvents, MainBaseEventSerializer, context)
 
         user_viewed_events = custom_user.viewedevent_set.select_related(
             'event__temporaryevent',
@@ -205,7 +202,6 @@ class EventTypeListAPIView(ListAPIView):
             {'type': 'perEvents', 'events': events_data2},
             {'type': 'temEvents', 'events': events_data3},
             {'type': 'freeEvents', 'events': events_data4},
-            {'type': 'paidEvents', 'events': events_data5},
             {'type': 'last_viewed_events', 'events': events_data6},
         ]
 
@@ -275,7 +271,6 @@ class AllPermEventsListAPIView(ListAPIView):
     serializer_class = AllMainBaseEventSerializer
     permission_classes = [IsAuthenticated]
     pagination_class = LimitOffsetPagination
-
 
     def get_queryset(self):
         user_city = self.request.user.baseprofile.user.city.city_name
