@@ -16,6 +16,7 @@ urlpatterns = [
     path('', include('apps.favorites.urls')),
     path('', include('apps.invitations.urls')),
     path('locations/', include('apps.locations.urls')),
+    path('', include('apps.questions.urls')),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
