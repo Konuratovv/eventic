@@ -46,6 +46,11 @@ class Organizer(BaseProfile):
 class PhoneNumber(models.Model):
     organizer = models.ForeignKey(Organizer, on_delete=models.CASCADE, related_name='phone_numbers')
     phone_number = models.CharField(max_length=30)
+    phone_number_choices = [
+        ('whatsapp', 'WhatsApp'),
+        ('telegram', 'Telegram'),
+    ]
+    phone_number_type = models.CharField(max_length=50, choices=phone_number_choices, blank=True)
 
     class Meta:
         verbose_name = 'Номер телефона'

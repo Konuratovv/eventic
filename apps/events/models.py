@@ -5,7 +5,7 @@ from apps.base.models import nb
 
 class Category(models.Model):
     """ Категории мероприятии """
-    name = models.CharField(max_length=150, verbose_name="Категория")
+    name = models.CharField(max_length=90, verbose_name="Категория")
     slug = models.SlugField(max_length=80, verbose_name='Слаг', help_text='Заполняется автоматически')
 
     class Meta:
@@ -46,8 +46,8 @@ class Language(models.Model):
 
 class BaseEvent(models.Model):
     """ Базовая модель мероприятии """
-    title = models.CharField(max_length=50, verbose_name="Заголовок")
-    description = models.TextField(verbose_name="Описание")
+    title = models.CharField(max_length=60, verbose_name="Заголовок")
+    description = models.TextField(verbose_name="Описание", max_length=350)
     language = models.ManyToManyField(Language, verbose_name="Язык", related_name="event_language")
     price = models.DecimalField(max_digits=7, decimal_places=2, verbose_name="Цена")
     category = models.ForeignKey(Category, verbose_name="Категория", on_delete=models.SET_NULL,
@@ -97,6 +97,19 @@ class TemporaryEvent(BaseEvent):
         verbose_name_plural = 'Временое мероприятия'
 
 
+class EventTime(models.Model):
+    start_time = models.TimeField(verbose_name="Время начала события")
+    end_time = models.TimeField(verbose_name="Время окончания события")
+    objects = models.Manager()
+
+    class Meta:
+        verbose_name = 'Время постоянного события'
+        verbose_name_plural = 'Время постоянных событий'
+
+    def __str__(self):
+        return f"{self.start_time} - {self.end_time}"
+
+
 class PermanentEvent(BaseEvent):
     """ Постоянное мероприятие наследуется от BaseEvent """
 
@@ -107,18 +120,15 @@ class PermanentEvent(BaseEvent):
 
 class EventWeek(models.Model):
     """ Модель недели и время события связан с PermanentEvent"""
-    perm = models.ForeignKey(PermanentEvent, on_delete=models.CASCADE, related_name='weeks',
-                             verbose_name='Выберите постоянное событие')
-    week = models.CharField(max_length=150, verbose_name="Недели")
+    week = models.CharField(max_length=80, verbose_name="День недели")
     slug = models.SlugField(max_length=80, verbose_name='Слаг', help_text='Заполняется автоматически')
-    start_time = models.TimeField(verbose_name="Время начала события")
-    end_time = models.TimeField(verbose_name="Время окончания события")
+    time = models.ForeignKey(EventTime, verbose_name='Укажите время', related_name='week_times', on_delete=models.CASCADE)
+    permanent_event = models.ForeignKey(PermanentEvent, verbose_name='Выберите постоянное событие', related_name='weeks', on_delete=models.CASCADE) # без этой хрени не работает
     objects = models.Manager()
 
     class Meta:
-        verbose_name = 'Неделя'
+        verbose_name = 'Неделю'
         verbose_name_plural = 'Недели'
-        unique_together = ['perm', 'week']
 
     def __str__(self):
         return f"{self.week}"

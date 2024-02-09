@@ -4,72 +4,82 @@ from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status
 from rest_framework.mixins import UpdateModelMixin
-from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 from django.utils.crypto import constant_time_compare
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework_simplejwt.views import TokenObtainPairView
 
 from rest_framework.generics import CreateAPIView, GenericAPIView
 from apps.profiles.models import User
 from apps.users.models import CustomUser
 from apps.profiles.serializer import SendResetCodeSerializer, ChangePasswordSerializer
-from apps.users.serializer import RegisterSerializer, CodeSerializer, SendCodeSerializer, CodeVerifyEmailSerializer
+from apps.users.serializer import RegisterSerializer, CodeSerializer, CodeVerifyEmailSerializer, \
+    LoginSerializer, SendEmailVerifyCodeSerializer
 from apps.users.utils import send_verification_mail
 
 
 class RegisterAPIView(CreateAPIView):
-    queryset = User.objects.all()
     serializer_class = RegisterSerializer
     permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        data = {"status": "success"}
-        return Response(data, status=status.HTTP_200_OK)
+
+        if serializer.is_valid(raise_exception=True):
+            user = User.objects.create_user(
+                email=serializer.validated_data['email'],
+                first_name=serializer.validated_data['first_name'],
+                last_name=serializer.validated_data['last_name'],
+                password=serializer.validated_data['password'],
+            )
+            send_verification_mail(user.email)
+            return Response({"status": 'success'})
+
+        return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class LoginViewSet(TokenObtainPairView):
+class SendVerifyCodeAPIView(UpdateModelMixin, GenericAPIView):
+    serializer_class = SendEmailVerifyCodeSerializer
     permission_classes = [AllowAny]
 
+    def patch(self, request, *args, **kwargs):
+        user = User.objects.filter(email=self.request.data.get('email'))
+        if user.exists():
+            send_verification_mail(user[0].email)
+            return Response({'status': 'success'})
+        return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
 
-class SendEmailCodeAPIView(UpdateModelMixin, GenericAPIView):
-    serializer_class = SendCodeSerializer
-    permission_classes = [IsAuthenticated]
 
-    def get_object(self):
-        user = CustomUser.objects.get(id=self.request.user.id)
-        return user
+class LoginAPIView(CreateAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = LoginSerializer
 
-    def patch(self, *args, **kwargs):
-        email = self.get_object().email
-        send_verification_mail(email)
-        return Response({'status': 'success'})
+    def post(self, request, *args, **kwargs):
+        user = User.objects.filter(email=self.request.data.get('email'))
+        if user.exists() and user[0].check_password(self.request.data.get('password')):
+            if not user[0].is_verified:
+                send_verification_mail(user[0].email)
+                return Response({'status': 'user is not valid'}, status=status.HTTP_400_BAD_REQUEST)
+            access_token = AccessToken.for_user(user[0])
+            refresh_token = RefreshToken.for_user(user[0])
+            return Response({'access_token': str(access_token), 'refresh_token': str(refresh_token)})
+        return Response({'status': 'error'}, status=status.HTTP_401_UNAUTHORIZED)
 
 
 class VerifyEmailAPIView(UpdateModelMixin, GenericAPIView):
     serializer_class = CodeVerifyEmailSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_object(self):
-        user = CustomUser.objects.get(id=self.request.user.id)
-        return user
 
     def patch(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            user = self.get_object()
-            code = serializer.validated_data['code']
-            if user.code == code:
-                user.is_verified = True
-                user.code = None
-                user.save()
-                return Response({'status': 'success'})
-            return Response({'status': 'error'})
-
-        return Response({'message': serializer.errors})
+        user = User.objects.filter(email=self.request.data.get('email')).first()
+        verify_code = self.request.data.get('code')
+        if user.code == verify_code:
+            user.is_verified = True
+            user.code = None
+            user.save()
+            access_token = AccessToken.for_user(user)
+            refresh_token = RefreshToken.for_user(user)
+            return Response({'access_token': str(access_token), 'refresh_token': str(refresh_token)})
+        return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class SendResetAPiView(UpdateModelMixin, GenericAPIView):
