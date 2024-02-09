@@ -15,7 +15,8 @@ from apps.users.models import CustomUser
 from apps.profiles.serializer import SendResetCodeSerializer, ChangePasswordSerializer
 from apps.users.serializer import RegisterSerializer, CodeSerializer, CodeVerifyEmailSerializer, \
     LoginSerializer, SendEmailVerifyCodeSerializer
-from apps.notifications.task import send_verification_mail
+# from apps.notifications.task import send_verification_mail
+from apps.users.utils import send_verification_mail
 
 
 class RegisterAPIView(CreateAPIView):
@@ -32,7 +33,7 @@ class RegisterAPIView(CreateAPIView):
                 last_name=serializer.validated_data['last_name'],
                 password=serializer.validated_data['password'],
             )
-            send_verification_mail.delay(user.email)
+            send_verification_mail(user.email)
             return Response({"status": 'success'})
 
         return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
@@ -45,7 +46,7 @@ class SendVerifyCodeAPIView(UpdateModelMixin, GenericAPIView):
     def patch(self, request, *args, **kwargs):
         user = User.objects.filter(email=self.request.data.get('email'))
         if user.exists():
-            send_verification_mail.delay(user[0].email)
+            send_verification_mail(user[0].email)
             return Response({'status': 'success'})
         return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -58,7 +59,7 @@ class LoginAPIView(CreateAPIView):
         user = User.objects.filter(email=self.request.data.get('email'))
         if user.exists() and user[0].check_password(self.request.data.get('password')):
             if not user[0].is_verified:
-                send_verification_mail.delay(user[0].email)
+                send_verification_mail(user[0].email)
                 return Response({'status': 'user is not valid'}, status=status.HTTP_400_BAD_REQUEST)
             access_token = AccessToken.for_user(user[0])
             refresh_token = RefreshToken.for_user(user[0])
