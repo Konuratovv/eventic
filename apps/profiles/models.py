@@ -1,4 +1,6 @@
 from django.db import models
+from multiselectfield import MultiSelectField
+from django.contrib.postgres.fields import ArrayField
 
 from apps.base.models import nb
 from apps.events.models import BaseEvent
@@ -13,7 +15,7 @@ class BaseProfile(CustomUser):
 class User(BaseProfile):
     """ Если что я удалил все null=True у всех M2M полей. Улукбек """
     favourites = models.ManyToManyField('events.BaseEvent', blank=True)
-    organizers = models.ManyToManyField('profiles.Organizer', blank=True)
+    organizers = models.ManyToManyField('profiles.Organizer', blank=True, related_name='user')
     first_name = models.CharField(max_length=155)
     last_name = models.CharField(max_length=255)
     events = models.ManyToManyField(BaseEvent, related_name='users', blank=True)
@@ -28,12 +30,16 @@ class User(BaseProfile):
         return f"{self.email}"
 
 
+
+
+
 class Organizer(BaseProfile):
     title = models.CharField(max_length=255)
     back_img = models.ImageField(verbose_name="Баннер", upload_to='organizers_banners', blank=True, null=True)
     address = models.ManyToManyField(Address, related_name='organizer_address')
     description = models.TextField(blank=True)
     followers = models.PositiveBigIntegerField(blank=True, default=0)
+
 
     class Meta:
         verbose_name = 'Организатор'

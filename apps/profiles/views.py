@@ -26,9 +26,6 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.core.exceptions import ObjectDoesNotExist
 
-from apps.users.utils import send_verification_mail
-
-
 class ProfileViewSet(RetrieveAPIView):
     serializer_class = ProfileSerializer
     permission_classes = [IsAuthenticated]
@@ -170,19 +167,19 @@ class FollowEventAPIView(CreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
         event_id = self.request.data.get('events')
-        if serializer.is_valid():
-            user = User.objects.get(id=self.request.user.id)
+        try:
             event = BaseEvent.objects.get(id=event_id)
-            if not user.events.filter(id=event.id).exists():
-                event.followers += 1
-                event.save()
-                user.events.add(event)
-                user.save()
-                return Response({'message': 'Followed to Event', 'is_followed': True}, status=status.HTTP_200_OK)
-            return Response({'status': 'Already following this event'}, status=status.HTTP_400_BAD_REQUEST)
-        return Response({'status': 'Event not found'}, status=status.HTTP_404_NOT_FOUND)
+        except ObjectDoesNotExist:
+            return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
+        user = self.request.user.id
+        if not user.events.filter(id=event.id).exists():
+            event.followers += 1
+            event.save()
+            user.events.add(event)
+            user.save()
+            return Response({'message': 'Followed to Event', 'is_followed': True})
+        return Response({'status': 'Already following this event'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UnFollowEventAPIView(DestroyAPIView):

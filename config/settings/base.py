@@ -26,9 +26,9 @@ SECRET_KEY = 'django-insecure-+!gfq7wg)y_*innav%(2+6gq*s0+&on!yx4vw@8y$rvvsqjb%7
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 if DEBUG:
-    from .development import *
+    from .production import *
 else:
-    from .development import *
+    from .production import *
 
 ALLOWED_HOSTS = ['*']
 
@@ -61,6 +61,8 @@ INSTALLED_APPS = [
     'django_extensions',
     'debug_toolbar',
     # 'cachalot',
+    'multiselectfield',
+    'django.contrib.postgres',
 ]
 
 MIDDLEWARE = [
@@ -187,3 +189,8 @@ INTERNAL_IPS = [
     '127.0.0.1',
     # '34.83.117.144',
 ]
+
+# settings.py
+CELERY_BROKER_URL = 'redis://127.0.0.1:6379/0'
+CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379'
+

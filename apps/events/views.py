@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.pagination import LimitOffsetPagination
 
-from .models import Category, Interests, Language, EventBanner, EventWeek, EventDate
+from .models import Category, Interests, Language, EventBanner, EventWeek, EventDate, EventTime
 from .serializers import DetailEventSerializer, CategorySerializer, InterestSerializer, OrganizerEventSerializer
 from .models import BaseEvent, PermanentEvent, TemporaryEvent
 from apps.profiles.serializer import MainBaseEventSerializer, AllMainBaseEventSerializer
@@ -139,6 +139,46 @@ class RelatedEventsByInterestAPIView(generics.ListAPIView):
 class EventTypeListAPIView(ListAPIView):
     permission_classes = [IsAuthenticated]
 
+    # from faker import Faker
+    #
+    # fake = Faker()
+    #
+    # for num in range(500):
+    #     organizer = Organizer.objects.order_by('?').first()
+    #     category_instance = Category.objects.order_by('?').first()
+    #     interests_instance = Interests.objects.order_by('?').first()
+    #     address_instance = Address.objects.order_by('?').first()
+    #     language_instance = Language.objects.order_by('?').first()
+    #     generate = PermanentEvent.objects.create(title=fake.catch_phrase(), description=fake.text(),
+    #                                              price=fake.random_int(min=0, max=100, step=1),
+    #                                              organizer=organizer, address=address_instance,
+    #                                              category=category_instance)
+    #     generate2 = TemporaryEvent.objects.create(title=fake.catch_phrase(), description=fake.text(),
+    #                                               price=fake.random_int(min=0, max=100, step=1),
+    #                                               organizer=organizer, address=address_instance,
+    #                                               category=category_instance)
+    #     # generate.category.set([category_instance])
+    #     generate.interests.set([interests_instance])
+    #     generate2.interests.set([interests_instance])
+    #     generate.language.set([language_instance])
+    #     generate2.language.set([language_instance])
+    #
+    #     # Добавляем 10 EventBanner для каждого события
+    #     for _ in range(10):
+    #         EventBanner.objects.create(event=generate, image='image.png')
+    #         EventBanner.objects.create(event=generate2, image='image.png')
+    #
+    #     # Добавляем 10 EventWeek для каждого PermanentEvent
+    #
+    #
+    #     for _ in range(10):
+    #         time = EventTime.objects.create(end_time='22:03:22', start_time='22:03:22')
+    #         EventWeek.objects.create(permanent_event=generate, week=fake.name(), time=time, slug='sreda')
+    #
+    #     # Добавляем 10 EventDate для каждого TemporaryEvent
+    #     for _ in range(10):
+    #         EventDate.objects.create(temp=generate2, start_time='21:03:22', end_time='21:03:22', date='2024-01-20')
+
     def get_queryset(self):
         return None
 
@@ -155,6 +195,7 @@ class EventTypeListAPIView(ListAPIView):
 
         events = BaseEvent.objects.prefetch_related(
             'permanentevent__weeks',
+            'permanentevent__weeks__time',
             'temporaryevent__dates',
             'banners'
         ).select_related(
