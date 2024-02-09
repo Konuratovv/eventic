@@ -172,7 +172,7 @@ class FollowEventAPIView(CreateAPIView):
             event = BaseEvent.objects.get(id=event_id)
         except ObjectDoesNotExist:
             return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
-        user = self.request.user.id
+        user = self.request.user.baseprofile.user
         if not user.events.filter(id=event.id).exists():
             event.followers += 1
             event.save()
