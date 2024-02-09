@@ -61,8 +61,6 @@ INSTALLED_APPS = [
     'django_extensions',
     'debug_toolbar',
     # 'cachalot',
-    # 'multiselectfield',
-    # 'django.contrib.postgres',
 ]
 
 MIDDLEWARE = [

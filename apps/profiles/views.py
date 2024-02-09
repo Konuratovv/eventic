@@ -187,20 +187,20 @@ class UnFollowEventAPIView(DestroyAPIView):
     permission_classes = [IsAuthenticated]
 
     def delete(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        user = User.objects.get(id=self.request.user.id)
+        user = self.request.user.baseprofile.user
         event_id = self.request.data.get('events')
-        if serializer.is_valid():
+        try:
             event = BaseEvent.objects.get(id=event_id)
-            try:
-                user.events.get(id=event.id)
-                user.events.remove(event)
-                event.followers -= 1
-                event.save()
-                return Response({'message': 'Unfollowed from Event', 'is_followed': False}, status=status.HTTP_200_OK)
-            except ObjectDoesNotExist:
-                return Response({'status': 'Not following this event'}, status=status.HTTP_400_BAD_REQUEST)
-        return Response({'status': 'event is not found'}, status=status.HTTP_400_BAD_REQUEST)
+        except ObjectDoesNotExist:
+            return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            user.events.get(id=event.id)
+            user.events.remove(event)
+            event.followers -= 1
+            event.save()
+            return Response({'message': 'Unfollowed from Event', 'is_followed': False}, status=status.HTTP_200_OK)
+        except ObjectDoesNotExist:
+            return Response({'status': 'Not following this event'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class LastViewedEvents(ListCreateAPIView):
