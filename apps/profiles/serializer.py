@@ -70,7 +70,7 @@ class MainOrganizerSerializer(ModelSerializer):
         fields = ['id', 'is_followed', 'profile_picture', 'title']
 
     def get_is_followed(self, organizer):
-        return organizer in self.context.get('followed_organizer')
+        return organizer in self.context.get('request').user.baseprofile.user.organizers.all()
 
 
 class ListOrginizerSerializer(ModelSerializer):
@@ -130,7 +130,7 @@ class InterestsEventSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class MainBaseEventSerializer(serializers.ModelSerializer):
+class   MainBaseEventSerializer(serializers.ModelSerializer):
     banners = EventBannerSerializer(many=True)
     event_weeks = MainEventWeekSerializer(many=True, source='permanentevent.weeks')
     event_dates = MainEventDateSerializer(many=True, source='temporaryevent.dates')

@@ -26,6 +26,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.core.exceptions import ObjectDoesNotExist
 
+
 class ProfileViewSet(RetrieveAPIView):
     serializer_class = ProfileSerializer
     permission_classes = [IsAuthenticated]
@@ -94,11 +95,10 @@ class OrganizerListAPIView(ListAPIView):
         except ObjectDoesNotExist:
             return Response({'status': 'user is not found'})
         organizers = Organizer.objects.order_by('-followers').filter(address__city__city_name=user.city)[:15]
-        followed_organizers = user.organizers.all()
         serialized_data = self.get_serializer(
             organizers,
             many=True,
-            context={'followed_organizer': followed_organizers, 'request': request}
+            context={'request': request}
         ).data
 
         return Response(serialized_data)
@@ -271,7 +271,7 @@ class UpdateCityAPIView(UpdateModelMixin, GenericAPIView):
             return Response({'status': 'success'})
         except ObjectDoesNotExist:
             return Response({'status': 'error'})
-    
+
 
 class AllOrganizerListAPIView(ListAPIView):
     permission_classes = [IsAuthenticated]

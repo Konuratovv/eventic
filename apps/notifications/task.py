@@ -7,7 +7,7 @@ from apps.users.models import CustomUser
 
 
 @shared_task
-def send_verification_mail(email):
+def send_verification_mail_task(email):
     generated_code = get_random_string(6, '0123456789')
     user = CustomUser.objects.get(email=email)
     user.code = generated_code

@@ -110,7 +110,6 @@ class DetailEventSerializer(serializers.ModelSerializer):
     banners = EventBannerSerializer(many=True)
     address = AddressSerializer(read_only=True)
     organizer = OrganizerSerializer(read_only=True)
-    event_dates = serializers.SerializerMethodField()
     event_weeks = EventWeekSerializer(many=True, source='permanentevent.weeks')
     event_type = serializers.SerializerMethodField(read_only=True)
     is_notified = serializers.BooleanField(default=False)
@@ -126,7 +125,6 @@ class DetailEventSerializer(serializers.ModelSerializer):
             'description',
             'banners',
             'event_type',
-            'event_dates',
             'event_weeks',
             'average_time',
             'price',
@@ -138,11 +136,6 @@ class DetailEventSerializer(serializers.ModelSerializer):
             'is_notified',
             'is_favourite'
         )
-
-    def get_event_dates(self, event):
-        now = datetime.now()
-        future_dates = event.temporaryevent.dates.filter(date__gte=now.date(), end_time__gte=now.time())
-        return EventDateSerializer(instance=future_dates, many=True).data
 
     def get_is_favourite(self, event):
         return event in self.context.get('request').user.baseprofile.user.favourites.all()
