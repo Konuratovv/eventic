@@ -132,7 +132,7 @@ class EventWeek(models.Model):
 class PermanentEventDays(EventTime):
     permanent_event = models.ForeignKey(PermanentEvent, verbose_name='Выберите постоянное событие',
                                         related_name='weeks', on_delete=models.CASCADE)  # без этой хрени не работает
-    event_week = models.ManyToManyField(EventWeek, verbose_name="Интересы", related_name="interests")
+    event_week = models.ManyToManyField(EventWeek, verbose_name="День недели", related_name="event_week")
 
     class Meta:
         verbose_name = 'Время проведения мероприятии'
