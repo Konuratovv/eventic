@@ -94,7 +94,7 @@ class OrganizerListAPIView(ListAPIView):
             user = self.request.user.baseprofile.user
         except ObjectDoesNotExist:
             return Response({'status': 'user is not found'})
-        organizers = Organizer.objects.order_by('-followers').filter(address__city__city_name=user.city)[:15]
+        organizers = Organizer.objects.order_by('-followers').filter(address__city__city_name=user.city).distinct()[:15]
         serialized_data = self.get_serializer(
             organizers,
             many=True,
