@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.forms import BaseInlineFormSet
 
 from .models import Category, TemporaryEvent, PermanentEvent, EventWeek, EventDate, Interests, EventBanner, \
-    Language, EventTime
+    Language, EventTime, PermanentEventDays
 
 
 class RequiredInlineFormSet(BaseInlineFormSet):
@@ -41,9 +41,8 @@ class EventDateInline(admin.TabularInline):
         return super().get_extra(request, obj, **kwargs)
 
 
-class EventWeekInline(admin.StackedInline):
-    model = EventWeek
-    prepopulated_fields = {'slug': ('week',)}
+class PermanentEventDaysInline(admin.StackedInline):
+    model = PermanentEventDays
     extra = 1
     formset = RequiredInlineFormSet
 
@@ -100,7 +99,7 @@ class TemporaryEventAdmin(admin.ModelAdmin):
 @admin.register(PermanentEvent)
 class PermanentEventAdmin(admin.ModelAdmin):
     """ Постоянные """
-    inlines = [EventBannerInline, EventWeekInline]
+    inlines = [EventBannerInline, PermanentEventDaysInline]
     exclude = ['followers']
     list_display = [
         "title",
@@ -111,7 +110,7 @@ class PermanentEventAdmin(admin.ModelAdmin):
         "get_categories",
         "get_interests",
         "organizer",
-        "get_weeks",
+        # "get_weeks",
         'get_followers_count',
 
     ]
@@ -130,9 +129,9 @@ class PermanentEventAdmin(admin.ModelAdmin):
         return ", ".join([interest.name for interest in obj.interests.all()])
     get_interests.short_description = 'Интересы'
 
-    def get_weeks(self, obj):
-        return ", ".join([week.week for week in obj.weeks.all()]) if hasattr(obj, 'weeks') and obj.weeks.exists() else ""
-    get_weeks.short_description = 'Недели'
+    # def get_weeks(self, obj):
+    #     return ", ".join([week.event_week for week in obj.weeks.all()]) if hasattr(obj, 'weeks') and obj.weeks.exists() else ""
+    # get_weeks.short_description = 'Недели'
 
     def get_languages(self, obj):
         return ", ".join([language.name for language in obj.language.all()])
@@ -184,6 +183,4 @@ class EventDateAdmin(admin.ModelAdmin):
     pass
 
 
-@admin.register(EventTime)
-class EventTimeAdmin(admin.ModelAdmin):
-    list_display = ['start_time', 'end_time']
+admin.site.register(PermanentEventDays)

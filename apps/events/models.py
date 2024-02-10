@@ -55,16 +55,12 @@ class BaseEvent(models.Model):
     interests = models.ManyToManyField(Interests, verbose_name="Интересы", related_name="interests")
     organizer = models.ForeignKey('profiles.Organizer', on_delete=models.CASCADE,
                                   verbose_name='Организатор мероприятия', related_name='baseevent_org')
-    address = models.ForeignKey('locations.Address', on_delete=models.CASCADE, verbose_name='Адрес')
+    city = models.ForeignKey('locations.City', on_delete=models.CASCADE, verbose_name='Город')
+    address = models.CharField(max_length=50, verbose_name='Адрес')
     is_active = models.BooleanField(verbose_name="Мероприятие активно", default=True)
     followers = models.PositiveBigIntegerField(blank=True, default=0)
 
     objects = models.Manager()
-
-    @property
-    def city(self):
-        """ Получаем доступ к объекту city через поле address """
-        return self.address.city
 
     class Meta:
         verbose_name = 'Мероприятие'
@@ -122,16 +118,28 @@ class EventWeek(models.Model):
     """ Модель недели и время события связан с PermanentEvent"""
     week = models.CharField(max_length=80, verbose_name="День недели")
     slug = models.SlugField(max_length=80, verbose_name='Слаг', help_text='Заполняется автоматически')
-    time = models.ForeignKey(EventTime, verbose_name='Укажите время', related_name='week_times', on_delete=models.CASCADE)
-    permanent_event = models.ForeignKey(PermanentEvent, verbose_name='Выберите постоянное событие', related_name='weeks', on_delete=models.CASCADE) # без этой хрени не работает
     objects = models.Manager()
 
     class Meta:
-        verbose_name = 'Неделю'
-        verbose_name_plural = 'Недели'
+        verbose_name = 'День недели'
+        verbose_name_plural = 'Дени недели'
+        ordering = ['id']
 
     def __str__(self):
         return f"{self.week}"
+
+
+class PermanentEventDays(EventTime):
+    permanent_event = models.ForeignKey(PermanentEvent, verbose_name='Выберите постоянное событие',
+                                        related_name='weeks', on_delete=models.CASCADE)  # без этой хрени не работает
+    event_week = models.ManyToManyField(EventWeek, verbose_name="Интересы", related_name="interests")
+
+    class Meta:
+        verbose_name = 'Время проведения мероприятии'
+        verbose_name_plural = 'Время проведения мероприятий'
+
+    def __str__(self):
+        return f"{self.event_week}: {self.start_time} - {self.end_time}"
 
 
 class EventDate(models.Model):
