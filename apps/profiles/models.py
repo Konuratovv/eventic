@@ -18,7 +18,7 @@ class User(BaseProfile):
     organizers = models.ManyToManyField('profiles.Organizer', blank=True)
     first_name = models.CharField(max_length=155)
     last_name = models.CharField(max_length=255)
-    events = models.ManyToManyField(BaseEvent, related_name='users', blank=True)
+    # events = models.ManyToManyField(BaseEvent, related_name='users', blank=True)
     last_viewed_events = models.ManyToManyField('ViewedEvent', related_name='users', blank=True)
 
     class Meta:

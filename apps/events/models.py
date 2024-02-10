@@ -85,14 +85,6 @@ class EventBanner(models.Model):
         return f"{self.event}"
 
 
-class TemporaryEvent(BaseEvent):
-    """ Временное мероприятие наследуется от BaseEvent """
-
-    class Meta:
-        verbose_name = 'Временное мероприятие'
-        verbose_name_plural = 'Временое мероприятия'
-
-
 class EventTime(models.Model):
     start_time = models.TimeField(verbose_name="Время начала события")
     end_time = models.TimeField(verbose_name="Время окончания события")
@@ -104,6 +96,29 @@ class EventTime(models.Model):
 
     def __str__(self):
         return f"{self.start_time} - {self.end_time}"
+
+
+class TemporaryEvent(BaseEvent):
+    """ Временное мероприятие наследуется от BaseEvent """
+
+    class Meta:
+        verbose_name = 'Временное мероприятие'
+        verbose_name_plural = 'Временое мероприятия'
+
+
+class EventDate(EventTime):
+    """ Дата и время, временного мероприятия связана с TemporaryEvent """
+    temp = models.ForeignKey(TemporaryEvent, on_delete=models.CASCADE, related_name='dates',
+                             verbose_name='Выберите временное событие')
+    date = models.DateField(verbose_name="Укажите дату начала события")
+    objects = models.Manager()
+
+    class Meta:
+        verbose_name = 'Дата и время мероприятия'
+        verbose_name_plural = 'Даты и время мероприятий'
+
+    def __str__(self):
+        return f"{self.start_time}, {self.end_time}"
 
 
 class PermanentEvent(BaseEvent):
@@ -140,21 +155,3 @@ class PermanentEventDays(EventTime):
 
     def __str__(self):
         return f"{self.event_week}: {self.start_time} - {self.end_time}"
-
-
-class EventDate(models.Model):
-    """ Дата и время, временного мероприятия связана с TemporaryEvent """
-    temp = models.ForeignKey(TemporaryEvent, on_delete=models.CASCADE, related_name='dates',
-                             verbose_name='Выберите временное событие')
-    date = models.DateField(verbose_name="Укажите дату начала события")
-    start_time = models.TimeField(verbose_name='Время начала события')
-    end_time = models.TimeField(verbose_name='Время окончания события')
-
-    objects = models.Manager()
-
-    class Meta:
-        verbose_name = 'Дата и время мероприятия'
-        verbose_name_plural = 'Даты и время мероприятий'
-
-    def __str__(self):
-        return f"{self.start_time}, {self.end_time}"
