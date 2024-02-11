@@ -9,6 +9,7 @@ from apps.users.models import CustomUser
 class BaseProfile(CustomUser):
     profile_picture = models.ImageField(verbose_name="Аватарка", upload_to='avatars', default='default/default_ava.png',
                                         **nb)
+    city = models.ForeignKey(City, on_delete=models.SET_NULL, **nb)
 
 
 class User(BaseProfile):
@@ -17,9 +18,8 @@ class User(BaseProfile):
     organizers = models.ManyToManyField('profiles.Organizer', blank=True)
     first_name = models.CharField(max_length=155)
     last_name = models.CharField(max_length=255)
-    events = models.ManyToManyField(BaseEvent, related_name='users', blank=True)
+    # events = models.ManyToManyField(BaseEvent, related_name='users', blank=True)
     last_viewed_events = models.ManyToManyField('ViewedEvent', related_name='users', blank=True)
-    city = models.ForeignKey(City, on_delete=models.SET_NULL, **nb)
 
     class Meta:
         verbose_name = 'Пользователь'
@@ -32,7 +32,7 @@ class User(BaseProfile):
 class Organizer(BaseProfile):
     title = models.CharField(max_length=255)
     back_img = models.ImageField(verbose_name="Баннер", upload_to='organizers_banners', blank=True, null=True)
-    address = models.CharField(max_length=50, verbose_name='Адрес')
+    # address = models.CharField(max_length=50, verbose_name='Адрес')
     description = models.TextField(blank=True)
     followers = models.PositiveBigIntegerField(blank=True, default=0)
 
