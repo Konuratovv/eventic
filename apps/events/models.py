@@ -154,4 +154,4 @@ class PermanentEventDays(EventTime):
         verbose_name_plural = 'Время проведения мероприятий'
 
     def __str__(self):
-        return f"{self.event_week}: {self.start_time} - {self.end_time}"
+        return f"{self.event_week}"

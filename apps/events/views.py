@@ -36,12 +36,14 @@ class EventDetailAPIView(generics.RetrieveAPIView):
     пример: http://127.0.0.1:8000/events/id/
     """
     permission_classes = [IsAuthenticated]
+    queryset = BaseEvent.objects.all()
     serializer_class = DetailEventSerializer
+    lookup_field = 'pk'
 
-    def get(self, request, pk):
-        event = BaseEvent.objects.get(id=pk)
-        serializer = self.get_serializer(event)
-        return Response(serializer.data)
+    # def get(self, request, pk):
+    #     event = BaseEvent.objects.get(id=pk)
+    #     serializer = self.get_serializer(event)
+    #     return Response(serializer.data)
 
 
 class EventListAPIView(generics.ListAPIView):

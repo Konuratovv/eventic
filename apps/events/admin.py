@@ -110,7 +110,7 @@ class PermanentEventAdmin(admin.ModelAdmin):
         "get_categories",
         "get_interests",
         "organizer",
-        # "get_weeks",
+        "get_weeks",
         'get_followers_count',
 
     ]
@@ -129,9 +129,16 @@ class PermanentEventAdmin(admin.ModelAdmin):
         return ", ".join([interest.name for interest in obj.interests.all()])
     get_interests.short_description = 'Интересы'
 
-    # def get_weeks(self, obj):
-    #     return ", ".join([week.event_week for week in obj.weeks.all()]) if hasattr(obj, 'weeks') and obj.weeks.exists() else ""
-    # get_weeks.short_description = 'Недели'
+    def get_weeks(self, obj):
+        if hasattr(obj, 'weeks') and obj.weeks.exists():
+            week_strings = []
+            for week in obj.weeks.all():
+                event_week_strings = [str(event_week) for event_week in week.event_week.all()]
+                week_strings.append(", ".join(event_week_strings))
+            return "; ".join(week_strings)
+        else:
+            return ""
+    get_weeks.short_description = 'Недели'
 
     def get_languages(self, obj):
         return ", ".join([language.name for language in obj.language.all()])
@@ -171,12 +178,12 @@ class LanguageAdmin(admin.ModelAdmin):
 
 @admin.register(EventWeek)
 class EventWeekAdmin(admin.ModelAdmin):
-    list_display = [
-        "week",
-        "slug",
-    ]
-    prepopulated_fields = {'slug': ('week',)}
-
+    # list_display = [
+    #     "week",
+    #     "slug",
+    # ]
+    # prepopulated_fields = {'slug': ('week',)}
+    pass
 
 @admin.register(EventDate)
 class EventDateAdmin(admin.ModelAdmin):

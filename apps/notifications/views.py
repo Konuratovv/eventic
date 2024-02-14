@@ -18,8 +18,4 @@ class Notifications(ListAPIView):
         return notifications
 
 
-    # def get_notifications_for_user(user):
-    #     notifications = Notification.objects.filter(Q(event__organizer__user=user) | Q(event__user=user))
-    #     return notifications
-#
-# # https://github.com/firebase/firebase-ios-sdk
+
