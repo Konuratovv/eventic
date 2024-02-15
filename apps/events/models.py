@@ -129,25 +129,31 @@ class PermanentEvent(BaseEvent):
         verbose_name_plural = 'Постоянные мероприятия'
 
 
-class EventWeek(models.Model):
-    """ Модель недели и время события связан с PermanentEvent"""
-    week = models.CharField(max_length=80, verbose_name="День недели")
-    slug = models.SlugField(max_length=80, verbose_name='Слаг', help_text='Заполняется автоматически')
-    objects = models.Manager()
-
-    class Meta:
-        verbose_name = 'День недели'
-        verbose_name_plural = 'Дени недели'
-        ordering = ['id']
-
-    def __str__(self):
-        return f"{self.week}"
+# class EventWeek(models.Model):
+#     """ Модель недели и время события связан с PermanentEvent"""
+#     week = models.CharField(max_length=80, verbose_name="День недели")
+#     slug = models.SlugField(max_length=80, verbose_name='Слаг', help_text='Заполняется автоматически')
+#     objects = models.Manager()
+#
+#     class Meta:
+#         verbose_name = 'День недели'
+#         verbose_name_plural = 'Дни недели'
+#         ordering = ['id']
+#
+#     def __str__(self):
+#         return f"{self.week}"
 
 
 class PermanentEventDays(EventTime):
+    week_days = (
+        ('mo', 'пн'), ('tu', 'вт'),
+        ('we', 'ср'), ('th', 'чт'),
+        ('fr', 'пт'), ('sa', 'сб'),
+        ('su', 'вс'),
+    )
     permanent_event = models.ForeignKey(PermanentEvent, verbose_name='Выберите постоянное событие',
                                         related_name='weeks', on_delete=models.CASCADE)  # без этой хрени не работает
-    event_week = models.ManyToManyField(EventWeek, verbose_name="День недели", related_name="event_week")
+    event_week = models.CharField(verbose_name='День недели', choices=week_days, max_length=2)
 
     class Meta:
         verbose_name = 'Время проведения мероприятии'
