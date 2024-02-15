@@ -4,7 +4,6 @@ from .views import *
 
 
 urlpatterns = [
-    path('noti/<int:pk>/', Notifications.as_view(),),
-    # path('sent',SendNotToUserApiView.as_view()),
-
+    path('permanent_notification/', PermanentNotificationAPIView.as_view()),
+    path('temporary_notification/', TemporaryNotificationAPIView.as_view())
 ]

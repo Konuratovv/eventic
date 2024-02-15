@@ -1,12 +1,12 @@
 from rest_framework import serializers
-from .models import Category, EventDate, BaseEvent, EventWeek, Interests, EventBanner, PermanentEvent, EventTime
+from .models import Category, EventDate, BaseEvent, Interests, EventBanner, PermanentEvent, PermanentEventDays
 
-from ..locations.models import Address, City
-from ..profiles.models import Organizer, User
+from ..locations.models import City
+from ..locations.serializers import CitySerializer
+from ..profiles.models import Organizer
 
-from datetime import datetime, date, timedelta
-
-from datetime import datetime, timedelta, timezone
+from datetime import date
+from datetime import datetime, timedelta
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -27,17 +27,9 @@ class EventDateSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class EventTimeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = EventTime
-        fields = '__all__'
-
-
 class EventWeekSerializer(serializers.ModelSerializer):
-    time = EventTimeSerializer()
-
     class Meta:
-        model = EventWeek
+        model = PermanentEventDays
         fields = '__all__'
 
 
@@ -45,12 +37,6 @@ class EventBannerSerializer(serializers.ModelSerializer):
     class Meta:
         model = EventBanner
         fields = '__all__'
-
-
-class AddressSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Address
-        fields = ('address_name',)
 
 
 class CityAddressSerializer(serializers.ModelSerializer):
@@ -108,11 +94,10 @@ class DetailEventSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
     interests = InterestSerializer(many=True)
     banners = EventBannerSerializer(many=True)
-    address = AddressSerializer(read_only=True)
     organizer = OrganizerSerializer(read_only=True)
+    event_dates = EventDateSerializer(many=True, source='permanentevent.dates')
     event_weeks = EventWeekSerializer(many=True, source='permanentevent.weeks')
     event_type = serializers.SerializerMethodField(read_only=True)
-    is_notified = serializers.BooleanField(default=False)
     is_free = serializers.SerializerMethodField(read_only=True)
     average_time = serializers.SerializerMethodField()
     is_favourite = serializers.SerializerMethodField()
@@ -133,7 +118,6 @@ class DetailEventSerializer(serializers.ModelSerializer):
             'interests',
             'organizer',
             'address',
-            'is_notified',
             'is_favourite'
         )
 
@@ -179,8 +163,8 @@ class DetailEventSerializer(serializers.ModelSerializer):
             count = 0
             for week in obj.permanentevent.weeks.all():
                 # Изменение здесь: получаем время из связанной модели EventTime через свойство time
-                start_time = datetime.combine(date.today(), week.time.start_time)
-                end_time = datetime.combine(date.today(), week.time.end_time)
+                start_time = datetime.combine(date.today(), week.start_time)
+                end_time = datetime.combine(date.today(), week.end_time)
                 if end_time < start_time:
                     end_time += timedelta(days=1)  # Добавляем 24 часа, если время окончания меньше времени начала
                 duration = end_time - start_time
@@ -196,21 +180,13 @@ class DetailEventSerializer(serializers.ModelSerializer):
             return "Нет данных"
         return None
 
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        request = self.context.get('request')
-        user = User.objects.get(id=request.user.id)
-        is_subscribed = user.events.filter(pk=instance.id).exists()
-        data['is_notified'] = is_subscribed
-        return data
-
 
 class EventAddressUpdateSerializer(serializers.ModelSerializer):
-    address = AddressSerializer()
+    city = CitySerializer()
 
     class Meta:
         model = BaseEvent
-        fields = ['id', 'address']
+        fields = ['id', 'city']
 
 
 class NextEventsOrgSerializer(serializers.ModelSerializer):

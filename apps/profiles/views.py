@@ -13,8 +13,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter
 from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 
-from apps.events.models import BaseEvent
-from apps.locations.models import City
+from apps.events.models import BaseEvent, PermanentEvent
+from apps.locations.models import City, Country, Region
 from apps.profiles.models import User, Organizer, ViewedEvent
 from apps.profiles.organizer_filter import OrganizerFilter
 from apps.profiles.serializer import ListOrginizerSerializer, UpdateCitySerializer, ProfileSerializer, \
@@ -94,11 +94,12 @@ class OrganizerListAPIView(ListAPIView):
             user = self.request.user.baseprofile.user
         except ObjectDoesNotExist:
             return Response({'status': 'user is not found'})
-        organizers = Organizer.objects.order_by('-followers').filter(address__city__city_name=user.city).distinct()[:15]
+        organizers = Organizer.objects.order_by('-followers').filter(city__city_name=user.city).distinct()[:15]
+        followed_organizers = user.organizers.all()
         serialized_data = self.get_serializer(
             organizers,
             many=True,
-            context={'request': request}
+            context={'request': request, 'followed_organizer': followed_organizers}
         ).data
 
         return Response(serialized_data)
@@ -260,6 +261,7 @@ class ChangeUserPictureAPIView(UpdateModelMixin, DestroyModelMixin, GenericAPIVi
 
 class UpdateCityAPIView(UpdateModelMixin, GenericAPIView):
     permission_classes = [IsAuthenticated]
+    serializer_class = UpdateCitySerializer
 
     def patch(self, request, *args, **kwargs):
         user = self.request.user.baseprofile.user
@@ -281,7 +283,7 @@ class AllOrganizerListAPIView(ListAPIView):
     def get_queryset(self):
         user_city = self.request.user.baseprofile.user.city.city_name
         queryset = Organizer.objects.filter(
-            address__city__city_name=user_city
+            city__city_name=user_city
         )
 
         return queryset
@@ -338,7 +340,12 @@ class GoogleOAuthAPIView(CreateAPIView):
             user = User.objects.get(email=user_info['email'])
             access_token = AccessToken.for_user(user)
             refresh_token = RefreshToken.for_user(user)
-            return Response({'access_token': str(access_token), 'refresh_token': str(refresh_token)})
+            return Response({
+                'access_token': str(access_token),
+                'refresh_token': str(refresh_token)
+            },
+             status=status.HTTP_302_FOUND
+            )
         except ObjectDoesNotExist:
             random_password = get_random_string(length=12)
             user = User.objects.create_user(
@@ -364,7 +371,11 @@ class AppleOAuthAPIView(CreateAPIView):
             user = User.objects.get(email=user_apple_email)
             access_token = AccessToken.for_user(user)
             refresh_token = RefreshToken.for_user(user)
-            return Response({'access_token': str(access_token), 'refresh_token': str(refresh_token)})
+            return Response({
+                'access_token': str(access_token),
+                'refresh_token': str(refresh_token)},
+            status=status.HTTP_302_FOUND
+            )
         except ObjectDoesNotExist:
             random_password = get_random_string(length=12)
             user = User.objects.create_user(
@@ -376,3 +387,27 @@ class AppleOAuthAPIView(CreateAPIView):
             access_token = AccessToken.for_user(user)
             refresh_token = RefreshToken.for_user(user)
             return Response({'access_token': str(access_token), 'refresh_token': str(refresh_token)})
+
+
+from faker import Faker
+
+fake = Faker()
+
+
+class AutoParseGeneration(CreateAPIView):
+    def post(self, request, *args, **kwargs):
+        county_obj = Country.objects.create(country_name='Kyrgyzstan', slug='kyrgyzstan')
+        region_obj = Region.objects.create(country=county_obj, region_name='Chui', slug='chui')
+        city_obj = City.objects.create(region=region_obj, city_name='Bishkek', slug='bishkek')
+        for num in range(1000):
+            Organizer.objects.create(
+                title=fake.title(),
+                back_img='media/media/Screenshot_from_2024-01-09_12-38-58.png',
+                description='Долгое время деятельность по организации мероприятий являлась составной частью других отраслей экономики: гостиничного бизнеса, туризма, шоу-бизнеса, часть функций по организации мероприятий была возложена на отделы продаж, профессиональные ассоциации… Это тормозило развитие event management как отдельной формы деятельности.',
+                profile_picture='media/media/Screenshot_from_2024-01-09_12-38-58.png',
+                city=city_obj,
+            )
+            PermanentEvent.objects.create(
+                title=fake.title(),
+                price=fake.number(),
+            )

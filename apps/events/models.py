@@ -1,6 +1,6 @@
 from django.db import models
 
-from apps.base.models import nb
+from apps.base.models import nb, GetOrNoneManager
 
 
 class Category(models.Model):
@@ -32,7 +32,8 @@ class Interests(models.Model):
 class Language(models.Model):
     """ Язык мероприятия """
     name = models.CharField(max_length=70, verbose_name="Язык")
-    name_two = models.CharField(max_length=70, verbose_name="Language", null=True, blank=True, help_text="Название на родном языке 'Английский > English'")
+    name_two = models.CharField(max_length=70, verbose_name="Language", null=True, blank=True,
+                                help_text="Название на родном языке 'Английский > English'")
     short_name = models.CharField(max_length=20, verbose_name="Короткое название", help_text="РУС, ENG, КЫР")
     slug = models.SlugField(max_length=60, verbose_name='Слаг', help_text='Заполняется автоматически')
 
@@ -111,7 +112,9 @@ class EventDate(EventTime):
     temp = models.ForeignKey(TemporaryEvent, on_delete=models.CASCADE, related_name='dates',
                              verbose_name='Выберите временное событие')
     date = models.DateField(verbose_name="Укажите дату начала события")
-    objects = models.Manager()
+    is_active = models.BooleanField(default=False)
+    is_notified = models.BooleanField(default=False)
+    objects = GetOrNoneManager()
 
     class Meta:
         verbose_name = 'Дата и время мероприятия'
@@ -129,21 +132,6 @@ class PermanentEvent(BaseEvent):
         verbose_name_plural = 'Постоянные мероприятия'
 
 
-# class EventWeek(models.Model):
-#     """ Модель недели и время события связан с PermanentEvent"""
-#     week = models.CharField(max_length=80, verbose_name="День недели")
-#     slug = models.SlugField(max_length=80, verbose_name='Слаг', help_text='Заполняется автоматически')
-#     objects = models.Manager()
-#
-#     class Meta:
-#         verbose_name = 'День недели'
-#         verbose_name_plural = 'Дни недели'
-#         ordering = ['id']
-#
-#     def __str__(self):
-#         return f"{self.week}"
-
-
 class PermanentEventDays(EventTime):
     week_days = (
         ('mo', 'пн'), ('tu', 'вт'),
@@ -151,9 +139,14 @@ class PermanentEventDays(EventTime):
         ('fr', 'пт'), ('sa', 'сб'),
         ('su', 'вс'),
     )
-    permanent_event = models.ForeignKey(PermanentEvent, verbose_name='Выберите постоянное событие',
-                                        related_name='weeks', on_delete=models.CASCADE)  # без этой хрени не работает
+    permanent_event = models.ForeignKey(
+        PermanentEvent,
+        verbose_name='Выберите постоянное событие',
+        related_name='weeks',
+        on_delete=models.CASCADE
+   )
     event_week = models.CharField(verbose_name='День недели', choices=week_days, max_length=2)
+    is_notified = models.BooleanField(default=False)
 
     class Meta:
         verbose_name = 'Время проведения мероприятии'

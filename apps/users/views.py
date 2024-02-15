@@ -17,7 +17,7 @@ from apps.users.serializer import RegisterSerializer, CodeSerializer, CodeVerify
     LoginSerializer, SendEmailVerifyCodeSerializer
 from config.settings.base import DEBUG
 from apps.users.utils import send_verification_mail
-from apps.notifications.task import send_verification_mail_task
+from apps.notifications.tasks import send_verification_mail_task
 
 
 class RegisterAPIView(CreateAPIView):

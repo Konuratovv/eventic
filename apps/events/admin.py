@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.forms import BaseInlineFormSet
 
-from .models import Category, TemporaryEvent, PermanentEvent, EventWeek, EventDate, Interests, EventBanner, \
+from .models import Category, TemporaryEvent, PermanentEvent, EventDate, Interests, EventBanner, \
     Language, EventTime, PermanentEventDays
 
 
@@ -32,6 +32,7 @@ class EventBannerInline(admin.TabularInline):
 
 class EventDateInline(admin.TabularInline):
     model = EventDate
+    exclude = ['is_notified', 'is_active']
     extra = 1
     formset = RequiredInlineFormSet
 
@@ -40,9 +41,21 @@ class EventDateInline(admin.TabularInline):
             return 0
         return super().get_extra(request, obj, **kwargs)
 
+    def get_formset(self, request, obj=None, **kwargs):
+        formset = super().get_formset(request, obj, **kwargs)
 
-class PermanentEventDaysInline(admin.StackedInline):
+        class CustomFormset(formset):
+            def __init__(self, *args, **kwargs):
+                super().__init__(*args, **kwargs)
+                # Устанавливаем значение по умолчанию для поля is_active на True
+                self.forms[0].instance.is_active = True
+
+        return CustomFormset
+
+
+class PermanentEventDaysInline(admin.TabularInline):
     model = PermanentEventDays
+    exclude = ['is_notified']
     extra = 1
     formset = RequiredInlineFormSet
 
@@ -75,24 +88,29 @@ class TemporaryEventAdmin(admin.ModelAdmin):
 
     def get_followers_count(self, obj):
         return obj.followers
+
     get_followers_count.short_description = 'Количество подписчиков'
 
     def get_categories(self, obj):
         return obj.category.name if obj.category else ""
+
     get_categories.short_description = 'Категория'
 
     def get_interests(self, obj):
         return ", ".join([interest.name for interest in obj.interests.all()])
+
     get_interests.short_description = 'Интересы'
 
     def get_dates(self, obj):
         return ", ".join(
             [f"Дата: {date.date}. Время: {date.start_time} - {date.end_time}" for date in obj.dates.all()]
         ) if obj.dates.exists() else ""
+
     get_dates.short_description = 'Дата и время события'
 
     def get_languages(self, obj):
         return ", ".join([language.name for language in obj.language.all()])
+
     get_languages.short_description = 'Языки'
 
 
@@ -110,7 +128,6 @@ class PermanentEventAdmin(admin.ModelAdmin):
         "get_categories",
         "get_interests",
         "organizer",
-        "get_weeks",
         'get_followers_count',
 
     ]
@@ -119,29 +136,22 @@ class PermanentEventAdmin(admin.ModelAdmin):
 
     def get_followers_count(self, obj):
         return obj.followers
+
     get_followers_count.short_description = 'Количество подписчиков'
 
     def get_categories(self, obj):
         return obj.category.name if obj.category else ""
+
     get_categories.short_description = 'Категория'
 
     def get_interests(self, obj):
         return ", ".join([interest.name for interest in obj.interests.all()])
-    get_interests.short_description = 'Интересы'
 
-    def get_weeks(self, obj):
-        if hasattr(obj, 'weeks') and obj.weeks.exists():
-            week_strings = []
-            for week in obj.weeks.all():
-                event_week_strings = [str(event_week) for event_week in week.event_week.all()]
-                week_strings.append(", ".join(event_week_strings))
-            return "; ".join(week_strings)
-        else:
-            return ""
-    get_weeks.short_description = 'Недели'
+    get_interests.short_description = 'Интересы'
 
     def get_languages(self, obj):
         return ", ".join([language.name for language in obj.language.all()])
+
     get_languages.short_description = 'Языки'
 
 
@@ -175,15 +185,6 @@ class LanguageAdmin(admin.ModelAdmin):
     ]
     prepopulated_fields = {'slug': ('name',)}
 
-
-@admin.register(EventWeek)
-class EventWeekAdmin(admin.ModelAdmin):
-    # list_display = [
-    #     "week",
-    #     "slug",
-    # ]
-    # prepopulated_fields = {'slug': ('week',)}
-    pass
 
 @admin.register(EventDate)
 class EventDateAdmin(admin.ModelAdmin):

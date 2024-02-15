@@ -3,7 +3,7 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import Group
 from django.forms import BaseInlineFormSet
 
-from apps.profiles.models import User, Organizer, PhoneNumber, SocialLink
+from apps.profiles.models import User, Organizer, PhoneNumber, SocialLink, OrganizerAddress
 
 admin.site.unregister(Group)
 
@@ -18,6 +18,17 @@ class RequiredInlineFormSet(BaseInlineFormSet):
         if form.prefix == self.prefix + '-0':
             return False
         return super()._should_delete_form(form)
+
+
+class OrganizerAddressInline(admin.TabularInline):
+    model = OrganizerAddress
+    extra = 1
+    formset = RequiredInlineFormSet
+
+    def get_extra(self, request, obj=None, **kwargs):
+        if obj:
+            return 0
+        return super().get_extra(request, obj, **kwargs)
 
 
 class PhoneNumberInline(admin.TabularInline):
@@ -93,7 +104,7 @@ class UserAdmin(UserAdmin):
 @admin.register(Organizer)
 class OrganizerAdmin(admin.ModelAdmin):
     exclude = ['code', 'groups', 'is_superuser', 'followers']
-    inlines = [PhoneNumberInline, SocialLinkInline]
+    inlines = [PhoneNumberInline, SocialLinkInline, OrganizerAddressInline]
     list_display = [
         "id",
         'title',
@@ -101,7 +112,6 @@ class OrganizerAdmin(admin.ModelAdmin):
         'is_staff',
         "last_login",
         'back_img',
-        'id',
         'get_followers_count'
     ]
 

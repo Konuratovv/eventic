@@ -1,9 +1,7 @@
-from rest_framework.validators import UniqueValidator
-
-from apps.events.models import BaseEvent, EventDate, EventWeek, Interests, Category, EventTime
-from apps.events.serializers import EventBannerSerializer, AddressSerializer, InterestSerializer, CategorySerializer, \
-    EventTimeSerializer
-from apps.locations.models import Address, City
+from apps.events.models import BaseEvent, EventDate, Interests, PermanentEventDays, \
+    PermanentEvent
+from apps.events.serializers import EventBannerSerializer, InterestSerializer, CategorySerializer
+from apps.locations.models import Address
 from apps.locations.serializers import CitySerializer
 from apps.profiles.models import Organizer, ViewedEvent, PhoneNumber, SocialLink
 
@@ -70,7 +68,7 @@ class MainOrganizerSerializer(ModelSerializer):
         fields = ['id', 'is_followed', 'profile_picture', 'title']
 
     def get_is_followed(self, organizer):
-        return organizer in self.context.get('request').user.baseprofile.user.organizers.all()
+        return organizer in self.context.get('followed_organizer')
 
 
 class ListOrginizerSerializer(ModelSerializer):
@@ -81,7 +79,7 @@ class ListOrginizerSerializer(ModelSerializer):
         fields = ['id', 'is_followed', 'profile_picture', 'title']
 
     def get_is_followed(self, organizer):
-        return organizer in self.context.get('request').user.baseprofile.user.organizers
+        return organizer in self.context.get('request').user.baseprofile.user.organizers.all()
 
 
 class FollowEventSerializer(ModelSerializer):
@@ -110,11 +108,16 @@ class MainEventDateSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class PermanentEventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PermanentEvent
+        fields = '__all__'
+
+
 class MainEventWeekSerializer(serializers.ModelSerializer):
-    time = EventTimeSerializer()
 
     class Meta:
-        model = EventWeek
+        model = PermanentEventDays
         fields = '__all__'
 
 
@@ -130,7 +133,7 @@ class InterestsEventSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class   MainBaseEventSerializer(serializers.ModelSerializer):
+class MainBaseEventSerializer(serializers.ModelSerializer):
     banners = EventBannerSerializer(many=True)
     event_weeks = MainEventWeekSerializer(many=True, source='permanentevent.weeks')
     event_dates = MainEventDateSerializer(many=True, source='temporaryevent.dates')
@@ -212,7 +215,6 @@ class DetailBaseEventSerializer(serializers.ModelSerializer):
 
 
 class OrganizerDetailSerializer(ModelSerializer):
-    address = AddressSerializer(many=True)
     phone_numbers = PhoneNumberSerializer(many=True)
     social_links = SocialLinkSerializer(many=True)
     interests = serializers.SerializerMethodField()
@@ -260,7 +262,7 @@ class AllMainBaseEventSerializer(serializers.ModelSerializer):
     banners = EventBannerSerializer(many=True)
     event_weeks = MainEventWeekSerializer(many=True, source='permanentevent.weeks')
     event_dates = MainEventDateSerializer(many=True, source='temporaryevent.dates')
-    is_favourite = serializers.BooleanField(default=False)
+    is_favourite = serializers.SerializerMethodField()
 
     class Meta:
         model = BaseEvent
@@ -275,13 +277,8 @@ class AllMainBaseEventSerializer(serializers.ModelSerializer):
             'is_favourite',
         ]
 
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        request = self.context.get('request')
-        user = User.objects.get(id=request.user.id)
-        is_subscribed = user.events.filter(pk=instance.id).exists()
-        data['is_favourite'] = is_subscribed
-        return data
+    def get_is_favourite(self, event):
+        return event in self.context.get('request').user.baseprofile.user.favourites.all()
 
 
 class FollowOrganizerSerializer(serializers.ModelSerializer):

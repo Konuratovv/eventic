@@ -22,15 +22,6 @@ class UUIDMixin(models.Model):
     id = models.UUIDField('ID', primary_key=True, default=uuid.uuid4, editable=False)
 
 
-class BaseModel(models.Model):
-    class Meta:
-        abstract = True
-        ordering = ['created_at']
-
-    updated_at = models.DateTimeField('Дата обновления', auto_now=True)
-    created_at = models.DateTimeField('Дата создания', auto_now_add=True)
-
-
 class GetOrNoneManager(models.Manager):
     """returns none if object doesn't exist else model instance"""
 
@@ -43,3 +34,13 @@ class GetOrNoneManager(models.Manager):
     @sync_to_async
     def as_get_or_none(self, **kwargs):
         return self.get_or_none(**kwargs)
+
+
+class BaseModel(models.Model):
+    class Meta:
+        abstract = True
+        ordering = ['created_at']
+
+    objects = models.Manager()
+    updated_at = models.DateTimeField('Дата обновления', auto_now=True)
+    created_at = models.DateTimeField('Дата создания', auto_now_add=True)

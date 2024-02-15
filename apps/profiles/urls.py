@@ -7,6 +7,7 @@ from apps.profiles.views import ProfileViewSet, FollowOrganizerAPIView, Organize
     ChangeUserPasswordAPIView, GoogleOAuthAPIView, FilterOrganizerAPIView, UpdateCityAPIView, \
     AllOrganizerListAPIView, AppleOAuthAPIView, OrganizerEventsDetailOrganizer
 
+
 urlpatterns = [
     path('profile/', ProfileViewSet.as_view()),
     path('follow/organizer/', FollowOrganizerAPIView.as_view()),
@@ -20,7 +21,6 @@ urlpatterns = [
     path('last_viewed_events/', LastViewedEvents.as_view()),
     path('detail_organizer/events/<int:pk>/', OrganizerEventsDetailOrganizer.as_view()),
     path('detail_events/events/<int:pk>/', OrganizerEvents.as_view()),
-    path('change_profile_picture/', ChangeUserPictureAPIView.as_view()),
     path('update-city/', UpdateCityAPIView.as_view()),
     path('all-organizers/', AllOrganizerListAPIView.as_view()),
     path('user_favourites/', UserFavouritesAPIView.as_view()),

@@ -15,12 +15,11 @@ class BaseProfile(CustomUser):
 
 
 class User(BaseProfile):
-    """ Если что я удалил все null=True у всех M2M полей. Улукбек """
     favourites = models.ManyToManyField('events.BaseEvent', blank=True)
     organizers = models.ManyToManyField('profiles.Organizer', blank=True, related_name='user')
+    events = models.ManyToManyField(BaseEvent, related_name='users', blank=True)
     first_name = models.CharField(max_length=155)
     last_name = models.CharField(max_length=255)
-    # events = models.ManyToManyField(BaseEvent, related_name='users', blank=True)
     last_viewed_events = models.ManyToManyField('ViewedEvent', related_name='users', blank=True)
 
     class Meta:
@@ -31,16 +30,12 @@ class User(BaseProfile):
         return f"{self.email}"
 
 
-
-
-
 class Organizer(BaseProfile):
     title = models.CharField(max_length=255)
     back_img = models.ImageField(verbose_name="Баннер", upload_to='organizers_banners', blank=True, null=True)
-    # address = models.CharField(max_length=50, verbose_name='Адрес')
+    address = models.CharField(max_length=50, verbose_name='Адрес')
     description = models.TextField(blank=True)
     followers = models.PositiveBigIntegerField(blank=True, default=0)
-
 
     class Meta:
         verbose_name = 'Организатор'
@@ -48,6 +43,15 @@ class Organizer(BaseProfile):
 
     def __str__(self):
         return f"{self.title}"
+
+
+class OrganizerAddress(models.Model):
+    organizer = models.ForeignKey(Organizer, on_delete=models.CASCADE, related_name='addresses')
+    address = models.CharField(max_length=255)
+
+    class Meta:
+        verbose_name = 'Адрес'
+        verbose_name_plural = 'Адреса'
 
 
 class PhoneNumber(models.Model):
