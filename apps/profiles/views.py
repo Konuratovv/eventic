@@ -344,7 +344,7 @@ class GoogleOAuthAPIView(CreateAPIView):
                 'access_token': str(access_token),
                 'refresh_token': str(refresh_token)
             },
-             status=status.HTTP_302_FOUND
+                status=status.HTTP_302_FOUND
             )
         except ObjectDoesNotExist:
             random_password = get_random_string(length=12)
@@ -373,8 +373,9 @@ class AppleOAuthAPIView(CreateAPIView):
             refresh_token = RefreshToken.for_user(user)
             return Response({
                 'access_token': str(access_token),
-                'refresh_token': str(refresh_token)},
-            status=status.HTTP_302_FOUND
+                'refresh_token': str(refresh_token)
+            },
+                status=status.HTTP_302_FOUND
             )
         except ObjectDoesNotExist:
             random_password = get_random_string(length=12)

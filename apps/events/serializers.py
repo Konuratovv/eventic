@@ -95,7 +95,7 @@ class DetailEventSerializer(serializers.ModelSerializer):
     interests = InterestSerializer(many=True)
     banners = EventBannerSerializer(many=True)
     organizer = OrganizerSerializer(read_only=True)
-    event_dates = EventDateSerializer(many=True, source='permanentevent.dates')
+    event_dates = EventDateSerializer(many=True, source='temporaryevent.dates')
     event_weeks = EventWeekSerializer(many=True, source='permanentevent.weeks')
     event_type = serializers.SerializerMethodField(read_only=True)
     is_free = serializers.SerializerMethodField(read_only=True)
@@ -118,7 +118,8 @@ class DetailEventSerializer(serializers.ModelSerializer):
             'interests',
             'organizer',
             'address',
-            'is_favourite'
+            'is_favourite',
+            'event_dates'
         )
 
     def get_is_favourite(self, event):
