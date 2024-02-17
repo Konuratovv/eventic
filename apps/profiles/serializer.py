@@ -3,7 +3,7 @@ from apps.events.models import BaseEvent, EventDate, Interests, PermanentEventDa
 from apps.events.serializers import EventBannerSerializer, InterestSerializer, CategorySerializer
 from apps.locations.models import Address
 from apps.locations.serializers import CitySerializer
-from apps.profiles.models import Organizer, ViewedEvent, PhoneNumber, SocialLink
+from apps.profiles.models import Organizer, ViewedEvent, PhoneNumber, SocialLink, OrganizerAddress
 
 from apps.profiles.models import User
 from rest_framework.serializers import ModelSerializer
@@ -57,6 +57,12 @@ class PhoneNumberSerializer(ModelSerializer):
 class SocialLinkSerializer(ModelSerializer):
     class Meta:
         model = SocialLink
+        fields = '__all__'
+
+
+class OrganizerAddressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrganizerAddress
         fields = '__all__'
 
 
@@ -215,13 +221,25 @@ class DetailBaseEventSerializer(serializers.ModelSerializer):
 class OrganizerDetailSerializer(ModelSerializer):
     phone_numbers = PhoneNumberSerializer(many=True)
     social_links = SocialLinkSerializer(many=True)
+    addresses = OrganizerAddressSerializer(many=True)
     interests = serializers.SerializerMethodField()
     is_followed = serializers.SerializerMethodField()
 
     class Meta:
         model = Organizer
-        exclude = ['code', 'password', 'groups', 'user_permissions', 'last_login', 'is_superuser', 'is_staff',
-                   'is_verified', 'followers']
+        fields = [
+            'id',
+            'title',
+            'email',
+            'profile_picture',
+            'back_img',
+            'description',
+            'is_followed',
+            'phone_numbers',
+            'social_links',
+            'addresses',
+            'interests'
+        ]
 
     def get_interests(self, organizer):
         events = BaseEvent.objects.filter(organizer=organizer)
