@@ -1,56 +1,37 @@
 from django.db import models
 
-
-# Create your models here.
 class Category(models.Model):
-    """ Категории мероприятии """
-    name = models.CharField(max_length=150, verbose_name="Категория")
-    slug = models.SlugField(max_length=80, verbose_name='Слаг', help_text='Заполняется автоматически')
+    title = models.CharField(max_length=30, verbose_name='Категория')
+    slug = models.SlugField(max_length=30, verbose_name='Слаг')
+
+    def __str__(self):
+        return f"{self.title}"
 
     class Meta:
         verbose_name = 'Категория'
         verbose_name_plural = 'Категории'
 
+class Contact(models.Model):
+    name = models.CharField(max_length=30, verbose_name='Контакт')
+    user = models.ForeignKey('profiles.User', on_delete=models.CASCADE, related_name='contact_user',
+                             verbose_name='Пользователь')
+    slug = models.SlugField(max_length=30, verbose_name='Слаг')
+
     def __str__(self):
         return f"{self.name}"
+    
+    class Meta:
+        verbose_name = 'Контакт'
+        verbose_name_plural = 'Контакты'
 
-
-class Recipient(models.Model):
-    name = models.CharField(
-        max_length=50,
-        verbose_name="Получатель"
+class Image(models.Model):
+    COLORS = (
+        ('BLACK', 'Черный'),
+        ('WHITE', 'Белый')
     )
+    image = models.ImageField(verbose_name='Картинка', upload_to='invitaions')
+    text_color = models.CharField(max_length=10, choices=COLORS, default='BLACK', verbose_name='Цвет текста')
 
     class Meta:
-        verbose_name = 'Получатель'
-        verbose_name_plural = 'Получатели'
-
-    def __str__(self) -> str:
-        return f'{self.name}'
-
-
-class Invitation(models.Model):
-    recipient = models.ForeignKey(
-        Recipient,
-        on_delete=models.CASCADE,
-        verbose_name="Получатель"
-    )
-    category = models.ForeignKey(
-        Category,
-        on_delete=models.CASCADE,
-        verbose_name="Категория"
-    )
-    date = models.DateTimeField(
-        verbose_name="Дата и время"
-    )
-    address = models.CharField(
-        max_length=100,
-        verbose_name="Адрес"
-    )
-    note = models.TextField(
-        verbose_name="Примечания"
-    )
-    sender = models.CharField(
-        max_length=30,
-        verbose_name="Отправитель"
-    )
+        verbose_name = 'Картинка'
+        verbose_name_plural = 'Картинки'
