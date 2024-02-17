@@ -32,8 +32,8 @@ class User(BaseProfile):
 
 class Organizer(BaseProfile):
     title = models.CharField(max_length=255)
-    back_img = models.ImageField(verbose_name="Баннер", upload_to='organizers_banners', blank=True, null=True)
-    address = models.CharField(max_length=50, verbose_name='Адрес')
+    back_img = models.ImageField(verbose_name="Баннер", upload_to='organizers_banners',
+                                 default='default/background.png', blank=True, null=True)
     description = models.TextField(blank=True)
     followers = models.PositiveBigIntegerField(blank=True, default=0)
 
@@ -56,10 +56,11 @@ class OrganizerAddress(models.Model):
 
 class PhoneNumber(models.Model):
     organizer = models.ForeignKey(Organizer, on_delete=models.CASCADE, related_name='phone_numbers')
-    phone_number = models.CharField(max_length=30)
+    phone_number = models.CharField(max_length=30, verbose_name='Введите данные')
     phone_number_choices = [
         ('whatsapp', 'WhatsApp'),
         ('telegram', 'Telegram'),
+        ('phone number', 'Phone Number')
     ]
     phone_number_type = models.CharField(max_length=50, choices=phone_number_choices, blank=True)
 

@@ -113,7 +113,6 @@ class EventDate(EventTime):
                              verbose_name='Выберите временное событие')
     date = models.DateField(verbose_name="Укажите дату начала события")
     is_active = models.BooleanField(default=False)
-    is_notified = models.BooleanField(default=False)
     objects = GetOrNoneManager()
 
     class Meta:
@@ -146,7 +145,6 @@ class PermanentEventDays(EventTime):
         on_delete=models.CASCADE
    )
     event_week = models.CharField(verbose_name='День недели', choices=week_days, max_length=2)
-    is_notified = models.BooleanField(default=False)
 
     class Meta:
         verbose_name = 'Время проведения мероприятии'

@@ -115,7 +115,6 @@ class PermanentEventSerializer(serializers.ModelSerializer):
 
 
 class MainEventWeekSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = PermanentEventDays
         fields = '__all__'
@@ -162,7 +161,6 @@ class UserFavouritesSerializer(serializers.ModelSerializer):
     event_weeks = MainEventWeekSerializer(many=True, source='permanentevent.weeks')
     event_dates = MainEventDateSerializer(many=True, source='temporaryevent.dates')
     category = CategorySerializer()
-
     is_favourite = serializers.SerializerMethodField()
     is_free = serializers.SerializerMethodField()
 

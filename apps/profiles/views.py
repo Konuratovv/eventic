@@ -354,6 +354,8 @@ class GoogleOAuthAPIView(CreateAPIView):
                 last_name=user_info['family_name'],
                 password=random_password
             )
+            user.is_verified = True
+            user.save()
             access_token = AccessToken.for_user(user)
             refresh_token = RefreshToken.for_user(user)
             return Response({'access_token': str(access_token), 'refresh_token': str(refresh_token)})
@@ -385,6 +387,8 @@ class AppleOAuthAPIView(CreateAPIView):
                 last_name=last_name,
                 password=random_password
             )
+            user.is_verified = True
+            user.save()
             access_token = AccessToken.for_user(user)
             refresh_token = RefreshToken.for_user(user)
             return Response({'access_token': str(access_token), 'refresh_token': str(refresh_token)})

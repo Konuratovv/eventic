@@ -201,9 +201,9 @@ class EventTypeListAPIView(ListAPIView):
 
         sorted_data = [
             {'type': 'events', 'events': events_data},
-            {'type': 'perEvents', 'events': events_data2},
             {'type': 'popularEvents', 'events': events_data3},
             {'type': 'freeEvents', 'events': events_data4},
+            {'type': 'perEvents', 'events': events_data2},
             {'type': 'last_viewed_events', 'events': events_data6},
         ]
 

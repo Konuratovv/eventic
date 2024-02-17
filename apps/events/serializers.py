@@ -3,6 +3,7 @@ from .models import Category, EventDate, BaseEvent, Interests, EventBanner, Perm
 
 from ..locations.models import City
 from ..locations.serializers import CitySerializer
+from ..notifications.models import FollowTemp, FollowPerm
 from ..profiles.models import Organizer
 
 from datetime import date
@@ -22,15 +23,33 @@ class InterestSerializer(serializers.ModelSerializer):
 
 
 class EventDateSerializer(serializers.ModelSerializer):
+    is_notified = serializers.SerializerMethodField()
+
     class Meta:
         model = EventDate
         fields = "__all__"
 
+    def get_is_notified(self, perm_date):
+        follow_temp = FollowTemp.objects.filter(
+            event=perm_date,
+            user=self.context.get('request').user.baseprofile.user
+        )
+        return True if follow_temp.exists() else False
+
 
 class EventWeekSerializer(serializers.ModelSerializer):
+    is_notified = serializers.SerializerMethodField()
+
     class Meta:
         model = PermanentEventDays
         fields = '__all__'
+
+    def get_is_notified(self, perm_day):
+        follow_perm = FollowPerm.objects.filter(
+            event=perm_day,
+            user=self.context.get('request').user.baseprofile.user
+        )
+        return True if follow_perm.exists() else False
 
 
 class EventBannerSerializer(serializers.ModelSerializer):
