@@ -74,7 +74,7 @@ class MainOrganizerSerializer(ModelSerializer):
         fields = ['id', 'is_followed', 'profile_picture', 'title']
 
     def get_is_followed(self, organizer):
-        return organizer in self.context.get('request').user.baseprofile.user.organizers.all()
+        return organizer in self.context.get('followed_organizers')
 
 
 class ListOrginizerSerializer(ModelSerializer):
@@ -85,7 +85,7 @@ class ListOrginizerSerializer(ModelSerializer):
         fields = ['id', 'is_followed', 'profile_picture', 'title']
 
     def get_is_followed(self, organizer):
-        return organizer in self.context.get('request').user.baseprofile.user.organizers.all()
+        return organizer in self.context.get('followed_organizers')
 
 
 class FollowEventSerializer(ModelSerializer):

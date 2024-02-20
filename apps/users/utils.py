@@ -1,7 +1,14 @@
+import json
+
+from asgiref.sync import sync_to_async
 from django.conf import settings
 from django.core.mail import send_mail
 from django.utils.crypto import get_random_string
+
+from apps.notifications.models import FollowPerm, FollowTemp
+from apps.profiles.models import User
 from apps.users.models import CustomUser
+import redis
 
 
 def send_verification_mail(email):
@@ -13,7 +20,6 @@ def send_verification_mail(email):
     message = f'Your verification code:\n{generated_code}\nThanks for using our application.'
     from_email = settings.EMAIL_HOST_USER
     send_mail(subject, message, from_email, [email])
-
 
     # from faker import Faker
     #
@@ -54,3 +60,55 @@ def send_verification_mail(email):
     #     # Добавляем 10 EventDate для каждого TemporaryEvent
     #     for _ in range(10):
     #         EventDate.objects.create(temp=generate2, start_time='21:03:22', end_time='21:03:22', date='2024-01-20')
+
+
+# def post(data):
+#     r = redis.Redis(host='localhost', port=6379, db=0)
+#     data_str = json.dumps(data)
+#     r.hset('user_connections', 'data', data_str)
+#
+#     data1 = r.hgetall("user_connections")
+#     print(f'то что мне нужна{data1}')
+
+r = redis.Redis(host='localhost', port=6379, db=0)
+
+
+def add_to_redis_dict(key, new_data):
+    existing_data = r.hgetall(key)
+
+    if not existing_data:
+        existing_data = {}
+
+    existing_data.update(new_data)
+
+    r.hmset(key, existing_data)
+
+
+def delete_from_redis_dict(key, delete_keys):
+    existing_data = r.hgetall(key)
+
+    delete_keys_bytes = [bytes(delete_key, 'utf-8') for delete_key in delete_keys]
+
+    for delete_key in delete_keys_bytes:
+        if delete_key in existing_data:
+            del existing_data[delete_key]
+
+    r.hdel(key, *delete_keys_bytes)
+
+
+def check_is_seen_status(email):
+    user = User.objects.get(email=email)
+    follows_perms = FollowPerm.objects.filter(user=user)
+    follows_temps = FollowTemp.objects.filter(user=user)
+    for follow_perm in follows_perms:
+        for notification in follow_perm.notifications.all():
+            if not notification.is_seen:
+                notification.is_sent = False
+                notification.save()
+    for follow_temp in follows_temps:
+        for notification in follow_temp.notifications.all():
+            if not notification.is_seen:
+                notification.is_sent = False
+                notification.save()
+
+

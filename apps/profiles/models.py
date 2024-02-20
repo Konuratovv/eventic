@@ -16,7 +16,6 @@ class BaseProfile(CustomUser):
 
 class User(BaseProfile):
     favourites = models.ManyToManyField('events.BaseEvent', blank=True)
-    organizers = models.ManyToManyField('profiles.Organizer', blank=True, related_name='user')
     events = models.ManyToManyField(BaseEvent, related_name='users', blank=True)
     first_name = models.CharField(max_length=155)
     last_name = models.CharField(max_length=255)
