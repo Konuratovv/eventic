@@ -1,10 +1,10 @@
-from django.urls import path 
-from rest_framework.routers import DefaultRouter
+from django.urls import path, include
+from apps.invitations.views import * 
+from rest_framework import routers
 
-from apps.invitations.views import InvitationAPIViewSet
-
-router = DefaultRouter()
-router.register('invitations', InvitationAPIViewSet, "api_invitations")
-
-
-urlpatterns = router.urls
+urlpatterns = [
+    path('invitation-categories/', CategoryAPIView.as_view()),
+    path('invitation-contacts/', ContactAPIView.as_view()),
+    path('invitation-contacts/<int:pk>/delete', ContactDeleteAPIView.as_view()),
+    path('invitation-images/', ImageAPIView.as_view())
+]

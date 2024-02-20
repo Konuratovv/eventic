@@ -1,18 +1,24 @@
 from rest_framework import serializers
-from apps.invitations.models import Category, Recipient, Invitation
 
+from apps.invitations.models import Category, Contact, Image
+from apps.profiles.models import User
 
-class CategorySerializer(serializers.ModelSerializer):
+class CategorySerialzer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ['id', 'name', 'slug']
+        fields = '__all__'
 
-class RecipientSerializer(serializers.ModelSerializer):
+class ContactSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Recipient
-        fields = ['name']
+        model = Contact
+        fields = [
+            'id',
+            'name',
+            'slug',
+            'user',
+        ]
 
-class InvitationSerializer(serializers.ModelSerializer):
+class ImageSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Invitation
-        fields = ['recipient', 'category', 'date', 'address', 'note', 'sender']
+        model = Image
+        fields = '__all__'

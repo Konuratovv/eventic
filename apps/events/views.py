@@ -216,11 +216,11 @@ class AllEventsListAPIView(ListAPIView):
     pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
-        user_city = self.request.user.baseprofile.user.city.city_name
+        user_city = self.request.user.baseprofile.user.city
         queryset = BaseEvent.objects.filter(
             is_active=True,
-            city__city_name=user_city,
-        ).order_by('-followers')
+            city=user_city,
+        )
         return queryset
 
 
@@ -230,12 +230,12 @@ class AllFreeEventsListAPIView(ListAPIView):
     pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
-        user_city = self.request.user.baseprofile.user.city.city_name
+        user_city = self.request.user.baseprofile.user.city
         queryset = BaseEvent.objects.filter(
             is_active=True,
-            city__city_name=user_city,
+            city=user_city,
             price=0,
-        ).order_by('-followers')
+        )
         return queryset
 
 
@@ -245,13 +245,25 @@ class AllPermEventsListAPIView(ListAPIView):
     pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
-        user_city = self.request.user.baseprofile.user.city.city_name
+        user_city = self.request.user.baseprofile.user.city
         queryset = PermanentEvent.objects.filter(
             is_active=True,
-            city__city_name=user_city,
+            city=user_city,
+        )
+        return queryset
+    
+class AllPopularEventsListAPIView(ListAPIView):
+    serializer_class = AllMainBaseEventSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = LimitOffsetPagination
+
+    def get_queryset(self):
+        user_city = self.request.user.baseprofile.user.city
+        queryset = BaseEvent.objects.filter(
+            is_active=True,
+            city=user_city
         ).order_by('-followers')
         return queryset
-
 
 class OrganizerEventsAPIView(ListAPIView):
     serializer_class = AllMainBaseEventSerializer
@@ -259,12 +271,12 @@ class OrganizerEventsAPIView(ListAPIView):
     pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
-        user_city = self.request.user.baseprofile.user.city.city_name
+        user_city = self.request.user.baseprofile.user.city
         organizer_id = self.kwargs.get('pk')
 
         queryset = BaseEvent.objects.filter(
             organizer__id=organizer_id,
-            city__city_name=user_city,
+            city=user_city,
             is_active=True
         ).order_by('-followers')
 
@@ -277,14 +289,14 @@ class EventsByInterestsAPIView(ListAPIView):
     pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
-        user_city = self.request.user.baseprofile.user.city.city_name
+        user_city = self.request.user.baseprofile.user.city
         event_id = self.kwargs.get('pk')
         try:
             event = BaseEvent.objects.get(id=event_id)
 
             queryset = BaseEvent.objects.filter(
                 interests__in=event.interests.all(),
-                city__city_name=user_city,
+                city=user_city,
                 is_active=True,
             ).exclude(pk=event_id)
 
