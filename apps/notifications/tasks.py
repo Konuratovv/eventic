@@ -46,6 +46,11 @@ def send_permanent_notification_task():
         send_date__time__lte=current_time.time(),
         send_date__time__gte=two_hours_ago.time()
     )
+    print(filtered_notifications)
+    print(current_time)
+    print(current_time.date())
+    print(current_time.time())
+    print(two_hours_ago.time())
 
 
     for notification in filtered_notifications:
@@ -73,7 +78,7 @@ def send_permanent_notification_task():
             'receipt_time': receipt_time_str,
         }
 
-        r = redis.Redis(host='localhost', port=6379, db=0)
+        r = redis.Redis(host='redis', port=6379, db=0)
 
         data_bytes = r.hgetall('user_connections')
         data = {}
@@ -132,7 +137,7 @@ def send_temporary_notification_task():
             'receipt_time': receipt_time_str,
         }
 
-        r = redis.Redis(host='localhost', port=6379, db=0)
+        r = redis.Redis(host='redis', port=6379, db=0)
 
         data_bytes = r.hgetall('user_connections')
         data = {}
