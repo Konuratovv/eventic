@@ -113,9 +113,10 @@ class DetailOrganizer(RetrieveAPIView):
     queryset = Organizer.objects.all()
 
     def get(self, request, *args, **kwargs):
-        user = self.request.user.baseprofile.user
         organizer = self.get_object()
-        serialized_data = self.get_serializer(organizer, context={'user': user, 'request': request}).data
+        followed_organizers = FollowOrg.objects.filter(user=self.request.user.baseprofile.user)
+        org_objects_list = [follow.organizer for follow in followed_organizers]
+        serialized_data = self.get_serializer(organizer, context={'followed_organizers': org_objects_list, 'request': request}).data
         return Response(serialized_data)
 
 

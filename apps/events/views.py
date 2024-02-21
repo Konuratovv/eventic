@@ -13,6 +13,7 @@ from .models import BaseEvent, PermanentEvent, TemporaryEvent
 from apps.profiles.serializer import MainBaseEventSerializer, AllMainBaseEventSerializer
 from .event_filters import EventFilter, EventTypeFilter
 from ..locations.models import Address, Country, Region, City
+from ..notifications.models import FollowOrg
 from ..profiles.models import User, Organizer
 from ..profiles.serializer import LastViewedEventReadSerializer
 from django.core.exceptions import ObjectDoesNotExist
@@ -43,7 +44,9 @@ class EventDetailAPIView(generics.RetrieveAPIView):
 
     def get(self, request, pk):
         event = BaseEvent.objects.get(id=pk)
-        serializer = self.get_serializer(event)
+        followed_organizers = FollowOrg.objects.filter(user=self.request.user.baseprofile.user)
+        org_objects_list = [follow.organizer for follow in followed_organizers]
+        serializer = self.get_serializer(event, context={'followed_organizers': org_objects_list, 'request': request})
         return Response(serializer.data)
 
 

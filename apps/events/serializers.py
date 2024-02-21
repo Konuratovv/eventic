@@ -106,7 +106,7 @@ class OrganizerSerializer(serializers.ModelSerializer):
         fields = ('id', 'title', 'profile_picture', 'back_img', 'is_followed',)
 
     def get_is_followed(self, obj):
-        return obj in self.context.get('request').user.baseprofile.user.organizers.all()
+        return obj in self.context.get('followed_organizers')
 
 
 class DetailEventSerializer(serializers.ModelSerializer):

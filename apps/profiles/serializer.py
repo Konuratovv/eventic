@@ -3,6 +3,7 @@ from apps.events.models import BaseEvent, EventDate, Interests, PermanentEventDa
 from apps.events.serializers import EventBannerSerializer, InterestSerializer, CategorySerializer
 from apps.locations.models import Address
 from apps.locations.serializers import CitySerializer
+from apps.notifications.models import FollowOrg
 from apps.profiles.models import Organizer, ViewedEvent, PhoneNumber, SocialLink, OrganizerAddress
 
 from apps.profiles.models import User
@@ -251,7 +252,7 @@ class OrganizerDetailSerializer(ModelSerializer):
         return serializer.data
 
     def get_is_followed(self, organizer):
-        return organizer in self.context.get('user').organizers.all()
+        return organizer in self.context.get('followed_organizers')
 
 
 class LastViewedEventSerializer(serializers.ModelSerializer):
@@ -299,8 +300,8 @@ class AllMainBaseEventSerializer(serializers.ModelSerializer):
 
 class FollowOrganizerSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User
-        fields = ['organizers']
+        model = FollowOrg
+        fields = ['organizer']
 
 
 class GoogleOAuthSerializer(serializers.Serializer):
