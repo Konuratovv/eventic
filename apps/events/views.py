@@ -72,6 +72,15 @@ class EventListAPIView(generics.ListAPIView):
             queryset = queryset.filter(city=user.city)
         return queryset
 
+    def get_serializer_context(self):
+        followed_organizers = FollowOrg.objects.filter(user=self.request.user.baseprofile.user)
+        org_objects_list = [follow.organizer for follow in followed_organizers]
+        context = super().get_serializer_context()
+        context['followed_organizers'] = org_objects_list
+        context['request'] = self.request
+        return context
+
+
 
 class EventTypeFilterAPIView(generics.ListAPIView):
     """
