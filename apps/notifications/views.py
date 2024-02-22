@@ -6,8 +6,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.generics import GenericAPIView
 from django.core.exceptions import ObjectDoesNotExist
 
-from .models import FollowPerm, FollowTemp, PermanentNotification, TemporaryNotification
-from .serializers import PermanentNotificationSerializer, TemporaryNotificationSerializer
+from .models import FollowPerm, FollowTemp, PermanentNotification, TemporaryNotification, BaseNotification
+from .serializers import PermanentNotificationSerializer, TemporaryNotificationSerializer, ViewNotificationSerializer
 from ..events.models import EventDate, PermanentEventDays, PermanentEvent, TemporaryEvent
 
 from constants import weekday_mapping
@@ -167,3 +167,31 @@ class TemporaryNotificationAPIView(mixins.CreateModelMixin, mixins.DestroyModelM
             followed_temp.delete()
             return Response({'status': 'success'})
         return Response({'status': 'you are not followed'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ViewedNotificationAPIView(mixins.UpdateModelMixin, mixins.DestroyModelMixin, GenericAPIView):
+    serializer_class = ViewNotificationSerializer
+
+    def patch(self, request, *args, **kwargs):
+        try:
+            notification = BaseNotification.objects.get(id=self.request.data.get('notification_id'))
+            if not notification.is_seen:
+                notification.is_seen = True
+                notification.save()
+                return Response({'status': 'success'})
+            else:
+                return Response({'status': 'notification is viewed'}, status=status.HTTP_400_BAD_REQUEST)
+        except ObjectDoesNotExist:
+            return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, *args, **kwargs):
+        try:
+            notification = BaseNotification.objects.get(id=self.request.data.get('notification_id'))
+            if notification.is_seen:
+                notification.is_seen = False
+                notification.save()
+                return Response({'status': 'success'})
+            else:
+                return Response({'status': 'notification is not viewed'}, status=status.HTTP_400_BAD_REQUEST)
+        except ObjectDoesNotExist:
+            return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)

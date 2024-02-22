@@ -200,7 +200,7 @@ class EventTypeListAPIView(ListAPIView):
             'event__permanentevent'
         ).prefetch_related(
             'event__banners',
-            'event__permanentevent__weeks__event_week',
+            'event__permanentevent__weeks',
             'event__temporaryevent__dates'
         ).order_by('-timestamp')[:15]
         serializer_data = LastViewedEventReadSerializer(

@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-+!gfq7wg)y_*innav%(2+6gq*s0+&on!yx4vw@8y$rvvsqjb%7
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 if DEBUG:
-    from .production import *
+    from .development import *
 else:
     from .production import *
 
@@ -214,6 +214,14 @@ CELERY_BEAT_SCHEDULE = {
     },
     'send_temporary_notification_task': {
         'task': 'apps.notifications.tasks.send_temporary_notification_task',
+        'schedule': 10,
+    },
+    'send_new_event_notification_task': {
+        'task': 'apps.notifications.tasks.new_event_notification',
+        'schedule': 10,
+    },
+    'cleanup_not_verified_users': {
+        'task': 'apps.notifications.tasks.cleanup_not_verified_users',
         'schedule': 10,
     },
 }
