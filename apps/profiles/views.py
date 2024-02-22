@@ -116,7 +116,8 @@ class DetailOrganizer(RetrieveAPIView):
         organizer = self.get_object()
         followed_organizers = FollowOrg.objects.filter(user=self.request.user.baseprofile.user)
         org_objects_list = [follow.organizer for follow in followed_organizers]
-        serialized_data = self.get_serializer(organizer, context={'followed_organizers': org_objects_list, 'request': request}).data
+        serialized_data = self.get_serializer(organizer, context={'followed_organizers': org_objects_list,
+                                                                  'request': request}).data
         return Response(serialized_data)
 
 
@@ -289,7 +290,6 @@ class AllOrganizerListAPIView(ListAPIView):
         queryset = Organizer.objects.filter(
             city__city_name=user_city
         )
-
         return self.paginate_queryset(queryset)
 
     def get(self, request, *args, **kwargs):
@@ -299,7 +299,7 @@ class AllOrganizerListAPIView(ListAPIView):
             self.get_queryset(),
             many=True,
             context={'request': request, 'followed_organizers': org_objects_list}
-          ).data
+        ).data
         return self.get_paginated_response(serialized_data)
 
 
@@ -311,13 +311,14 @@ class FilterOrganizerAPIView(ListAPIView):
     filterset_class = OrganizerFilter
     search_fields = ['title']
 
-    def get_serializer_context(self):
+    def get(self, request, *args, **kwargs):
+        filtered_queryset = self.filter_queryset(self.get_queryset()).distinct()
         followed_organizers = FollowOrg.objects.filter(user=self.request.user.baseprofile.user)
         org_objects_list = [follow.organizer for follow in followed_organizers]
-        context = super().get_serializer_context()
-        context['followed_organizers'] = org_objects_list
-        context['request'] = self.request
-        return context
+        serialized_data = self.get_serializer(
+            filtered_queryset, many=True,
+            context={'followed_organizers': org_objects_list, 'request': request}).data
+        return Response(serialized_data)
 
 
 class ChangeUserNameAPIView(UpdateModelMixin, GenericAPIView):

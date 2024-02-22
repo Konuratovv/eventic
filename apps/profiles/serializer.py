@@ -72,7 +72,7 @@ class MainOrganizerSerializer(ModelSerializer):
 
     class Meta:
         model = Organizer
-        fields = ['id', 'is_followed', 'profile_picture', 'title']
+        fields = ['id', 'profile_picture', 'title', 'is_followed']
 
     def get_is_followed(self, organizer):
         return organizer in self.context.get('followed_organizers')

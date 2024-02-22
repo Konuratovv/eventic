@@ -72,6 +72,17 @@ class EventListAPIView(generics.ListAPIView):
             queryset = queryset.filter(city=user.city)
         return queryset
 
+    def get(self, request, *args, **kwargs):
+        filtered_data = self.filter_queryset(self.get_queryset()).distinct()
+        followed_organizers = FollowOrg.objects.filter(user=self.request.user.baseprofile.user)
+        org_objects_list = [follow.organizer for follow in followed_organizers]
+        serialized_data = self.get_serializer(
+            filtered_data,
+            many=True,
+            context={'request': request, 'followed_organizers': org_objects_list}
+        ).data
+        return Response(serialized_data)
+
     def get_serializer_context(self):
         followed_organizers = FollowOrg.objects.filter(user=self.request.user.baseprofile.user)
         org_objects_list = [follow.organizer for follow in followed_organizers]
@@ -79,7 +90,6 @@ class EventListAPIView(generics.ListAPIView):
         context['followed_organizers'] = org_objects_list
         context['request'] = self.request
         return context
-
 
 
 class EventTypeFilterAPIView(generics.ListAPIView):
@@ -263,7 +273,8 @@ class AllPermEventsListAPIView(ListAPIView):
             city=user_city,
         )
         return queryset
-    
+
+
 class AllPopularEventsListAPIView(ListAPIView):
     serializer_class = AllMainBaseEventSerializer
     permission_classes = [IsAuthenticated]
@@ -276,6 +287,7 @@ class AllPopularEventsListAPIView(ListAPIView):
             city=user_city
         ).order_by('-followers')
         return queryset
+
 
 class OrganizerEventsAPIView(ListAPIView):
     serializer_class = AllMainBaseEventSerializer

@@ -65,16 +65,15 @@ class CityAddressSerializer(serializers.ModelSerializer):
 
 
 class PermanentEventWeeksSerializer(serializers.ModelSerializer):
-    weeks = EventWeekSerializer(many=True, read_only=True)
 
     class Meta:
-        model = PermanentEvent
-        fields = ['weeks']
+        model = PermanentEventDays
+        fields = '__all__'
 
 
 class OrganizerEventSerializer(serializers.ModelSerializer):
     event_dates = EventDateSerializer(many=True, source='temporaryevent.dates')
-    event_weeks = PermanentEventWeeksSerializer(source='permanentevent', read_only=True)
+    event_weeks = PermanentEventWeeksSerializer(many=True, source='permanentevent.weeks')
     banners = EventBannerSerializer(many=True, read_only=True)
     event_type = serializers.SerializerMethodField()
 
