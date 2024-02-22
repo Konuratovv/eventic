@@ -248,12 +248,12 @@ class OrganizerDetailSerializer(ModelSerializer):
 
         for event in events:
             interests.extend(event.interests.all())
+        interests = list(set(interests))
         serializer = InterestSerializer(interests, many=True)
         return serializer.data
 
     def get_is_followed(self, organizer):
         return organizer in self.context.get('followed_organizers')
-
 
 class LastViewedEventSerializer(serializers.ModelSerializer):
     class Meta:
