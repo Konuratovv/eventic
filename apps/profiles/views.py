@@ -3,6 +3,7 @@ from django.utils import timezone
 from django.utils.crypto import constant_time_compare, get_random_string
 from google.oauth2 import id_token
 from google.auth.transport import requests
+import jwt
 
 from rest_framework import status
 from rest_framework.generics import RetrieveAPIView, ListAPIView, CreateAPIView, DestroyAPIView, \
@@ -367,10 +368,11 @@ class AppleOAuthAPIView(CreateAPIView):
     def post(self, request, *args, **kwargs):
         first_name = self.request.data.get('first_name')
         last_name = self.request.data.get('last_name')
-        user_apple_email = self.request.data.get('email')
+        user_apple_token = self.request.data.get('apple_token')
+        decoded = jwt.decode(user_apple_token, options={"verify_signature": False})
 
         try:
-            user = User.objects.get(email=user_apple_email)
+            user = User.objects.get(email=decoded['email'])
             access_token = AccessToken.for_user(user)
             refresh_token = RefreshToken.for_user(user)
             return Response({
@@ -382,7 +384,7 @@ class AppleOAuthAPIView(CreateAPIView):
         except ObjectDoesNotExist:
             random_password = get_random_string(length=12)
             user = User.objects.create_user(
-                email=user_apple_email,
+                email=decoded['email'],
                 first_name=first_name,
                 last_name=last_name,
                 password=random_password
