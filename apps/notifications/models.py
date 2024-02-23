@@ -1,6 +1,7 @@
 from django.db import models
 
 from apps.base.models import BaseModel
+from apps.events.models import BaseEvent
 
 
 class FollowBase(BaseModel):
@@ -26,6 +27,7 @@ class FollowOrg(FollowBase):
 class BaseNotification(BaseModel):
     is_seen = models.BooleanField(default=False)
     send_date = models.DateTimeField()
+    is_sent = models.BooleanField(default=False)
 
 
 class PermanentNotification(BaseNotification):
@@ -38,3 +40,4 @@ class TemporaryNotification(BaseNotification):
 
 class OrganizationNotification(BaseNotification):
     follow = models.ForeignKey(FollowOrg, on_delete=models.CASCADE, related_name='notifications')
+    event = models.ForeignKey(BaseEvent, on_delete=models.CASCADE, related_name='notifications')

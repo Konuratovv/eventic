@@ -1,42 +1,36 @@
-from django.shortcuts import render
+from rest_framework import generics
+from rest_framework.permissions import IsAuthenticated
+from rest_framework import viewsets
 
-from rest_framework.viewsets import GenericViewSet
-from rest_framework import mixins
-# from rest_framework.permissions import IsAuthenticated
-
-from apps.invitations.models import Invitation, Recipient, Category
-from apps.invitations.permissions import InvitationPermission
-from apps.invitations.serializers import InvitationSerializer, RecipientSerializer, CategorySerializer
-
-class InvitationAPIViewSet(GenericViewSet,
-                            mixins.ListModelMixin,
-                            mixins.RetrieveModelMixin,
-                            mixins.CreateModelMixin,
-                            mixins.UpdateModelMixin,
-                            mixins.DestroyModelMixin):
-    queryset = Invitation.objects.all()
-    serializer_class = InvitationSerializer
-    permission_classes = [InvitationPermission]
+from apps.invitations.models import Category, Contact, Image
+from apps.invitations.serializers import CategorySerialzer, ContactSerializer, ImageSerializer
 
 
-class RecipientAPIViewSet(GenericViewSet,
-                            mixins.ListModelMixin,
-                            mixins.RetrieveModelMixin,
-                            mixins.CreateModelMixin,
-                            mixins.UpdateModelMixin,
-                            mixins.DestroyModelMixin):
-    queryset = Recipient.objects.all()
-    serializer_class = RecipientSerializer
-    permission_classes = [InvitationPermission]
-
-
-class CategoryAPIViewSet(GenericViewSet,
-                            mixins.ListModelMixin,
-                            mixins.RetrieveModelMixin,
-                            mixins.CreateModelMixin,
-                            mixins.UpdateModelMixin,
-                            mixins.DestroyModelMixin):
+class CategoryAPIView(generics.ListAPIView):
     queryset = Category.objects.all()
-    serializer_class = CategorySerializer
-    permission_classes = [InvitationPermission]
-    
+    serializer_class = CategorySerialzer
+    permission_classes = [IsAuthenticated]
+
+
+class ContactAPIView(generics.ListCreateAPIView):
+    serializer_class = ContactSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user.baseprofile.user
+        return Contact.objects.filter(user=user)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user.baseprofile.user)
+
+
+class ContactDeleteAPIView(generics.DestroyAPIView):
+    serializer_class = ContactSerializer
+    permission_classes = [IsAuthenticated]
+    queryset = Contact.objects.all()
+
+
+class ImageAPIView(generics.ListAPIView):
+    queryset = Image.objects.all()
+    serializer_class = ImageSerializer
+    permission_classes = [IsAuthenticated]

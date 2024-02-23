@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import EventListAPIView, EventDetailAPIView, \
+from .views import AllPopularEventsListAPIView, EventListAPIView, EventDetailAPIView, \
     EventCategoryListAPIView, EventInterestListAPIView, EventTypeListAPIView, EventTypeFilterAPIView, \
     AllEventsListAPIView, AllFreeEventsListAPIView, AllPermEventsListAPIView, \
     OrganizerEventsAPIView, EventsByInterestsAPIView, NextEventsOrgAPIView, \
@@ -17,6 +17,7 @@ urlpatterns = [
     path('types/all-events/', AllEventsListAPIView.as_view()),
     path('types/all-free-events/', AllFreeEventsListAPIView.as_view()),
     path('types/all-permanent-events/', AllPermEventsListAPIView.as_view()),
+    path('types/all-popular-events/', AllPopularEventsListAPIView.as_view()),
     path('all-organizer-events/<int:pk>/', OrganizerEventsAPIView.as_view()),
     path('all-interests-events/<int:pk>/', EventsByInterestsAPIView.as_view()),
 ]

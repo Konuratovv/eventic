@@ -116,7 +116,7 @@ class CheckResetCodeAPIView(UpdateModelMixin, GenericAPIView):
         code = self.request.data.get('code')
         email = self.request.data.get('email')
         if code is None:
-            return Response({'status': 'error'})
+            return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
         try:
             user = CustomUser.objects.get(email=email)
             if user.code == code:

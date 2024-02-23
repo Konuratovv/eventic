@@ -13,6 +13,7 @@ from .models import BaseEvent, PermanentEvent, TemporaryEvent
 from apps.profiles.serializer import MainBaseEventSerializer, AllMainBaseEventSerializer
 from .event_filters import EventFilter, EventTypeFilter
 from ..locations.models import Address, Country, Region, City
+from ..notifications.models import FollowOrg
 from ..profiles.models import User, Organizer
 from ..profiles.serializer import LastViewedEventReadSerializer
 from django.core.exceptions import ObjectDoesNotExist
@@ -43,7 +44,9 @@ class EventDetailAPIView(generics.RetrieveAPIView):
 
     def get(self, request, pk):
         event = BaseEvent.objects.get(id=pk)
-        serializer = self.get_serializer(event)
+        followed_organizers = FollowOrg.objects.filter(user=self.request.user.baseprofile.user)
+        org_objects_list = [follow.organizer for follow in followed_organizers]
+        serializer = self.get_serializer(event, context={'followed_organizers': org_objects_list, 'request': request})
         return Response(serializer.data)
 
 
@@ -68,6 +71,25 @@ class EventListAPIView(generics.ListAPIView):
         if hasattr(user, 'city') and user.city:
             queryset = queryset.filter(city=user.city)
         return queryset
+
+    def get(self, request, *args, **kwargs):
+        filtered_data = self.filter_queryset(self.get_queryset()).distinct()
+        followed_organizers = FollowOrg.objects.filter(user=self.request.user.baseprofile.user)
+        org_objects_list = [follow.organizer for follow in followed_organizers]
+        serialized_data = self.get_serializer(
+            filtered_data,
+            many=True,
+            context={'request': request, 'followed_organizers': org_objects_list}
+        ).data
+        return Response(serialized_data)
+
+    def get_serializer_context(self):
+        followed_organizers = FollowOrg.objects.filter(user=self.request.user.baseprofile.user)
+        org_objects_list = [follow.organizer for follow in followed_organizers]
+        context = super().get_serializer_context()
+        context['followed_organizers'] = org_objects_list
+        context['request'] = self.request
+        return context
 
 
 class EventTypeFilterAPIView(generics.ListAPIView):
@@ -188,7 +210,7 @@ class EventTypeListAPIView(ListAPIView):
             'event__permanentevent'
         ).prefetch_related(
             'event__banners',
-            'event__permanentevent__weeks__event_week',
+            'event__permanentevent__weeks',
             'event__temporaryevent__dates'
         ).order_by('-timestamp')[:15]
         serializer_data = LastViewedEventReadSerializer(
@@ -216,11 +238,11 @@ class AllEventsListAPIView(ListAPIView):
     pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
-        user_city = self.request.user.baseprofile.user.city.city_name
+        user_city = self.request.user.baseprofile.user.city
         queryset = BaseEvent.objects.filter(
             is_active=True,
-            city__city_name=user_city,
-        ).order_by('-followers')
+            city=user_city,
+        )
         return queryset
 
 
@@ -230,12 +252,12 @@ class AllFreeEventsListAPIView(ListAPIView):
     pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
-        user_city = self.request.user.baseprofile.user.city.city_name
+        user_city = self.request.user.baseprofile.user.city
         queryset = BaseEvent.objects.filter(
             is_active=True,
-            city__city_name=user_city,
+            city=user_city,
             price=0,
-        ).order_by('-followers')
+        )
         return queryset
 
 
@@ -245,10 +267,24 @@ class AllPermEventsListAPIView(ListAPIView):
     pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
-        user_city = self.request.user.baseprofile.user.city.city_name
+        user_city = self.request.user.baseprofile.user.city
         queryset = PermanentEvent.objects.filter(
             is_active=True,
-            city__city_name=user_city,
+            city=user_city,
+        )
+        return queryset
+
+
+class AllPopularEventsListAPIView(ListAPIView):
+    serializer_class = AllMainBaseEventSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = LimitOffsetPagination
+
+    def get_queryset(self):
+        user_city = self.request.user.baseprofile.user.city
+        queryset = BaseEvent.objects.filter(
+            is_active=True,
+            city=user_city
         ).order_by('-followers')
         return queryset
 
@@ -259,12 +295,12 @@ class OrganizerEventsAPIView(ListAPIView):
     pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
-        user_city = self.request.user.baseprofile.user.city.city_name
+        user_city = self.request.user.baseprofile.user.city
         organizer_id = self.kwargs.get('pk')
 
         queryset = BaseEvent.objects.filter(
             organizer__id=organizer_id,
-            city__city_name=user_city,
+            city=user_city,
             is_active=True
         ).order_by('-followers')
 
@@ -277,14 +313,14 @@ class EventsByInterestsAPIView(ListAPIView):
     pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
-        user_city = self.request.user.baseprofile.user.city.city_name
+        user_city = self.request.user.baseprofile.user.city
         event_id = self.kwargs.get('pk')
         try:
             event = BaseEvent.objects.get(id=event_id)
 
             queryset = BaseEvent.objects.filter(
                 interests__in=event.interests.all(),
-                city__city_name=user_city,
+                city=user_city,
                 is_active=True,
             ).exclude(pk=event_id)
 

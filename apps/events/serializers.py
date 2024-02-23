@@ -65,16 +65,15 @@ class CityAddressSerializer(serializers.ModelSerializer):
 
 
 class PermanentEventWeeksSerializer(serializers.ModelSerializer):
-    weeks = EventWeekSerializer(many=True, read_only=True)
 
     class Meta:
-        model = PermanentEvent
-        fields = ['weeks']
+        model = PermanentEventDays
+        fields = '__all__'
 
 
 class OrganizerEventSerializer(serializers.ModelSerializer):
     event_dates = EventDateSerializer(many=True, source='temporaryevent.dates')
-    event_weeks = PermanentEventWeeksSerializer(source='permanentevent', read_only=True)
+    event_weeks = PermanentEventWeeksSerializer(many=True, source='permanentevent.weeks')
     banners = EventBannerSerializer(many=True, read_only=True)
     event_type = serializers.SerializerMethodField()
 
@@ -103,10 +102,10 @@ class OrganizerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Organizer
-        fields = ('id', 'title', 'profile_picture', 'back_img', 'is_followed',)
+        fields = ('id', 'title', 'profile_picture', 'back_img', 'is_followed')
 
     def get_is_followed(self, obj):
-        return obj in self.context.get('request').user.baseprofile.user.organizers.all()
+        return obj in self.context.get('followed_organizers')
 
 
 class DetailEventSerializer(serializers.ModelSerializer):

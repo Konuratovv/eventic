@@ -16,6 +16,7 @@ from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 
 from apps.events.models import BaseEvent, PermanentEvent
 from apps.locations.models import City, Country, Region
+from apps.notifications.models import FollowOrg
 from apps.profiles.models import User, Organizer, ViewedEvent
 from apps.profiles.organizer_filter import OrganizerFilter
 from apps.profiles.serializer import ListOrginizerSerializer, UpdateCitySerializer, ProfileSerializer, \
@@ -34,7 +35,7 @@ class ProfileViewSet(RetrieveAPIView):
 
     def get(self, request, *args, **kwargs):
         user = self.request.user.baseprofile.user
-        followed_organizers = user.organizers.count()
+        followed_organizers = FollowOrg.objects.filter(user=user).count()
         favourites = user.favourites.count()
         serialized_data = self.get_serializer(user).data
         serialized_data['followed_organizers'] = followed_organizers
@@ -54,10 +55,10 @@ class FollowOrganizerAPIView(CreateAPIView):
             return Response({'status': 'organizer is not found'})
 
         try:
-            user.organizers.get(title=organizer.title)
+            FollowOrg.objects.get(organizer=organizer)
             return Response({'status': 'already followed'})
         except ObjectDoesNotExist:
-            user.organizers.add(organizer)
+            FollowOrg.objects.create(organizer=organizer, user=user)
             organizer.followers += 1
             user.save()
             organizer.save()
@@ -75,8 +76,8 @@ class UnFollowOrganizerAPIView(DestroyModelMixin, GenericAPIView):
         except ObjectDoesNotExist:
             return Response({'status': 'Organizer is not found'}, status=status.HTTP_400_BAD_REQUEST)
         try:
-            user.organizers.get(title=organizer.title)
-            user.organizers.remove(organizer)
+            follow = FollowOrg.objects.get(organizer=organizer)
+            follow.delete()
             organizer.followers -= 1
             user.save()
             organizer.save()
@@ -96,11 +97,12 @@ class OrganizerListAPIView(ListAPIView):
         except ObjectDoesNotExist:
             return Response({'status': 'user is not found'})
         organizers = Organizer.objects.order_by('-followers').filter(city__city_name=user.city).distinct()[:15]
-        followed_organizers = user.organizers.all()
+        followed_organizers = FollowOrg.objects.filter(user=user)
+        org_objects_list = [follow.organizer for follow in followed_organizers]
         serialized_data = self.get_serializer(
             organizers,
             many=True,
-            context={'request': request, 'followed_organizer': followed_organizers}
+            context={'request': request, 'followed_organizers': org_objects_list}
         ).data
 
         return Response(serialized_data)
@@ -112,9 +114,11 @@ class DetailOrganizer(RetrieveAPIView):
     queryset = Organizer.objects.all()
 
     def get(self, request, *args, **kwargs):
-        user = self.request.user.baseprofile.user
         organizer = self.get_object()
-        serialized_data = self.get_serializer(organizer, context={'user': user, 'request': request}).data
+        followed_organizers = FollowOrg.objects.filter(user=self.request.user.baseprofile.user)
+        org_objects_list = [follow.organizer for follow in followed_organizers]
+        serialized_data = self.get_serializer(organizer, context={'followed_organizers': org_objects_list,
+                                                                  'request': request}).data
         return Response(serialized_data)
 
 
@@ -152,14 +156,15 @@ class SubscribersUserAPIView(ListAPIView):
 
     def get_queryset(self):
         user = User.objects.get(id=self.request.user.id)
-        subscribers_obj = user.organizers.all()
-        return subscribers_obj
+        subscribers_obj = FollowOrg.objects.filter(user=user)
+        org_objects_list = [follow.organizer for follow in subscribers_obj]
+        return org_objects_list
 
     def get(self, request, *args, **kwargs):
         page = self.paginate_queryset(self.get_queryset())
         serializer_data = self.get_serializer(
             page,
-            context={'followed_organizer': self.get_queryset(), 'request': request},
+            context={'followed_organizers': self.get_queryset(), 'request': request},
             many=True).data
         return self.get_paginated_response(serializer_data)
 
@@ -286,8 +291,17 @@ class AllOrganizerListAPIView(ListAPIView):
         queryset = Organizer.objects.filter(
             city__city_name=user_city
         )
+        return self.paginate_queryset(queryset)
 
-        return queryset
+    def get(self, request, *args, **kwargs):
+        followed_organizers = FollowOrg.objects.filter(user=self.request.user.baseprofile.user)
+        org_objects_list = [follow.organizer for follow in followed_organizers]
+        serialized_data = self.get_serializer(
+            self.get_queryset(),
+            many=True,
+            context={'request': request, 'followed_organizers': org_objects_list}
+        ).data
+        return self.get_paginated_response(serialized_data)
 
 
 class FilterOrganizerAPIView(ListAPIView):
@@ -297,6 +311,15 @@ class FilterOrganizerAPIView(ListAPIView):
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_class = OrganizerFilter
     search_fields = ['title']
+
+    def get(self, request, *args, **kwargs):
+        filtered_queryset = self.filter_queryset(self.get_queryset()).distinct()
+        followed_organizers = FollowOrg.objects.filter(user=self.request.user.baseprofile.user)
+        org_objects_list = [follow.organizer for follow in followed_organizers]
+        serialized_data = self.get_serializer(
+            filtered_queryset, many=True,
+            context={'followed_organizers': org_objects_list, 'request': request}).data
+        return Response(serialized_data)
 
 
 class ChangeUserNameAPIView(UpdateModelMixin, GenericAPIView):

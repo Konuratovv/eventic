@@ -3,7 +3,8 @@ from apps.events.models import BaseEvent, EventDate, Interests, PermanentEventDa
 from apps.events.serializers import EventBannerSerializer, InterestSerializer, CategorySerializer
 from apps.locations.models import Address
 from apps.locations.serializers import CitySerializer
-from apps.profiles.models import Organizer, ViewedEvent, PhoneNumber, SocialLink
+from apps.notifications.models import FollowOrg
+from apps.profiles.models import Organizer, ViewedEvent, PhoneNumber, SocialLink, OrganizerAddress
 
 from apps.profiles.models import User
 from rest_framework.serializers import ModelSerializer
@@ -60,15 +61,21 @@ class SocialLinkSerializer(ModelSerializer):
         fields = '__all__'
 
 
+class OrganizerAddressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrganizerAddress
+        fields = '__all__'
+
+
 class MainOrganizerSerializer(ModelSerializer):
     is_followed = serializers.SerializerMethodField()
 
     class Meta:
         model = Organizer
-        fields = ['id', 'is_followed', 'profile_picture', 'title']
+        fields = ['id', 'profile_picture', 'title', 'is_followed']
 
     def get_is_followed(self, organizer):
-        return organizer in self.context.get('request').user.baseprofile.user.organizers.all()
+        return organizer in self.context.get('followed_organizers')
 
 
 class ListOrginizerSerializer(ModelSerializer):
@@ -79,7 +86,7 @@ class ListOrginizerSerializer(ModelSerializer):
         fields = ['id', 'is_followed', 'profile_picture', 'title']
 
     def get_is_followed(self, organizer):
-        return organizer in self.context.get('request').user.baseprofile.user.organizers.all()
+        return organizer in self.context.get('followed_organizers')
 
 
 class FollowEventSerializer(ModelSerializer):
@@ -215,13 +222,25 @@ class DetailBaseEventSerializer(serializers.ModelSerializer):
 class OrganizerDetailSerializer(ModelSerializer):
     phone_numbers = PhoneNumberSerializer(many=True)
     social_links = SocialLinkSerializer(many=True)
+    addresses = OrganizerAddressSerializer(many=True)
     interests = serializers.SerializerMethodField()
     is_followed = serializers.SerializerMethodField()
 
     class Meta:
         model = Organizer
-        exclude = ['code', 'password', 'groups', 'user_permissions', 'last_login', 'is_superuser', 'is_staff',
-                   'is_verified', 'followers']
+        fields = [
+            'id',
+            'title',
+            'email',
+            'profile_picture',
+            'back_img',
+            'description',
+            'is_followed',
+            'phone_numbers',
+            'social_links',
+            'addresses',
+            'interests'
+        ]
 
     def get_interests(self, organizer):
         events = BaseEvent.objects.filter(organizer=organizer)
@@ -229,12 +248,12 @@ class OrganizerDetailSerializer(ModelSerializer):
 
         for event in events:
             interests.extend(event.interests.all())
+        interests = list(set(interests))
         serializer = InterestSerializer(interests, many=True)
         return serializer.data
 
     def get_is_followed(self, organizer):
-        return organizer in self.context.get('user').organizers.all()
-
+        return organizer in self.context.get('followed_organizers')
 
 class LastViewedEventSerializer(serializers.ModelSerializer):
     class Meta:
@@ -281,8 +300,8 @@ class AllMainBaseEventSerializer(serializers.ModelSerializer):
 
 class FollowOrganizerSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User
-        fields = ['organizers']
+        model = FollowOrg
+        fields = ['organizer']
 
 
 class GoogleOAuthSerializer(serializers.Serializer):
