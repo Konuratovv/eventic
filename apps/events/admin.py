@@ -32,7 +32,7 @@ class EventBannerInline(admin.TabularInline):
 
 class EventDateInline(admin.TabularInline):
     model = EventDate
-    exclude = ['is_notified', 'is_active']
+    exclude = ['is_notified', 'is_active', 'uniq_int']
     extra = 1
     formset = RequiredInlineFormSet
 
@@ -41,16 +41,6 @@ class EventDateInline(admin.TabularInline):
             return 0
         return super().get_extra(request, obj, **kwargs)
 
-    def get_formset(self, request, obj=None, **kwargs):
-        formset = super().get_formset(request, obj, **kwargs)
-
-        class CustomFormset(formset):
-            def __init__(self, *args, **kwargs):
-                super().__init__(*args, **kwargs)
-                # Устанавливаем значение по умолчанию для поля is_active на True
-                self.forms[0].instance.is_active = True
-
-        return CustomFormset
 
 
 class PermanentEventDaysInline(admin.TabularInline):

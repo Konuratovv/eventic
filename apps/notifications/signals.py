@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 from django.db.models.signals import post_save
-from django.dispatch import receiver, Signal
+from django.dispatch import receiver
 from django.utils import timezone
 
 from apps.events.models import PermanentEvent, PermanentEventDays, EventDate
@@ -60,23 +60,32 @@ def send_permanent_event_notification(sender, instance, created, **kwargs):
             )
 
 
+# @receiver(pre_save, sender=EventDate)
+# def send_temporary_event_notification_pre_save(sender, instance, **kwargs):
+#     start_date = instance.date
+#     end_time = instance.end_time
+#     end_date_time = datetime.combine(start_date, end_time)
+#     countdown_seconds = (end_date_time - datetime.now()).total_seconds()
+#     status_switcher.apply_async(args=(instance.id,), countdown=countdown_seconds)
+
+
 @receiver(post_save, sender=EventDate)
-def send_temporary_event_notification(sender, instance, created, **kwargs):
-    if created:
-        follows_org = FollowOrg.objects.filter(organizer=instance.temp.organizer)
-        event_date = instance.date
-        start_time = instance.start_time
+def send_temporary_event_notification_post_save(sender, instance, **kwargs):
 
-        combined_datetime = datetime.combine(event_date, start_time)
-        send_datetime = combined_datetime - timedelta(hours=7)
-        send_datetime_aware = timezone.make_aware(send_datetime)
+    follows_org = FollowOrg.objects.filter(organizer=instance.temp.organizer)
+    event_date = instance.date
+    start_time = instance.start_time
 
-        for follow in follows_org:
-            OrganizationNotification.objects.create(
-                follow=follow,
-                event=instance.temp,
-                send_date=send_datetime_aware
-            )
+    combined_datetime = datetime.combine(event_date, start_time)
+    send_datetime = combined_datetime - timedelta(hours=7)
+    send_datetime_aware = timezone.make_aware(send_datetime)
+
+    for follow in follows_org:
+        OrganizationNotification.objects.create(
+            follow=follow,
+            event=instance.temp,
+            send_date=send_datetime_aware
+        )
 
 # @receiver(post_save, sender=EventWeek)
 # def update_notif(sender, instance, created, **kwargs):

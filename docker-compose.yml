@@ -13,7 +13,6 @@ services:
       - postgres
       - migration
     volumes:
-      - .:/app
       - static_volume:/usr/src/app/static
       - media_volume:/usr/src/app/media
 #    environment:
@@ -35,8 +34,6 @@ services:
   migration:
     build: .
     command: sh -c "python manage.py makemigrations && python manage.py migrate"
-    volumes:
-      - .:/usr/src/app
     depends_on:
       - postgres
 
@@ -77,8 +74,6 @@ services:
     build: .
     command: celery -A config worker -l INFO
 
-    volumes:
-      - .:/usr/src/app/
     depends_on:
       - api
       - redis

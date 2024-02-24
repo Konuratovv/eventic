@@ -1,10 +1,6 @@
-from datetime import timedelta, datetime
-
-from django.utils.timezone import make_naive, get_current_timezone, make_aware
-
-from apps.events.models import BaseEvent
-from apps.notifications.consumers import NotificationConsumer
-
+from datetime import timedelta
+from django.core.exceptions import ObjectDoesNotExist
+from apps.events.models import BaseEvent, EventDate
 from celery import shared_task
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
@@ -12,15 +8,10 @@ from django.conf import settings
 from django.core.mail import send_mail
 from django.utils import timezone
 from django.utils.crypto import get_random_string
-
 from apps.notifications.models import TemporaryNotification, PermanentNotification, OrganizationNotification
 from apps.profiles.models import User
-from apps.profiles.serializer import ProfileSerializer
 from apps.users.models import CustomUser
 import redis
-
-import json
-
 
 @shared_task
 def send_verification_mail_task(email):
@@ -263,5 +254,26 @@ def new_event_notification():
 
 
 @shared_task
-def cleanup_not_verified_users():
+def cleanup_not_verified_users_and_old_views_user():
     not_verified_users = User.objects.filter(is_verified=False)
+    fifteen_minutes_ago = timezone.now() - timedelta(minutes=15)
+    users_to_delete = not_verified_users.filter(created_at__lte=fifteen_minutes_ago)
+    users_to_delete.delete()
+
+    users = User.objects.all()
+    for user in users:
+        user_views = user.user_views.order_by('-tamestamp')
+        stale_views = user_views[15:]
+        stale_views.delete()
+
+
+@shared_task
+def status_switcher(event_date_uid):
+    try:
+        event_date = EventDate.objects.get(uid=event_date_uid)
+        print(event_date)
+        event_date.save()
+    except ObjectDoesNotExist:
+        print(f'айдишка{event_date_uid}')
+        print('таск не работает')
+        return None

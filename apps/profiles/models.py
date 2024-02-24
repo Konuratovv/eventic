@@ -20,6 +20,7 @@ class User(BaseProfile):
     first_name = models.CharField(max_length=155)
     last_name = models.CharField(max_length=255)
     last_viewed_events = models.ManyToManyField('ViewedEvent', related_name='users', blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         verbose_name = 'Пользователь'
@@ -90,7 +91,7 @@ class SocialLink(models.Model):
 
 
 class ViewedEvent(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_views')
     event = models.ForeignKey(BaseEvent, on_delete=models.CASCADE)
     timestamp = models.DateTimeField(auto_now=True)
 

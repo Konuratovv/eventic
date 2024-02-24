@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Category, EventDate, BaseEvent, Interests, EventBanner, PermanentEvent, PermanentEventDays
+from .models import Category, EventDate, BaseEvent, Interests, EventBanner, PermanentEvent, PermanentEventDays, Language
 
 from ..locations.models import City
 from ..locations.serializers import CitySerializer
@@ -65,7 +65,6 @@ class CityAddressSerializer(serializers.ModelSerializer):
 
 
 class PermanentEventWeeksSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = PermanentEventDays
         fields = '__all__'
@@ -108,17 +107,24 @@ class OrganizerSerializer(serializers.ModelSerializer):
         return obj in self.context.get('followed_organizers')
 
 
+class EventLanguageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Language
+        fields = '__all__'
+
+
 class DetailEventSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
     interests = InterestSerializer(many=True)
     banners = EventBannerSerializer(many=True)
     organizer = OrganizerSerializer(read_only=True)
-    event_dates = EventDateSerializer(many=True, source='temporaryevent.dates')
+    event_dates = serializers.SerializerMethodField()
     event_weeks = EventWeekSerializer(many=True, source='permanentevent.weeks')
     event_type = serializers.SerializerMethodField(read_only=True)
     is_free = serializers.SerializerMethodField(read_only=True)
     average_time = serializers.SerializerMethodField()
     is_favourite = serializers.SerializerMethodField()
+    language = EventLanguageSerializer(many=True)
 
     class Meta:
         model = BaseEvent
@@ -137,8 +143,18 @@ class DetailEventSerializer(serializers.ModelSerializer):
             'organizer',
             'address',
             'is_favourite',
-            'event_dates'
+            'event_dates',
+            'language'
         )
+
+    def get_event_dates(self, event):
+        if hasattr(event, 'temporaryevent'):
+            event_dates = EventDate.objects.filter(is_active=True)
+            serialized_data = EventDateSerializer(
+                event_dates,
+                many=True,
+                context={'request': self.context.get('request')}).data
+            return serialized_data
 
     def get_is_favourite(self, event):
         return event in self.context.get('request').user.baseprofile.user.favourites.all()

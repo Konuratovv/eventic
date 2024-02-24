@@ -23,7 +23,7 @@ from apps.profiles.serializer import ListOrginizerSerializer, UpdateCitySerializ
     FollowEventSerializer, LastViewedEventSerializer, MainOrganizerSerializer, OrganizerDetailSerializer, \
     DetailBaseEventSerializer, UserFavouritesSerializer, ChangeUserPictureSerializer, ChangeProfileNamesSerializer, \
     ChangeUserPasswordSerializer, FollowOrganizerSerializer, GoogleOAuthSerializer, \
-    AppleOAuthSerializer
+    AppleOAuthSerializer, DeleteUserSerializer
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.core.exceptions import ObjectDoesNotExist
@@ -441,3 +441,16 @@ class AutoParseGeneration(CreateAPIView):
                 title=fake.title(),
                 price=fake.number(),
             )
+
+
+class DeleteUserAPIView(DestroyAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = DeleteUserSerializer
+
+    def delete(self, request, *args, **kwargs):
+        try:
+            user = self.request.user.baseprofile.user
+            user.delete()
+            return Response({'status': 'success'})
+        except ObjectDoesNotExist:
+            return Response({'status': 'user is not found'}, status=status.HTTP_400_BAD_REQUEST)

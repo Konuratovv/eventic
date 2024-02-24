@@ -1,4 +1,10 @@
+from datetime import datetime, timedelta
+from uuid import uuid4
+
+import shortuuid
 from django.db import models
+from django.db.models import BigAutoField
+from django.utils import timezone
 
 from apps.base.models import nb, GetOrNoneManager
 
@@ -48,7 +54,7 @@ class Language(models.Model):
 class BaseEvent(models.Model):
     """ Базовая модель мероприятии """
     title = models.CharField(max_length=60, verbose_name="Заголовок")
-    description = models.TextField(verbose_name="Описание", max_length=350)
+    description = models.TextField(verbose_name="Описание", max_length=500)
     language = models.ManyToManyField(Language, verbose_name="Язык", related_name="event_language")
     price = models.DecimalField(max_digits=7, decimal_places=2, verbose_name="Цена")
     category = models.ForeignKey(Category, verbose_name="Категория", on_delete=models.SET_NULL,
@@ -113,7 +119,30 @@ class EventDate(EventTime):
                              verbose_name='Выберите временное событие')
     date = models.DateField(verbose_name="Укажите дату начала события")
     is_active = models.BooleanField(default=False)
+
+    uid = models.UUIDField(default=uuid4, editable=False, unique=True)
+
     objects = GetOrNoneManager()
+
+    def save(self, *args, **kwargs):
+        from apps.notifications.tasks import status_switcher
+        current_datetime = timezone.now()
+        end_datetime = timezone.datetime.combine(self.date, self.end_time)
+        print('ничего не работает')
+
+        if self.date >= current_datetime.date() and end_datetime.time() > current_datetime.time():
+            print('True работает')
+            self.is_active = True
+            start_date = self.date
+            end_time = self.end_time
+            end_date_time = datetime.combine(start_date, end_time)
+            countdown_seconds = (end_date_time - datetime.now()).total_seconds()
+            print(f'объект {vars(self)}')
+            status_switcher.apply_async(args=(self.uid,), countdown=countdown_seconds)
+        else:
+            self.is_active = False
+            print('false работает')
+        super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = 'Дата и время мероприятия'
@@ -143,7 +172,7 @@ class PermanentEventDays(EventTime):
         verbose_name='Выберите постоянное событие',
         related_name='weeks',
         on_delete=models.CASCADE
-   )
+    )
     event_week = models.CharField(verbose_name='День недели', choices=week_days, max_length=2)
 
     class Meta:

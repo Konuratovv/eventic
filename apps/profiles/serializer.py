@@ -255,6 +255,7 @@ class OrganizerDetailSerializer(ModelSerializer):
     def get_is_followed(self, organizer):
         return organizer in self.context.get('followed_organizers')
 
+
 class LastViewedEventSerializer(serializers.ModelSerializer):
     class Meta:
         model = ViewedEvent
@@ -321,3 +322,9 @@ class SendChangeEmailCodeSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = ['code']
+
+
+class DeleteUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = '__all__'

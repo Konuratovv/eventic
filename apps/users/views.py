@@ -25,22 +25,34 @@ class RegisterAPIView(CreateAPIView):
     permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+        try:
+            user = User.objects.get(email=self.request.data.get('email'))
+            user.first_name = self.request.data.get('first_name')
+            user.last_name = self.request.data.get('last_name')
+            if constant_time_compare(self.request.data.get('password'), self.request.data.get('confirm_password')):
+                user.password = make_password(self.request.data.get('password'))
+                user.save()
+                if DEBUG:
+                    send_verification_mail(user.email)
+                else:
+                    send_verification_mail_task.delay(user.email)
+                return Response({'status': 'success'})
+        except ObjectDoesNotExist:
+            serializer = self.get_serializer(data=request.data)
+            if serializer.is_valid(raise_exception=True):
+                user = User.objects.create_user(
+                    email=serializer.validated_data['email'],
+                    first_name=serializer.validated_data['first_name'],
+                    last_name=serializer.validated_data['last_name'],
+                    password=serializer.validated_data['password'],
+                )
+                if DEBUG:
+                    send_verification_mail(user.email)
+                else:
+                    send_verification_mail_task.delay(user.email)
+                return Response({"status": 'success'})
 
-        if serializer.is_valid(raise_exception=True):
-            user = User.objects.create_user(
-                email=serializer.validated_data['email'],
-                first_name=serializer.validated_data['first_name'],
-                last_name=serializer.validated_data['last_name'],
-                password=serializer.validated_data['password'],
-            )
-            if DEBUG:
-                send_verification_mail(user.email)
-            else:
-                send_verification_mail_task.delay(user.email)
-            return Response({"status": 'success'})
-
-        return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class SendVerifyCodeAPIView(UpdateModelMixin, GenericAPIView):

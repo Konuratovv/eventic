@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 import os
 from datetime import timedelta
 from pathlib import Path
+
+from celery.schedules import crontab
 from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -26,7 +28,7 @@ SECRET_KEY = 'django-insecure-+!gfq7wg)y_*innav%(2+6gq*s0+&on!yx4vw@8y$rvvsqjb%7
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 if DEBUG:
-    from .development import *
+    from .production import *
 else:
     from .production import *
 
@@ -103,7 +105,7 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("redis", 6379)],
+            "hosts": [("localhost", 6379)],
         },
     },
 }
@@ -199,8 +201,8 @@ INTERNAL_IPS = [
 ]
 
 # settings.py
-CELERY_BROKER_URL = 'redis://redis:6379/0'
-CELERY_RESULT_BACKEND = 'redis://redis:6379'
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379'
 
 # CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
@@ -210,19 +212,19 @@ CELERY_BEAT_SCHEDULER = 'celery.beat.PersistentScheduler'
 CELERY_BEAT_SCHEDULE = {
     'send_permanent_notification_task': {
         'task': 'apps.notifications.tasks.send_permanent_notification_task',
-        'schedule': 10,
+        'schedule': crontab(minute='*/4'),
     },
     'send_temporary_notification_task': {
         'task': 'apps.notifications.tasks.send_temporary_notification_task',
-        'schedule': 10,
+        'schedule': crontab(minute='*/5'),
     },
     'send_new_event_notification_task': {
         'task': 'apps.notifications.tasks.new_event_notification',
-        'schedule': 10,
+        'schedule': crontab(minute='*/6'),
     },
     'cleanup_not_verified_users': {
-        'task': 'apps.notifications.tasks.cleanup_not_verified_users',
-        'schedule': 10,
+        'task': 'apps.notifications.tasks.cleanup_not_verified_users_and_old_views_user',
+        'schedule': crontab(minute='*/10'),
     },
 }
 

@@ -23,7 +23,6 @@ class RequiredInlineFormSet(BaseInlineFormSet):
 class OrganizerAddressInline(admin.TabularInline):
     model = OrganizerAddress
     extra = 1
-    formset = RequiredInlineFormSet
 
     def get_extra(self, request, obj=None, **kwargs):
         if obj:
