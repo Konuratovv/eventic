@@ -25,7 +25,7 @@ class ContactAPIView(generics.ListCreateAPIView):
     def post(self, request, *args, **kwargs):
         name = self.request.data.get('name')
         try:
-            user = User.objects.get(id=self.request.data.get('user'))
+            user = User.objects.get(id=self.request.user.baseprofile.user.id)
         except ObjectDoesNotExist:
             return Response({'status': 'user is not found'}, status=status.HTTP_400_BAD_REQUEST)
         Contact.objects.create(name=name, user=user)

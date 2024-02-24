@@ -262,7 +262,7 @@ def cleanup_not_verified_users_and_old_views_user():
 
     users = User.objects.all()
     for user in users:
-        user_views = user.user_views.order_by('-tamestamp')
+        user_views = user.user_views.order_by('-timestamp')
         stale_views = user_views[15:]
         stale_views.delete()
 
@@ -271,9 +271,6 @@ def cleanup_not_verified_users_and_old_views_user():
 def status_switcher(event_date_uid):
     try:
         event_date = EventDate.objects.get(uid=event_date_uid)
-        print(event_date)
         event_date.save()
     except ObjectDoesNotExist:
-        print(f'айдишка{event_date_uid}')
-        print('таск не работает')
         return None

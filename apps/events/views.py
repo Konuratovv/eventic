@@ -84,7 +84,6 @@ class EventListAPIView(generics.ListAPIView):
         return Response(serialized_data)
 
 
-
 class EventTypeFilterAPIView(generics.ListAPIView):
     """
     Здесь происходит фильтрация по типу мероприятия,

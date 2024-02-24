@@ -16,7 +16,6 @@ class ContactSerializer(serializers.ModelSerializer):
         fields = [
             'id',
             'name',
-            'user',
         ]
 
 
