@@ -198,7 +198,7 @@ class EventTypeListAPIView(ListAPIView):
         freeEvents = events.filter(price=0)[:15]
         events_data4 = self.get_events_data(freeEvents, MainBaseEventSerializer, context)
 
-        user_viewed_events = custom_user.viewedevent_set.select_related(
+        user_viewed_events = custom_user.user_views.select_related(
             'event__temporaryevent',
             'event__permanentevent'
         ).prefetch_related(
