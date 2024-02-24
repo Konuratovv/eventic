@@ -169,7 +169,7 @@ class EventTypeListAPIView(ListAPIView):
         return serializer_class_data
 
     def get(self, request, *args, **kwargs):
-        custom_user = User.objects.prefetch_related('favourites', 'viewedevent_set').get(id=self.request.user.id)
+        custom_user = User.objects.prefetch_related('favourites', 'user_views').get(id=self.request.user.id)
 
         events = BaseEvent.objects.prefetch_related(
             'temporaryevent__dates__eventtime_ptr',
