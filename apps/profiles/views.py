@@ -76,7 +76,7 @@ class UnFollowOrganizerAPIView(DestroyModelMixin, GenericAPIView):
         except ObjectDoesNotExist:
             return Response({'status': 'Organizer is not found'}, status=status.HTTP_400_BAD_REQUEST)
         try:
-            follow = FollowOrg.objects.get(organizer=organizer)
+            follow = FollowOrg.objects.get(organizer=organizer, user=user)
             follow.delete()
             organizer.followers -= 1
             user.save()
