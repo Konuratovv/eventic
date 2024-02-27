@@ -128,20 +128,16 @@ class EventDate(EventTime):
         from apps.notifications.tasks import status_switcher
         current_datetime = timezone.now()
         end_datetime = timezone.datetime.combine(self.date, self.end_time)
-        print('ничего не работает')
 
-        if self.date >= current_datetime.date() and end_datetime.time() > current_datetime.time():
-            print('True работает')
+        if end_datetime >= current_datetime:
             self.is_active = True
             start_date = self.date
             end_time = self.end_time
             end_date_time = datetime.combine(start_date, end_time)
             countdown_seconds = (end_date_time - datetime.now()).total_seconds()
-            print(f'объект {vars(self)}')
             status_switcher.apply_async(args=(self.uid,), countdown=countdown_seconds)
         else:
             self.is_active = False
-            print('false работает')
         super().save(*args, **kwargs)
 
     class Meta:

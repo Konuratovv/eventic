@@ -55,7 +55,7 @@ class FollowOrganizerAPIView(CreateAPIView):
             return Response({'status': 'organizer is not found'})
 
         try:
-            FollowOrg.objects.get(organizer=organizer)
+            FollowOrg.objects.get(organizer=organizer, user=user)
             return Response({'status': 'already followed'})
         except ObjectDoesNotExist:
             FollowOrg.objects.create(organizer=organizer, user=user)

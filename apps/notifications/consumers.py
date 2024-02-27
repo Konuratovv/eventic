@@ -1,9 +1,16 @@
 import json
+from datetime import timedelta
+
 import jwt
+from channels.db import database_sync_to_async
 from asgiref.sync import sync_to_async, async_to_sync
 from channels.generic.websocket import WebsocketConsumer, AsyncWebsocketConsumer
+from django.core.serializers import serialize
+from django.utils import timezone
 
-from apps.notifications.models import FollowPerm
+from apps.events.models import BaseEvent
+from apps.notifications.models import FollowPerm, BaseNotification
+from apps.notifications.tasks import send_notifications_history
 from apps.profiles.models import User
 from config.settings.base import SECRET_KEY
 from apps.users.utils import add_to_redis_dict, delete_from_redis_dict, check_is_seen_status
@@ -24,6 +31,7 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         user = await self.get_user(decoded_token.get("user_id"))
         self.user_connections[str(user)] = self.channel_name
         add_to_redis_dict("user_connections", self.user_connections)
+        send_notifications_history.delay(str(user), self.channel_name)
         await self.channel_layer.group_add("notifications", self.channel_name)
 
     async def disconnect(self, event):

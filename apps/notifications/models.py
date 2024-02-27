@@ -1,4 +1,8 @@
+import json
+
+from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
+from django.forms import model_to_dict
 
 from apps.base.models import BaseModel
 from apps.events.models import BaseEvent

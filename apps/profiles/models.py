@@ -1,10 +1,7 @@
 from django.db import models
-from multiselectfield import MultiSelectField
-from django.contrib.postgres.fields import ArrayField
-
 from apps.base.models import nb
 from apps.events.models import BaseEvent
-from apps.locations.models import City, Address
+from apps.locations.models import City
 from apps.users.models import CustomUser
 
 
@@ -34,7 +31,7 @@ class Organizer(BaseProfile):
     title = models.CharField(max_length=255)
     back_img = models.ImageField(verbose_name="Баннер", upload_to='organizers_banners',
                                  default='default/background.png', blank=True, null=True)
-    description = models.TextField(blank=True)
+    description = models.TextField(blank=True, max_length=500)
     followers = models.PositiveBigIntegerField(blank=True, default=0)
 
     class Meta:

@@ -210,22 +210,18 @@ CELERY_BEAT_SCHEDULER = 'celery.beat.PersistentScheduler'
 
 
 CELERY_BEAT_SCHEDULE = {
-    'send_permanent_notification_task': {
-        'task': 'apps.notifications.tasks.send_permanent_notification_task',
-        'schedule': crontab(minute='*/4'),
-    },
-    'send_temporary_notification_task': {
-        'task': 'apps.notifications.tasks.send_temporary_notification_task',
-        'schedule': crontab(minute='*/5'),
-    },
-    'send_new_event_notification_task': {
-        'task': 'apps.notifications.tasks.new_event_notification',
-        'schedule': crontab(minute='*/6'),
-    },
-    'cleanup_not_verified_users': {
-        'task': 'apps.notifications.tasks.cleanup_not_verified_users_and_old_views_user',
-        'schedule': crontab(minute='*/10'),
-    },
+    # 'general_notification_task': {
+    #     'task': 'apps.notifications.tasks.general_notification_task',
+    #     'schedule': 10,
+    # },
+    # 'send_new_event_notification_task': {
+    #     'task': 'apps.notifications.tasks.new_event_notification',
+    #     'schedule': crontab(minute='*/6'),
+    # },
+    # 'cleanup_not_verified_users': {
+    #     'task': 'apps.notifications.tasks.cleanup_not_verified_users_and_old_views_user',
+    #     'schedule': crontab(minute='*/10'),
+    # },
 }
 
 # CACHES = {
