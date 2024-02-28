@@ -13,8 +13,8 @@ services:
       - postgres
       - migration
     volumes:
-      - static_volume:/usr/src/app/static
-      - media_volume:/usr/src/app/media
+      - static_volume:/usr/src/app/back_static
+      - media_volume:/usr/src/app/back_media
 #    environment:
 #      - DJANGO_SETTINGS_MODULE=config.settings.base
 #    environment:
@@ -45,8 +45,8 @@ services:
 #      - "443:443"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
-      - static_volume:/usr/src/app/static
-      - media_volume:/usr/src/app/media
+      - static_volume:/usr/src/app/back_static
+      - media_volume:/usr/src/app/back_media
 #      - /var/run/docker.sock:/tmp/docker.sock:ro
 #      - html:/usr/share/nginx/html
 #      - vhost:/etc/nginx/vhost.d

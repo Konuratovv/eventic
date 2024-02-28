@@ -146,13 +146,13 @@ USE_TZ = False
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
-STATIC_URL = 'static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATIC_URL = 'back_static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'back_static')
 
-MEDIA_URL = '/media/'
+MEDIA_URL = '/back_media/'
 
 
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'back_media')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
@@ -210,10 +210,10 @@ CELERY_BEAT_SCHEDULER = 'celery.beat.PersistentScheduler'
 
 
 CELERY_BEAT_SCHEDULE = {
-    # 'general_notification_task': {
-    #     'task': 'apps.notifications.tasks.general_notification_task',
-    #     'schedule': 10,
-    # },
+    'general_notification_task': {
+        'task': 'apps.notifications.tasks.general_notification_task',
+        'schedule': 10,
+    },
     # 'send_new_event_notification_task': {
     #     'task': 'apps.notifications.tasks.new_event_notification',
     #     'schedule': crontab(minute='*/6'),

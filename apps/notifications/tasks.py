@@ -1,6 +1,7 @@
 import json
 from datetime import timedelta
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Q
 from django.forms import model_to_dict
 
 from apps.events.models import BaseEvent, EventDate
@@ -11,7 +12,7 @@ from django.conf import settings
 from django.core.mail import send_mail
 from django.utils import timezone
 from django.utils.crypto import get_random_string
-from apps.notifications.models import OrganizationNotification, BaseNotification
+from apps.notifications.models import BaseNotification
 from apps.profiles.models import User
 from apps.users.models import CustomUser
 import redis
@@ -108,12 +109,11 @@ def general_notification_task():
         send_date__time__gte=two_hours_ago.time()
     )
     notification_ids = list(actual_notifications.values_list('id', flat=True))
-    print(notification_ids)
     base_notification_task.delay(notification_ids)
 
 
 @shared_task
-def send_notifications_history(user, channel_name):
+def send_notifications_history():
     current_time = timezone.now()
     start_of_day = current_time - timedelta(
         hours=current_time.hour,
@@ -122,12 +122,18 @@ def send_notifications_history(user, channel_name):
     )
     two_hours_ago = current_time - timedelta(hours=2)
     notifications_history = BaseNotification.objects.filter(
-        send_date__date=current_time.date(),
-        send_date__time__gte=start_of_day.time(),
-        send_date__time__lte=two_hours_ago.time()
+        Q(
+            send_date__date=current_time.date(),
+            send_date__time__gte=start_of_day.time(),
+            send_date__time__lte=two_hours_ago.time()
+        )
+        |
+        Q(
+            send_date__date=current_time.date(),
+            send_date__time__gte=two_hours_ago.time()
+        )
     )
     notification_ids = list(notifications_history.values_list('id', flat=True))
-    print(notification_ids)
     base_notification_task.delay(notification_ids)
 
 

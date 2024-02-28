@@ -96,19 +96,19 @@ def delete_from_redis_dict(key, delete_keys):
     r.hdel(key, *delete_keys_bytes)
 
 
-def check_is_seen_status(email):
-    user = User.objects.get(email=email)
-    follows_perms = FollowPerm.objects.filter(user=user)
-    follows_temps = FollowTemp.objects.filter(user=user)
-    for follow_perm in follows_perms:
-        for notification in follow_perm.notifications.all():
-            if not notification.is_seen:
-                notification.is_sent = False
-                notification.save()
-    for follow_temp in follows_temps:
-        for notification in follow_temp.notifications.all():
-            if not notification.is_seen:
-                notification.is_sent = False
-                notification.save()
+# def check_is_seen_status(email):
+#     user = User.objects.get(email=email)
+#     follows_perms = FollowPerm.objects.filter(user=user)
+#     follows_temps = FollowTemp.objects.filter(user=user)
+#     for follow_perm in follows_perms:
+#         for notification in follow_perm.notifications.all():
+#             if not notification.is_seen:
+#                 notification.is_sent = False
+#                 notification.save()
+#     for follow_temp in follows_temps:
+#         for notification in follow_temp.notifications.all():
+#             if not notification.is_seen:
+#                 notification.is_sent = False
+#                 notification.save()
 
 

@@ -6,17 +6,17 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, Spec
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('apps.users.urls')),
-    path('', include('apps.profiles.urls')),
-    path('events/', include('apps.events.urls')),
+    path('api/v1/', include('apps.users.urls')),
+    path('api/v1/', include('apps.profiles.urls')),
+    path('api/v1/events/', include('apps.events.urls')),
     path('docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
     path('redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
     path('schema/', SpectacularAPIView.as_view(), name='schema'),
-    path('', include('apps.notifications.urls')),
-    path('', include('apps.favorites.urls')),
-    path('', include('apps.invitations.urls')),
-    path('locations/', include('apps.locations.urls')),
-    path('', include('apps.questions.urls')),
+    path('api/v1/', include('apps.notifications.urls')),
+    path('api/v1/', include('apps.favorites.urls')),
+    path('api/v1/', include('apps.invitations.urls')),
+    path('api/v1/locations/', include('apps.locations.urls')),
+    path('api/v1/', include('apps.questions.urls')),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

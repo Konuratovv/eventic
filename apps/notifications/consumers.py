@@ -1,19 +1,12 @@
 import json
-from datetime import timedelta
-
 import jwt
-from channels.db import database_sync_to_async
-from asgiref.sync import sync_to_async, async_to_sync
-from channels.generic.websocket import WebsocketConsumer, AsyncWebsocketConsumer
-from django.core.serializers import serialize
-from django.utils import timezone
+from asgiref.sync import sync_to_async
+from channels.generic.websocket import AsyncWebsocketConsumer
 
-from apps.events.models import BaseEvent
-from apps.notifications.models import FollowPerm, BaseNotification
 from apps.notifications.tasks import send_notifications_history
 from apps.profiles.models import User
 from config.settings.base import SECRET_KEY
-from apps.users.utils import add_to_redis_dict, delete_from_redis_dict, check_is_seen_status
+from apps.users.utils import add_to_redis_dict, delete_from_redis_dict
 
 
 class NotificationConsumer(AsyncWebsocketConsumer):
@@ -38,7 +31,6 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         token_to_remove = []
         for token, channel_name in self.user_connections.items():
             if channel_name == self.channel_name:
-                await sync_to_async(check_is_seen_status)(token)
                 delete_from_redis_dict("user_connections", [token])
                 token_to_remove.append(token)
         del self.user_connections[token_to_remove[0]]
