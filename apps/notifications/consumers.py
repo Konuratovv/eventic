@@ -23,8 +23,8 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         decoded_token = jwt.decode(tk, SECRET_KEY, algorithms=['HS256'])
         user = await self.get_user(decoded_token.get("user_id"))
         self.user_connections[str(user)] = self.channel_name
+        send_notifications_history.delay(decoded_token.get("user_id"), self.channel_name)
         add_to_redis_dict("user_connections", self.user_connections)
-        send_notifications_history.delay(str(user), self.channel_name)
         await self.channel_layer.group_add("notifications", self.channel_name)
 
     async def disconnect(self, event):
@@ -40,8 +40,20 @@ class NotificationConsumer(AsyncWebsocketConsumer):
 
         await self.send(
             text_data=json.dumps(
-                {
-                    "message": message
-                }, ensure_ascii=False
+                message, ensure_ascii=False
+            )
+        )
+
+
+class NotificationBellConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        await self.accept()
+
+    async def send_notification_mark(self, event):
+        message = event["message"]
+
+        await self.send(
+            text_data=json.dumps(
+                message, ensure_ascii=False
             )
         )

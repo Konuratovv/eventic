@@ -2,8 +2,6 @@ import json
 from datetime import timedelta
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
-from django.forms import model_to_dict
-
 from apps.events.models import BaseEvent, EventDate
 from celery import shared_task
 from channels.layers import get_channel_layer
@@ -21,7 +19,7 @@ import redis
 @shared_task
 def send_notification_task(message_data, user_email, notification_id):
     notification = BaseNotification.objects.get(id=notification_id)
-    r = redis.Redis(host='redis', port=6379, db=0)
+    r = redis.Redis(host='localhost', port=6379, db=0)
 
     data_bytes = r.hgetall('user_connections')
     data = {}
@@ -46,16 +44,15 @@ def send_notification_task(message_data, user_email, notification_id):
 @shared_task
 def base_notification_task(notification_ids):
     notifications = BaseNotification.objects.filter(id__in=notification_ids)
-    current_time = timezone.now()
     for notification in notifications:
         if hasattr(notification, 'permanentnotification'):
-            print(f'постоянные уведомления {notification}')
             event = notification.permanentnotification.follow.event.permanent_event
             event_date = notification.permanentnotification.follow.event
             user_email = notification.permanentnotification.follow.user.email
             base_event = BaseEvent.objects.get(id=event.baseevent_ptr_id)
             event_banner = base_event.banners.filter(is_img_main=True)
-            receipt_time_str = current_time.strftime('%Y-%m-%d %H:%M:%S')
+            notification.save()
+            receipt_time_str = notification.updated_at.strftime('%Y-%m-%d %H:%M:%S')
             perm_event = {
                 'id': event.id,
                 'title': event.title,
@@ -77,8 +74,8 @@ def base_notification_task(notification_ids):
             user_email = notification.temporarynotification.follow.user.email
             base_event = BaseEvent.objects.get(id=event.baseevent_ptr_id)
             event_banner = base_event.banners.filter(is_img_main=True)
-            receipt_time_str = current_time.strftime('%Y-%m-%d %H:%M:%S')
-            print(f'временные ивенты {notification}')
+            notification.save()
+            receipt_time_str = notification.updated_at.strftime('%Y-%m-%d %H:%M:%S')
             temp_event = {
                 'id': event.id,
                 'title': event.title,
@@ -113,7 +110,7 @@ def general_notification_task():
 
 
 @shared_task
-def send_notifications_history():
+def send_notifications_history(user_id, channel_name):
     current_time = timezone.now()
     start_of_day = current_time - timedelta(
         hours=current_time.hour,
@@ -123,18 +120,115 @@ def send_notifications_history():
     two_hours_ago = current_time - timedelta(hours=2)
     notifications_history = BaseNotification.objects.filter(
         Q(
+            Q(temporarynotification__follow__user_id=user_id) | Q(permanentnotification__follow__user_id=user_id),
             send_date__date=current_time.date(),
             send_date__time__gte=start_of_day.time(),
             send_date__time__lte=two_hours_ago.time()
         )
         |
         Q(
+            Q(temporarynotification__follow__user_id=user_id) | Q(permanentnotification__follow__user_id=user_id),
             send_date__date=current_time.date(),
-            send_date__time__gte=two_hours_ago.time()
+            send_date__time__gte=two_hours_ago.time(),
+            send_date__time__lte=current_time.time(),
+            is_sent=True
         )
     )
-    notification_ids = list(notifications_history.values_list('id', flat=True))
-    base_notification_task.delay(notification_ids)
+    notifications_history_data = []
+    for notification in notifications_history:
+        if hasattr(notification, 'permanentnotification'):
+            event = notification.permanentnotification.follow.event.permanent_event
+            event_date = notification.permanentnotification.follow.event
+            base_event = BaseEvent.objects.get(id=event.baseevent_ptr_id)
+            event_banner = base_event.banners.filter(is_img_main=True)
+            receipt_time_str = notification.updated_at.strftime('%Y-%m-%d %H:%M:%S')
+            perm_event = {
+                'id': event.id,
+                'title': event.title,
+                'event_week': event_date.event_week,
+                'start_time': event_date.start_time.strftime('%H:%M:%S'),
+                'end_time': event_date.end_time.strftime('%H:%M:%S'),
+                'event_banner': f'http://209.38.228.54:81/{str(event_banner[0].image)}'
+            }
+            message_data = {
+                'id': notification.id,
+                'perm_event': perm_event,
+                'is_seen': notification.permanentnotification.is_seen,
+                'receipt_time': receipt_time_str
+            }
+            notifications_history_data.append(message_data)
+        elif hasattr(notification, 'temporarynotification'):
+            event = notification.temporarynotification.follow.event.temp
+            event_date = notification.temporarynotification.follow.event
+            base_event = BaseEvent.objects.get(id=event.baseevent_ptr_id)
+            event_banner = base_event.banners.filter(is_img_main=True)
+            receipt_time_str = notification.updated_at.strftime('%Y-%m-%d %H:%M:%S')
+            temp_event = {
+                'id': event.id,
+                'title': event.title,
+                'event_date': event_date.date.strftime('%Y-%m-%d'),
+                'start_time': event_date.start_time.strftime('%H:%M:%S'),
+                'end_time': event_date.end_time.strftime('%H:%M:%S'),
+                'event_banner': f'http://209.38.228.54:81/media{str(event_banner[0].image)}'
+            }
+            message_data = {
+                'id': notification.id,
+                'temp_event': temp_event,
+                'is_seen': notification.temporarynotification.is_seen,
+                'receipt_time': receipt_time_str
+            }
+            notifications_history_data.append(message_data)
+    sorted_notifications = sorted(notifications_history_data, key=lambda x: x['receipt_time'], reverse=True)
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.send)(channel_name, {
+        'type': 'send_notification',
+        'message': sorted_notifications
+    })
+
+
+@shared_task
+def send_notification_mark_task(message_data, user_email):
+    r = redis.Redis(host='localhost', port=6379, db=0)
+
+    data_bytes = r.hgetall('user_connections')
+    data = {}
+
+    for key, value in data_bytes.items():
+        decoded_key = key.decode('utf-8')
+        decoded_value = value.decode('utf-8')
+
+        data[decoded_key] = decoded_value
+
+    for email, channel_name in data.items():
+        if email == user_email:
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.send)(channel_name, {
+                'type': 'send_notification_mark',
+                'message': message_data
+            })
+
+
+@shared_task
+def notification_mark_task():
+    current_time = timezone.now()
+    start_of_day = current_time - timedelta(
+        hours=current_time.hour,
+        minutes=current_time.minute,
+        seconds=current_time.second
+    )
+    notifications = BaseNotification.objects.filter(
+        send_date__date=current_time.date(),
+        send_date__time__gte=start_of_day.time(),
+        send_date__time_lte=current_time.time(),
+        is_seen=False,
+    )
+    for notification in notifications:
+        if hasattr(notification, 'permanentnotification'):
+            user_email = notification.permanentnotification.follow.user.email
+            send_notification_mark_task.delay('new_notification', user_email)
+        elif hasattr(notification, 'temporarynotification'):
+            user_email = notification.permanentnotification.follow.user.email
+            send_notification_mark_task.delay('new_notification', user_email)
 
 
 # @shared_task
