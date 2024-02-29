@@ -19,7 +19,7 @@ import redis
 @shared_task
 def send_notification_task(message_data, user_email, notification_id):
     notification = BaseNotification.objects.get(id=notification_id)
-    r = redis.Redis(host='localhost', port=6379, db=0)
+    r = redis.Redis(host='redis', port=6379, db=0)
 
     data_bytes = r.hgetall('user_connections')
     data = {}
@@ -184,51 +184,6 @@ def send_notifications_history(user_id, channel_name):
         'type': 'send_notification',
         'message': sorted_notifications
     })
-
-
-@shared_task
-def send_notification_mark_task(message_data, user_email):
-    r = redis.Redis(host='localhost', port=6379, db=0)
-
-    data_bytes = r.hgetall('user_connections')
-    data = {}
-
-    for key, value in data_bytes.items():
-        decoded_key = key.decode('utf-8')
-        decoded_value = value.decode('utf-8')
-
-        data[decoded_key] = decoded_value
-
-    for email, channel_name in data.items():
-        if email == user_email:
-            channel_layer = get_channel_layer()
-            async_to_sync(channel_layer.send)(channel_name, {
-                'type': 'send_notification_mark',
-                'message': message_data
-            })
-
-
-@shared_task
-def notification_mark_task():
-    current_time = timezone.now()
-    start_of_day = current_time - timedelta(
-        hours=current_time.hour,
-        minutes=current_time.minute,
-        seconds=current_time.second
-    )
-    notifications = BaseNotification.objects.filter(
-        send_date__date=current_time.date(),
-        send_date__time__gte=start_of_day.time(),
-        send_date__time_lte=current_time.time(),
-        is_seen=False,
-    )
-    for notification in notifications:
-        if hasattr(notification, 'permanentnotification'):
-            user_email = notification.permanentnotification.follow.user.email
-            send_notification_mark_task.delay('new_notification', user_email)
-        elif hasattr(notification, 'temporarynotification'):
-            user_email = notification.permanentnotification.follow.user.email
-            send_notification_mark_task.delay('new_notification', user_email)
 
 
 # @shared_task

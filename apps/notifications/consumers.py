@@ -43,17 +43,3 @@ class NotificationConsumer(AsyncWebsocketConsumer):
                 message, ensure_ascii=False
             )
         )
-
-
-class NotificationBellConsumer(AsyncWebsocketConsumer):
-    async def connect(self):
-        await self.accept()
-
-    async def send_notification_mark(self, event):
-        message = event["message"]
-
-        await self.send(
-            text_data=json.dumps(
-                message, ensure_ascii=False
-            )
-        )
