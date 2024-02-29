@@ -149,7 +149,7 @@ class DetailEventSerializer(serializers.ModelSerializer):
 
     def get_event_dates(self, event):
         if hasattr(event, 'temporaryevent'):
-            event_dates = EventDate.objects.filter(is_active=True)
+            event_dates = EventDate.objects.filter(is_active=True, temp=event)
             serialized_data = EventDateSerializer(
                 event_dates,
                 many=True,

@@ -148,10 +148,10 @@ def send_notifications_history(user_id, channel_name):
                 'event_week': event_date.event_week,
                 'start_time': event_date.start_time.strftime('%H:%M:%S'),
                 'end_time': event_date.end_time.strftime('%H:%M:%S'),
-                'event_banner': f'http://209.38.228.54:81/{str(event_banner[0].image)}'
+                'event_banner': f'http://209.38.228.54:81/back_media/{str(event_banner[0].image)}'
             }
             message_data = {
-                'id': notification.id,
+                'id': notification.id,  
                 'perm_event': perm_event,
                 'is_seen': notification.permanentnotification.is_seen,
                 'receipt_time': receipt_time_str
