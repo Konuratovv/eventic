@@ -65,7 +65,6 @@ INSTALLED_APPS = [
     'django_extensions',
     'debug_toolbar',
     'django_celery_beat',
-    # 'cachalot',
 ]
 
 MIDDLEWARE = [
@@ -191,45 +190,24 @@ EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 
-# CSRF_USE_SESSIONS = True
-# CSRF_TRUSTED_ORIGINS = ['http://209.38.228.54:81']
 CSRF_TRUSTED_ORIGINS = ['http://127.0.0.1:8000']
-# http://0.0.0.0:81
 INTERNAL_IPS = [
     '127.0.0.1',
-    # '34.83.117.144',
 ]
 
 # settings.py
 CELERY_BROKER_URL = 'redis://redis:6379/0'
 CELERY_RESULT_BACKEND = 'redis://redis:6379'
-
-# CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
-
 CELERY_BEAT_SCHEDULER = 'celery.beat.PersistentScheduler'
 
 
 CELERY_BEAT_SCHEDULE = {
     'general_notification_task': {
         'task': 'apps.notifications.tasks.general_notification_task',
-        'schedule': 10,
+        'schedule': crontab(minute='*/5'),
     },
-    # 'send_new_event_notification_task': {
-    #     'task': 'apps.notifications.tasks.new_event_notification',
-    #     'schedule': crontab(minute='*/6'),
-    # },
     'cleanup_users_viewed_notifications': {
         'task': 'apps.notifications.tasks.cleanup_old_data_task',
         'schedule': crontab(minute='*/10'),
     },
 }
-
-# CACHES = {
-#     "default": {
-#         "BACKEND": "django_redis.cache.RedisCache",
-#         "LOCATION": "redis://127.0.0.1:6379/1",  # URL вашего Redis сервера и номер базы данных (1)
-#         "OPTIONS": {
-#             "CLIENT_CLASS": "django_redis.client.DefaultClient",
-#         }
-#     }
-# }
