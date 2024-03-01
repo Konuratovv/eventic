@@ -102,6 +102,7 @@ class PermanentNotificationAPIView(mixins.CreateModelMixin, mixins.DestroyModelM
         if followed_perm.exists():
             for i in followed_perm[0].notifications.all():
                 i.delete()
+            BaseNotification.objects.filter(id=followed_perm[0].id).delete()
             followed_perm.delete()
             return Response({'status': 'success'})
         return Response({'status': 'you are not followed'}, status=status.HTTP_400_BAD_REQUEST)
@@ -164,6 +165,7 @@ class TemporaryNotificationAPIView(mixins.CreateModelMixin, mixins.DestroyModelM
         if followed_temp.exists():
             for i in followed_temp[0].notifications.all():
                 i.delete()
+            BaseNotification.objects.filter(id=followed_temp[0].id).delete()
             followed_temp.delete()
             return Response({'status': 'success'})
         return Response({'status': 'you are not followed'}, status=status.HTTP_400_BAD_REQUEST)
@@ -195,3 +197,27 @@ class ViewedNotificationAPIView(mixins.UpdateModelMixin, mixins.DestroyModelMixi
                 return Response({'status': 'notification is not viewed'}, status=status.HTTP_400_BAD_REQUEST)
         except ObjectDoesNotExist:
             return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ViewedAllNotificationAPIView(mixins.UpdateModelMixin, mixins.DestroyModelMixin, GenericAPIView):
+    serializer_class = ViewNotificationSerializer
+
+    def patch(self, request, *args, **kwargs):
+        notifications = BaseNotification.objects.filter(id__in=self.request.data.get('notification_ids'))
+        if not notifications.exists():
+            return Response({'status': 'nothing to view'})
+        for notification in notifications:
+            if not notification.is_seen:
+                notification.is_seen = True
+                notification.save()
+        return Response({'status': 'success'})
+
+    def delete(self, request, *args, **kwargs):
+        notifications = BaseNotification.objects.filter(id__in=self.request.data.get('notification_ids'))
+        if not notifications.exists():
+            return Response({'status': 'nothing to unview'})
+        for notification in notifications:
+            if notification.is_seen:
+                notification.is_seen = False
+                notification.save()
+        return Response({'status': 'success'})

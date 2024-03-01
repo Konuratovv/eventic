@@ -118,27 +118,8 @@ class EventDate(EventTime):
     temp = models.ForeignKey(TemporaryEvent, on_delete=models.CASCADE, related_name='dates',
                              verbose_name='Выберите временное событие')
     date = models.DateField(verbose_name="Укажите дату начала события")
-    is_active = models.BooleanField(default=False)
-
-    uid = models.UUIDField(default=uuid4, editable=False, unique=True)
 
     objects = GetOrNoneManager()
-
-    def save(self, *args, **kwargs):
-        from apps.notifications.tasks import status_switcher
-        current_datetime = timezone.now()
-        end_datetime = timezone.datetime.combine(self.date, self.end_time)
-
-        if end_datetime >= current_datetime:
-            self.is_active = True
-            start_date = self.date
-            end_time = self.end_time
-            end_date_time = datetime.combine(start_date, end_time)
-            countdown_seconds = (end_date_time - datetime.now()).total_seconds()
-            status_switcher.apply_async(args=(self.uid,), countdown=countdown_seconds)
-        else:
-            self.is_active = False
-        super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = 'Дата и время мероприятия'

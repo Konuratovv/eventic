@@ -26,9 +26,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 SECRET_KEY = 'django-insecure-+!gfq7wg)y_*innav%(2+6gq*s0+&on!yx4vw@8y$rvvsqjb%7'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 if DEBUG:
-    from .production import *
+    from .development import *
 else:
     from .production import *
 
@@ -218,10 +218,10 @@ CELERY_BEAT_SCHEDULE = {
     #     'task': 'apps.notifications.tasks.new_event_notification',
     #     'schedule': crontab(minute='*/6'),
     # },
-    # 'cleanup_not_verified_users': {
-    #     'task': 'apps.notifications.tasks.cleanup_not_verified_users_and_old_views_user',
-    #     'schedule': crontab(minute='*/10'),
-    # },
+    'cleanup_users_viewed_notifications': {
+        'task': 'apps.notifications.tasks.cleanup_old_data_task',
+        'schedule': crontab(minute='*/10'),
+    },
 }
 
 # CACHES = {

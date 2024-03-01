@@ -151,7 +151,7 @@ def send_notifications_history(user_id, channel_name):
                 'event_banner': f'http://209.38.228.54:81/back_media/{str(event_banner[0].image)}'
             }
             message_data = {
-                'id': notification.id,  
+                'id': notification.id,
                 'perm_event': perm_event,
                 'is_seen': notification.permanentnotification.is_seen,
                 'receipt_time': receipt_time_str
@@ -294,26 +294,37 @@ def send_notifications_history(user_id, channel_name):
 
 
 @shared_task
-def cleanup_not_verified_users_and_old_views_user():
+def cleanup_old_data_task():
     not_verified_users = User.objects.filter(is_verified=False)
     fifteen_minutes_ago = timezone.now() - timedelta(minutes=15)
     users_to_delete = not_verified_users.filter(created_at__lte=fifteen_minutes_ago)
     users_to_delete.delete()
+
+    current_time = timezone.now()
+    one_day_ago = current_time - timedelta(days=1)
+
+    old_notifications = BaseNotification.objects.filter(send_date__lte=one_day_ago)
+    print(old_notifications)
+    for old_notification in old_notifications:
+        if hasattr(old_notification, 'permanentnotification'):
+            old_notification.is_seen = False
+            old_notification.is_seen = False
+            send_date = old_notification.send_date
+            current_day_of_week = send_date.weekday()
+            days_until_next_weekday = (7 - current_day_of_week) % 7
+            new_date = send_date + timedelta(days=days_until_next_weekday)
+            old_notification.send_date = new_date
+            old_notification.save()
+        elif hasattr(old_notification, 'temporarynotification'):
+            followed_temp = old_notification.temporarynotification.follow
+            followed_temp.delete()
+            old_notification.delete()
 
     users = User.objects.all()
     for user in users:
         user_views = user.user_views.order_by('-timestamp')
         views_to_keep = user_views[:15]
         user.user_views.exclude(id__in=views_to_keep).delete()
-
-
-@shared_task
-def status_switcher(event_date_uid):
-    try:
-        event_date = EventDate.objects.get(uid=event_date_uid)
-        event_date.save()
-    except ObjectDoesNotExist:
-        return None
 
 
 @shared_task

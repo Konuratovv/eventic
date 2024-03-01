@@ -18,7 +18,7 @@ class TemporaryNotificationSerializer(serializers.Serializer):
 
 
 class ViewNotificationSerializer(serializers.Serializer):
-    notification_id = serializers.IntegerField()
+    notification_ids = serializers.ListField(child=serializers.IntegerField())
 
     class Meta:
-        fields = ['notification_id']
+        fields = ['notification_ids']
