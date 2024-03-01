@@ -304,7 +304,6 @@ def cleanup_old_data_task():
     one_day_ago = current_time - timedelta(days=1)
 
     old_notifications = BaseNotification.objects.filter(send_date__lte=one_day_ago)
-    print(old_notifications)
     for old_notification in old_notifications:
         if hasattr(old_notification, 'permanentnotification'):
             old_notification.is_seen = False
