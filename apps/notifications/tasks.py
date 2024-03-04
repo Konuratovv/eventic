@@ -19,7 +19,7 @@ import redis
 @shared_task
 def send_notification_task(message_data, user_email, notification_id):
     notification = BaseNotification.objects.get(id=notification_id)
-    r = redis.Redis(host='redis', port=6379, db=0)
+    r = redis.Redis(host='redis', port=6379, db=0, password='myPass')
 
     data_bytes = r.hgetall('user_connections')
     data = {}

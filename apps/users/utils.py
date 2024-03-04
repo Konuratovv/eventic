@@ -70,7 +70,7 @@ def send_verification_mail(email):
 #     data1 = r.hgetall("user_connections")
 #     print(f'то что мне нужна{data1}')
 
-r = redis.Redis(host='redis', port=6379, db=0)
+r = redis.Redis(host='redis', port=6379, db=0, password='myPass')
 
 
 def add_to_redis_dict(key, new_data):
