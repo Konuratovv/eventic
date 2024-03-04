@@ -105,6 +105,8 @@ CHANNEL_LAYERS = {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
             "hosts": [("redis", 6379)],
+            'password': 'myPass',
+            'username': 'default'
         },
     },
 }
