@@ -104,9 +104,7 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("redis", 6379)],
-            'password': 'myPass',
-            'username': 'default'
+            "hosts": ["redis://default:myPass@redis:6379"],
         },
     },
 }
@@ -151,7 +149,6 @@ STATIC_URL = 'back_static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'back_static')
 
 MEDIA_URL = '/back_media/'
-
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'back_media')
 
@@ -201,7 +198,6 @@ INTERNAL_IPS = [
 CELERY_BROKER_URL = 'redis://default:myPass@redis:6379/0'
 CELERY_RESULT_BACKEND = 'redis://default:myPass@redis:6379'
 CELERY_BEAT_SCHEDULER = 'celery.beat.PersistentScheduler'
-
 
 CELERY_BEAT_SCHEDULE = {
     'general_notification_task': {
