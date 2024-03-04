@@ -204,7 +204,7 @@ CELERY_BEAT_SCHEDULER = 'celery.beat.PersistentScheduler'
 CELERY_BEAT_SCHEDULE = {
     'general_notification_task': {
         'task': 'apps.notifications.tasks.general_notification_task',
-        'schedule': crontab(minute='*/5'),
+        'schedule': 10,
     },
     'cleanup_users_viewed_notifications': {
         'task': 'apps.notifications.tasks.cleanup_old_data_task',
