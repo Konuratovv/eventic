@@ -23,7 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-+!gfq7wg)y_*innav%(2+6gq*s0+&on!yx4vw@8y$rvvsqjb%7'
+SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
@@ -32,7 +32,7 @@ if DEBUG:
 else:
     from .production import *
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = [config('ALLOWED_HOSTS')]
 
 # Application definition
 
@@ -104,7 +104,7 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": ["redis://default:myPass@redis:6379"],
+            "hosts": [config('CHANNEL_LAYER_REDIS_URL')],
         },
     },
 }
@@ -165,7 +165,7 @@ SIMPLE_JWT = {
     "UPDATE_LAST_LOGIN": False,
 }
 
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = config('CORS_ALLOW_ALL_ORIGINS', cast=bool)
 
 AUTH_USER_MODEL = 'users.CustomUser'
 
@@ -189,15 +189,15 @@ EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 
-CSRF_TRUSTED_ORIGINS = ['http://127.0.0.1:8000']
+CSRF_TRUSTED_ORIGINS = [config('CSRF_TRUSTED_ORIGINS')]
 INTERNAL_IPS = [
     '127.0.0.1',
 ]
 
 # settings.py
-CELERY_BROKER_URL = 'redis://default:myPass@redis:6379/0'
-CELERY_RESULT_BACKEND = 'redis://default:myPass@redis:6379'
-CELERY_BEAT_SCHEDULER = 'celery.beat.PersistentScheduler'
+CELERY_BROKER_URL = config('CELERY_BROKER_URL')
+CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND')
+CELERY_BEAT_SCHEDULER = config('CELERY_BEAT_SCHEDULER')
 
 CELERY_BEAT_SCHEDULE = {
     'general_notification_task': {

@@ -1,5 +1,7 @@
 import json
 from datetime import timedelta
+
+from decouple import config
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 from apps.events.models import BaseEvent, EventDate
@@ -19,7 +21,8 @@ import redis
 @shared_task
 def send_notification_task(message_data, user_email, notification_id):
     notification = BaseNotification.objects.get(id=notification_id)
-    r = redis.Redis(host='redis', port=6379, db=0, password='myPass', username='default')
+    r = redis.Redis(host='redis', port=config('REDIS_PORT', cast=int), db=config('REDIS_DB', cast=int),
+                    password=config('REDIS_PASSWORD'), username=config('REDIS_USER'))
 
     data_bytes = r.hgetall('user_connections')
     data = {}

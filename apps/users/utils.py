@@ -1,6 +1,7 @@
 import json
 
 from asgiref.sync import sync_to_async
+from decouple import config
 from django.conf import settings
 from django.core.mail import send_mail
 from django.utils.crypto import get_random_string
@@ -70,7 +71,8 @@ def send_verification_mail(email):
 #     data1 = r.hgetall("user_connections")
 #     print(f'то что мне нужна{data1}')
 
-r = redis.Redis(host='redis', port=6379, db=0, password='myPass', username='default')
+r = redis.Redis(host='redis', port=config('REDIS_PORT'), db=config('REDIS_DB'), password=config('REDIS_PASSWORD'),
+                username=config('REDIS_USER'))
 
 
 def add_to_redis_dict(key, new_data):
@@ -95,7 +97,6 @@ def delete_from_redis_dict(key, delete_keys):
 
     r.hdel(key, *delete_keys_bytes)
 
-
 # def check_is_seen_status(email):
 #     user = User.objects.get(email=email)
 #     follows_perms = FollowPerm.objects.filter(user=user)
@@ -110,5 +111,3 @@ def delete_from_redis_dict(key, delete_keys):
 #             if not notification.is_seen:
 #                 notification.is_sent = False
 #                 notification.save()
-
-
