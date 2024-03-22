@@ -1,3 +1,4 @@
+from django.db.models import Q
 from django.utils import timezone
 from rest_framework import serializers
 from .models import Category, EventDate, BaseEvent, Interests, EventBanner, PermanentEvent, PermanentEventDays, Language
@@ -152,9 +153,16 @@ class DetailEventSerializer(serializers.ModelSerializer):
         if hasattr(event, 'temporaryevent'):
             current_time = timezone.now()
             event_dates = EventDate.objects.filter(
+                Q(
+                temp=event,
+                date__gt=current_time.date(),
+                )
+                |
+                Q(
                 temp=event,
                 date__gte=current_time.date(),
                 end_time__gt=current_time.time()
+                )
             )
             serialized_data = EventDateSerializer(
                 event_dates,
