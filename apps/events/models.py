@@ -122,6 +122,7 @@ class EventDate(EventTime):
     objects = GetOrNoneManager()
 
     class Meta:
+        # ordering=['date']
         verbose_name = 'Дата и время мероприятия'
         verbose_name_plural = 'Даты и время мероприятий'
 
@@ -158,3 +159,4 @@ class PermanentEventDays(EventTime):
 
     def __str__(self):
         return f"{self.event_week}"
+

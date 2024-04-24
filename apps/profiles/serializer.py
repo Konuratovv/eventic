@@ -1,6 +1,9 @@
+from django.db.models import Q
+from django.utils import timezone
+
 from apps.events.models import BaseEvent, EventDate, Interests, PermanentEventDays, \
     PermanentEvent
-from apps.events.serializers import EventBannerSerializer, InterestSerializer, CategorySerializer
+from apps.events.serializers import EventBannerSerializer, InterestSerializer, CategorySerializer, EventDateSerializer
 from apps.locations.models import Address
 from apps.locations.serializers import CitySerializer
 from apps.notifications.models import FollowOrg
@@ -143,6 +146,7 @@ class MainBaseEventSerializer(serializers.ModelSerializer):
     banners = EventBannerSerializer(many=True)
     event_weeks = MainEventWeekSerializer(many=True, source='permanentevent.weeks')
     event_dates = MainEventDateSerializer(many=True, source='temporaryevent.dates')
+    # event_dates = serializers.SerializerMethodField()
     is_favourite = serializers.SerializerMethodField()
 
     class Meta:

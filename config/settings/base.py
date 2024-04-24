@@ -28,7 +28,7 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', cast=bool)
 if DEBUG:
-    from .development import *
+    from .production import *
 else:
     from .production import *
 

@@ -34,7 +34,7 @@ class RegisterSerializer(ModelSerializer):
 
     def validate(self, data):
         if data.get('password') != data.get('confirm_password'):
-            raise AuthenticationFailed('Password did not match')
+            raise AuthenticationFailed('Password do not match')
         return data
 
 
