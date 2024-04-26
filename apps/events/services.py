@@ -13,7 +13,7 @@ def filtered_events(self, request):
 
     dates_subquery = EventDate.objects.filter(
         Q(date__gt=current_time.date()) | Q(date__gte=current_time.date(), end_time__gt=current_time.time()),
-        temp=OuterRef('temporaryevent__id')
+        temp__id=OuterRef('temporaryevent__id')
     )
 
     events = BaseEvent.objects.prefetch_related(
