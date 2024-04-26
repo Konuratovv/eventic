@@ -1,4 +1,4 @@
-from django.db.models import Prefetch, Q
+from django.db.models import Prefetch, Q, OuterRef, Exists
 from django.utils import timezone
 
 from apps.events.models import BaseEvent, EventDate
@@ -11,24 +11,27 @@ def filtered_events(self, request):
 
     current_time = timezone.now()
 
-    filtered_dates = EventDate.objects.filter(
-        Q(date__gt=current_time.date()) | Q(date__gte=current_time.date(), end_time__gt=current_time.time())
+    dates_subquery = EventDate.objects.filter(
+        Q(date__gt=current_time.date()) | Q(date__gte=current_time.date(), end_time__gt=current_time.time()),
+        temp=OuterRef('temporaryevent__id')
     )
+
     events = BaseEvent.objects.prefetch_related(
-        Prefetch('temporaryevent__dates', queryset=filtered_dates),
+        Prefetch('temporaryevent__dates', queryset=EventDate.objects.filter(
+            Q(date__gt=current_time.date()) | Q(date__gte=current_time.date(), end_time__gt=current_time.time())
+        )),
         'permanentevent__weeks',
         'banners',
     ).select_related(
         'permanentevent',
         'temporaryevent',
-    ).only(
-        'title',
-        'price',
-        'organizer',
-        'followers'
+    ).annotate(
+        has_actual_dates=Exists(dates_subquery)
     ).filter(
         city__city_name=custom_user.city,
-        is_active=True,
+        is_active=True
+    ).filter(
+        Q(permanentevent__isnull=False) | Q(temporaryevent__isnull=True, has_actual_dates=True)
     )
     context = {'custom_user': custom_user, 'request': request}
 
