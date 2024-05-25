@@ -6,11 +6,11 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.pagination import LimitOffsetPagination
-from django.db.models import Prefetch, Q
+from django.db.models import Prefetch, Q, OuterRef, Exists
 from .models import Category, Interests, Language, EventBanner, EventDate, EventTime, PermanentEventDays
 from .serializers import DetailEventSerializer, CategorySerializer, InterestSerializer, OrganizerEventSerializer
 from .models import BaseEvent, PermanentEvent, TemporaryEvent
-from apps.profiles.serializer import MainBaseEventSerializer, AllMainBaseEventSerializer
+from apps.profiles.serializer import MainBaseEventSerializer, AllMainBaseEventSerializer, AllPermanentEventSerializer
 from .event_filters import EventFilter, EventTypeFilter
 from .services import filtered_events
 from ..locations.models import Address, Country, Region, City
@@ -18,7 +18,10 @@ from ..notifications.models import FollowOrg
 from ..profiles.models import User, Organizer
 from ..profiles.serializer import LastViewedEventReadSerializer
 from django.core.exceptions import ObjectDoesNotExist
+from django.utils import timezone
+from django.db.models import Min
 
+current_date = timezone.now()
 
 class EventCategoryListAPIView(generics.ListAPIView):
     """ Вывод списка категориев"""
@@ -180,11 +183,27 @@ class AllEventsListAPIView(ListAPIView):
     pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
-        user_city = self.request.user.baseprofile.user.city
-        queryset = BaseEvent.objects.filter(
-            is_active=True,
+        user_city = self.request.user.baseprofile.city   
+
+        dates = EventDate.objects.filter(
+            temp__id=OuterRef('pk')
+        ).select_related('eventtime_ptr', 'temp')
+
+        queryset = TemporaryEvent.objects.filter(
             city=user_city,
-        )
+            is_active=True,
+        ).filter(
+            Q(dates__date__gt=current_date.date()) | Q(dates__date__gte=current_date.date(), dates__end_time__gte=current_date.time())
+        ).annotate(
+            earliest_date=Min('dates__date'),
+            has_dates=Exists(dates)
+        ).filter(has_dates=True).select_related(
+            'organizer',
+            'baseevent_ptr',
+            'category'
+        ).prefetch_related(
+            'banners'
+        ).order_by('earliest_date')
         return queryset
 
 
@@ -194,23 +213,47 @@ class AllFreeEventsListAPIView(ListAPIView):
     pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
-        user_city = self.request.user.baseprofile.user.city
-        queryset = BaseEvent.objects.filter(
-            is_active=True,
-            city=user_city,
-            price=0,
+        user_city = self.request.user.baseprofile.city   
+
+        dates = EventDate.objects.filter(
+            Q(date__gt=current_date.date()) | Q(date__gte=current_date.date(), end_time__gt=current_date.time()),
+            temp__id=OuterRef('pk')
         )
+        
+        queryset = TemporaryEvent.objects.filter(
+            Q(dates__date__gt=current_date.date()) | Q(dates__date__gte=current_date.date(), dates__end_time__gte=current_date.time()),
+            city=user_city,
+            is_active=True,
+            price=0,
+        ).annotate(
+            earliest_date=Min('dates__date'),
+            has_dates=Exists(dates)
+        ).filter(has_dates=True).select_related(
+            'organizer',
+            'baseevent_ptr',
+            'category'
+        ).prefetch_related(
+            'banners'
+        ).order_by('earliest_date')
         return queryset
 
 
 class AllPermEventsListAPIView(ListAPIView):
-    serializer_class = AllMainBaseEventSerializer
+    serializer_class = AllPermanentEventSerializer
     permission_classes = [IsAuthenticated]
     pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
         user_city = self.request.user.baseprofile.user.city
-        queryset = PermanentEvent.objects.filter(
+
+        queryset = PermanentEvent.objects.select_related(
+            'organizer',
+            'baseevent_ptr',
+            'category',
+        ).prefetch_related(
+            Prefetch('weeks', queryset=PermanentEventDays.objects.select_related('permanent_event')),
+            'banners',
+        ).filter(
             is_active=True,
             city=user_city,
         )
@@ -224,10 +267,43 @@ class AllPopularEventsListAPIView(ListAPIView):
 
     def get_queryset(self):
         user_city = self.request.user.baseprofile.user.city
-        queryset = BaseEvent.objects.filter(
+
+        dates = EventDate.objects.filter(
+            temp__id=OuterRef('pk')
+        ).select_related('eventtime_ptr', 'temp')
+
+        perm_queryset = BaseEvent.objects.select_related(
+            'organizer',
+            'baseevent_ptr',
+            'category',
+        ).prefetch_related(
+            Prefetch('weeks', queryset=PermanentEventDays.objects.select_related('permanent_event')),
+            'banners',
+        ).filter(
             is_active=True,
-            city=user_city
-        ).order_by('-followers')
+            city=user_city,
+            permanentevent__isnull=False
+        )
+
+        temp_queryset = BaseEvent.objects.filter(
+            city=user_city,
+            is_active=True,
+        ).filter(
+            Q(temporaryevent__dates__date__gt=current_date.date()) | Q(temporaryevent__dates__date__gte=current_date.date(), temporaryevent__dates__end_time__gte=current_date.time()),
+            temporaryevent__isnull=False
+        ).annotate(
+            earliest_date=Min('temporaryevent__dates__date'),
+            has_dates=Exists(dates)
+        ).filter(has_dates=True).select_related(
+            'organizer',
+            'temporaryevent',
+            'permanentevent',
+            'category'
+        ).prefetch_related(
+            'banners'
+        )
+
+        queryset = (temp_queryset | perm_queryset).order_by('-followers')
         return queryset
 
 
@@ -240,11 +316,44 @@ class OrganizerEventsAPIView(ListAPIView):
         user_city = self.request.user.baseprofile.user.city
         organizer_id = self.kwargs.get('pk')
 
-        queryset = BaseEvent.objects.filter(
-            organizer__id=organizer_id,
+        dates = EventDate.objects.filter(
+            temp__id=OuterRef('pk')
+        ).select_related('eventtime_ptr', 'temp')
+
+        perm_queryset = BaseEvent.objects.select_related(
+            'organizer',
+            'baseevent_ptr',
+            'category',
+        ).prefetch_related(
+            Prefetch('weeks', queryset=PermanentEventDays.objects.select_related('permanent_event')),
+            'banners',
+        ).filter(
+            is_active=True,
             city=user_city,
-            is_active=True
-        ).order_by('-followers')
+            permanentevent__isnull=False,
+            organizer__id=organizer_id,
+        )
+
+        temp_queryset = BaseEvent.objects.filter(
+            city=user_city,
+            is_active=True,
+        ).filter(
+            Q(temporaryevent__dates__date__gt=current_date.date()) | Q(temporaryevent__dates__date__gte=current_date.date(), temporaryevent__dates__end_time__gte=current_date.time()),
+            temporaryevent__isnull=False,
+            organizer__id=organizer_id,
+        ).annotate(
+            earliest_date=Min('temporaryevent__dates__date'),
+            has_dates=Exists(dates)
+        ).filter(has_dates=True).select_related(
+            'organizer',
+            'temporaryevent',
+            'permanentevent',
+            'category'
+        ).prefetch_related(
+            'banners'
+        )
+
+        queryset = (temp_queryset | perm_queryset).order_by('-followers')
 
         return queryset
 
@@ -260,11 +369,44 @@ class EventsByInterestsAPIView(ListAPIView):
         try:
             event = BaseEvent.objects.get(id=event_id)
 
-            queryset = BaseEvent.objects.filter(
+            dates = EventDate.objects.filter(
+                temp__id=OuterRef('pk')
+            ).select_related('eventtime_ptr', 'temp')
+
+            perm_queryset = BaseEvent.objects.select_related(
+                'organizer',
+                'baseevent_ptr',
+                'category',
+            ).prefetch_related(
+                Prefetch('weeks', queryset=PermanentEventDays.objects.select_related('permanent_event')),
+                'banners',
+            ).filter(
+                is_active=True,
+                city=user_city,
+                permanentevent__isnull=False,
                 interests__in=event.interests.all(),
+            ).exclude(pk=event_id)
+
+            temp_queryset = BaseEvent.objects.filter(
                 city=user_city,
                 is_active=True,
+            ).filter(
+                Q(temporaryevent__dates__date__gt=current_date.date()) | Q(temporaryevent__dates__date__gte=current_date.date(), temporaryevent__dates__end_time__gte=current_date.time()),
+                temporaryevent__isnull=False,
+                interests__in=event.interests.all(),
+            ).annotate(
+                earliest_date=Min('temporaryevent__dates__date'),
+                has_dates=Exists(dates)
+            ).filter(has_dates=True).select_related(
+                'organizer',
+                'temporaryevent',
+                'permanentevent',
+                'category'
+            ).prefetch_related(
+                'banners'
             ).exclude(pk=event_id)
+
+            queryset = (temp_queryset | perm_queryset)
 
             return queryset
         except ObjectDoesNotExist:

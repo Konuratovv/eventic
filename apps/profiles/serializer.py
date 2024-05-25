@@ -283,7 +283,7 @@ class ChangeUserPictureSerializer(serializers.ModelSerializer):
 class AllMainBaseEventSerializer(serializers.ModelSerializer):
     banners = EventBannerSerializer(many=True)
     event_weeks = MainEventWeekSerializer(many=True, source='permanentevent.weeks')
-    event_dates = MainEventDateSerializer(many=True, source='temporaryevent.dates')
+    event_dates = serializers.SerializerMethodField()
     is_favourite = serializers.SerializerMethodField()
 
     class Meta:
@@ -296,6 +296,39 @@ class AllMainBaseEventSerializer(serializers.ModelSerializer):
             'organizer',
             'event_weeks',
             'event_dates',
+            'is_favourite',
+        ]
+
+    def get_is_favourite(self, event):
+        return event in self.context.get('request').user.baseprofile.user.favourites.all()
+    
+    def get_event_dates(self, event):
+        if hasattr(event, 'temporaryevent'):
+            current_time = timezone.now()
+            event_dates = EventDate.objects.filter(
+                Q(date__gt=current_time.date()) | 
+                Q(date__gte=current_time.date(), end_time__gt=current_time.time()),
+                temp=event,
+            ).select_related(
+                'temp',
+                'eventtime_ptr'
+            ).order_by('date')
+            return EventDateSerializer(event_dates, many=True, context={'request': self.context.get('request')}).data
+    
+class AllPermanentEventSerializer(serializers.ModelSerializer):
+    banners = EventBannerSerializer(many=True)
+    event_weeks = MainEventWeekSerializer(many=True, source='permanentevent.weeks')
+    is_favourite = serializers.SerializerMethodField()
+
+    class Meta:
+        model = BaseEvent
+        fields = [
+            'id',
+            'banners',
+            'title',
+            'price',
+            'organizer',
+            'event_weeks',
             'is_favourite',
         ]
 
