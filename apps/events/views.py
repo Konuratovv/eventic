@@ -217,7 +217,7 @@ class AllFreeEventsListAPIView(ListAPIView):
 
         dates = EventDate.objects.filter(
             Q(date__gt=current_date.date()) | Q(date__gte=current_date.date(), end_time__gt=current_date.time()),
-            temp__id=OuterRef('temporaryevent__id')
+            temp__id=OuterRef('pk')
         )
         
         queryset = TemporaryEvent.objects.filter(
@@ -227,7 +227,7 @@ class AllFreeEventsListAPIView(ListAPIView):
             price=0,
         ).annotate(
             earliest_date=Min('dates__date'),
-                has_dates=Exists(dates)
+            has_dates=Exists(dates)
         ).filter(has_dates=True).select_related(
             'organizer',
             'baseevent_ptr',
